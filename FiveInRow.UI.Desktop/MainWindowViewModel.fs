@@ -5,25 +5,17 @@ open System.Collections.ObjectModel
 open System.ComponentModel
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
-
-type Cell = Empty | X | O
+open FiveInRow.Foundation
 
 type MainWindowViewModel() = 
+    inherit ObservableObject()
 
-    let propertyChanged = new Event<_, _>()
+    let v = new Cell((0, 0), List.empty, CellValue.O)
 
-    interface INotifyPropertyChanged with
-        [<CLIEvent>]
-        member x.PropertyChanged = propertyChanged.Publish
- 
-    abstract member OnPropertyChanged: string -> unit
+    let mutable _something = Array.empty<CellValue array>
 
-    default x.OnPropertyChanged(propertyName : string) =
-        propertyChanged.Trigger(x, new PropertyChangedEventArgs(propertyName))
- 
-    member x.OnPropertyChanged(expr : Expr) =
-        match expr with
-        | PropertyGet(_, b, _) -> x.OnPropertyChanged(b.Name)
-        | _ -> raise (new Exception())
-
-    member x.Board with get() = [| for i in 1..5 -> [| for _ in 1..5 -> Empty |] |]
+    member x.Board 
+        with get() = [| for i in 1..5 -> [| for _ in 1..5 -> CellValue.Unset |] |]
+        and set(v : CellValue[][]) = 
+            _something <- v
+            x.OnPropertyChanged(<@ x.Board @>)
