@@ -8,7 +8,8 @@ type CellValue =
     | X
     | O
 
-type Vertice(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
+type Cell(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
+    inherit ObservableObject()
 
     let propertyChanged = Event<_, _>()
     let mutable _value = value
