@@ -39,7 +39,7 @@ type Board(cols:int, rows:int, vertices: Cell list, nextValue: CellValue) =
             _controlsXPlayer <- v
             x.OnPropertyChanged(<@ x.ControlsXPlayer @>)
 
-    member x.Vertices with get() = vertices
+    member x.Cells with get() = vertices
 
     static member CreateNew(cols:int, rows:int) =
         let vertices = 
@@ -53,7 +53,8 @@ type Board(cols:int, rows:int, vertices: Cell list, nextValue: CellValue) =
             |> List.map (fun (i, j) -> new Cell((i, j), getNeighbors i j, Unset))
         new Board(cols, rows, vertices)
 
-    member x.Set(v: Cell) =
+    member x.Set(i: (int * int)) =
+        let v = _map.[i]
         if v.IsEmpty() then
             v.Set(_value)
             match _value with 
@@ -79,7 +80,7 @@ type Board(cols:int, rows:int, vertices: Cell list, nextValue: CellValue) =
             | O ->
                 _graphO.MarkPossibleChoices(_graphX);
             | _ -> raise (NotSupportedException())
-        x.Set(nextMove)
+        x.Set(nextMove.Index)
 
     member x.HighlightBestMoves() =
         match _value with
@@ -90,6 +91,8 @@ type Board(cols:int, rows:int, vertices: Cell list, nextValue: CellValue) =
             _graphO.MarkPossibleChoices(_graphX) |> ignore
             _graphO
         | _ -> raise (NotSupportedException())
+         
+    member x.Graph with get() = match _value with | X -> _graphX | _ -> _graphO
 
     member x.Clear() =
         for v in vertices do

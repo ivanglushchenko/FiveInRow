@@ -8,6 +8,8 @@ type CellValue =
     | X
     | O
 
+type CellIndex = { x: int; y: int }
+
 type Cell(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
     inherit ObservableObject()
 
@@ -45,3 +47,4 @@ type Cell(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
         and  set(v) =
             _probability <- v
             x.OnPropertyChanged(<@ x.Probability @>)
+

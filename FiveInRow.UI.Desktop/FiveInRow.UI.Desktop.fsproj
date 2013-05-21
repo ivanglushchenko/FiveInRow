@@ -8,7 +8,7 @@
     <ProjectGuid>{30597be9-08f8-4832-8ab7-009c00a6a2f2}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>FSharpWpfEmptyTemplate.App</RootNamespace>
-    <AssemblyName>App</AssemblyName>
+    <AssemblyName>FiveInRow.UI.Desktop</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>App</Name>
     <TargetFrameworkProfile>
@@ -43,8 +43,10 @@
     </None>
     <None Include="packages.config" />
     <Resource Include="ApplicationResources.xaml" />
+    <Compile Include="RowLocationConverter.fs" />
     <Resource Include="MainWindow.xaml" />
     <Compile Include="MainWindowViewModel.fs" />
+    <Compile Include="BoardPanel.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <ItemGroup>

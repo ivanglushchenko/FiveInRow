@@ -1,6 +1,7 @@
 ﻿namespace FiveInRow.UI.Desktop
 
 open System
+open System.Windows
 open System.Collections.ObjectModel
 open System.ComponentModel
 open Microsoft.FSharp.Quotations
@@ -10,12 +11,28 @@ open FiveInRow.Foundation
 type MainWindowViewModel() = 
     inherit ObservableObject()
 
-    let v = new Cell((0, 0), List.empty, CellValue.O)
+    let mutable _offset = Vector(0.0, 0.0)
+    let _board = Board.CreateNew(51, 51)
 
-    let mutable _something = Array.empty<CellValue array>
+    member x.Board with get() = _board
 
-    member x.Board 
-        with get() = [| for i in 1..5 -> [| for _ in 1..5 -> CellValue.Unset |] |]
-        and set(v : CellValue[][]) = 
-            _something <- v
-            x.OnPropertyChanged(<@ x.Board @>)
+    member x.Graph with get() = _board.Graph
+
+    member x.Set(index: (int * int)) =
+        _board.Set index |> ignore
+        x.OnPropertyChanged(<@ x.Graph @>)
+        ()
+
+    member x.Offset
+        with get() = _offset
+        and set(v) = 
+            _offset <- v
+            x.OnPropertyChanged(<@ x.Offset @>)
+
+    member x.Player1
+        with get() = _board.ControlsXPlayer
+        and set(v) = _board.ControlsXPlayer <- v
+
+    member x.Player2
+        with get() = _board.ControlsOPlayer
+        and set(v) = _board.ControlsOPlayer <- v
