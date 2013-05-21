@@ -34,7 +34,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ObservableObject.fs" />
-    <Compile Include="Vertice.fs" />
+    <Compile Include="Cell.fs" />
+    <Compile Include="Row.fs" />
+    <Compile Include="Graph.fs" />
+    <Compile Include="Board.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

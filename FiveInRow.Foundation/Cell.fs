@@ -11,7 +11,6 @@ type CellValue =
 type Cell(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
     inherit ObservableObject()
 
-    let propertyChanged = Event<_, _>()
     let mutable _value = value
     let mutable _probability = 0.0
 
@@ -31,12 +30,6 @@ type Cell(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
 
     member x.IsEmpty() =
         match x.Value with | X | O -> false | _ -> true
-
-    interface INotifyPropertyChanged with
-        member this.add_PropertyChanged(e) =
-            propertyChanged.Publish.AddHandler(e)
-        member this.remove_PropertyChanged(e) =
-            propertyChanged.Publish.RemoveHandler(e)
  
     override x.ToString() =
         "V: " + (fst _index).ToString() + ", " + (snd _index).ToString()
@@ -45,10 +38,10 @@ type Cell(_index: (int * int), pointsTo: (int * int) list, value: CellValue) =
         with get() = _value
         and  set(v) =
             _value <- v
-            propertyChanged.Trigger(x, new PropertyChangedEventArgs("Value"))
+            x.OnPropertyChanged(<@ x.Value @>)
 
     member x.Probability
         with get() = _probability
         and  set(v) =
             _probability <- v
-            propertyChanged.Trigger(x, new PropertyChangedEventArgs("Probability"))
+            x.OnPropertyChanged(<@ x.Probability @>)
