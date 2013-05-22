@@ -1,5 +1,4 @@
-﻿using FiveInRow.UI.Metro.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,11 +19,13 @@ namespace FiveInRow.UI.Metro
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class MainPage : Page
+    public sealed partial class MenuPage : Page
     {
-        public MainPage()
+        public MenuPage()
         {
             this.InitializeComponent();
+
+            DataContext = new MenuPageViewModel();
         }
 
         /// <summary>
@@ -34,7 +35,11 @@ namespace FiveInRow.UI.Metro
         /// property is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            DataContext = new MainPageViewModel((GameStartingParams)e.Parameter);
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(MainPage), ((MenuPageViewModel)DataContext).ToGameParams());
         }
     }
 }
