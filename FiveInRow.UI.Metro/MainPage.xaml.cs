@@ -24,6 +24,8 @@ namespace FiveInRow.UI.Metro
         public MainPage()
         {
             this.InitializeComponent();
+
+            DataContext = new MainPageViewModel();
         }
 
         /// <summary>

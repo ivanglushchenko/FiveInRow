@@ -5,9 +5,40 @@
     xmlns:local="using:FiveInRow.UI.Metro"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:comp="using:FiveInRow.UI.Metro.Components"
+    xmlns:conv="using:FiveInRow.UI.Metro.Converters"
+    xmlns:f="using:FiveInRow.Foundation"
+    xmlns:sys="using:System"
     mc:Ignorable="d">
 
+    <Page.Resources>
+        <conv:CellValue2VisibilityConverter x:Key="CP2VisibilityConverter" />
+    </Page.Resources>
+    
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
-
+        <ItemsControl ItemsSource="{Binding Board.Cells}" Background="Green">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <comp:BoardPanel />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Width="50" Height="50">
+                        <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
+                        <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                        <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=X}">
+                            <Grid>
+                                <Line Stroke="Red" StrokeThickness="3" X1="0" Y1="0" X2="50" Y2="50" />
+                                <Line Stroke="Red" StrokeThickness="3" X1="50" Y1="0" X2="0" Y2="50" />
+                            </Grid>
+                        </Viewbox>
+                        <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}">
+                            <Ellipse Stroke="Blue" StrokeThickness="3" Width="50" Height="50" />
+                        </Viewbox>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </Page>
