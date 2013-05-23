@@ -9,6 +9,15 @@ open FiveInRow.UI.Desktop
 
 type MainWindow = XAML<"MainWindow.xaml">
 
+//let t = System.Environment.TickCount
+//let b = FiveInRow.Foundation.BoardView.Create(19)
+//for i in 1..19 do
+//    for j in 1..19 do
+//        b.Set (i, j)
+//let dt = System.Environment.TickCount - t
+//System.Diagnostics.Debug.Write(dt)
+//printfn ""
+
 //let b0 = Board.Create(9)
 //let moves = [ (1, 1); (1, 2); 
 //              (2, 2); (2, 1); 

@@ -63,21 +63,22 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
     let fitness = lazy (
         let calcFitness player = 
             let rowStats =
-                seq { for rowGroup in rows.[player] do
-                        for row in rowGroup.Value do
-                            if row.Rank > 0 then yield (row.Length, row.Rank) }
-                |> Seq.groupBy fst
-                |> Seq.map (fun (k, v) -> (k, v |> Seq.map snd |> Seq.groupBy (fun t -> t) |> Seq.map (fun (k, v) -> (k, v |> Seq.length)) |> Map.ofSeq))
-                |> Map.ofSeq
-            let numOfRows length rank = 
-                if rowStats.ContainsKey length && rowStats.[length].ContainsKey rank then rowStats.[length].[rank]
-                else 0
-            if rowStats.ContainsKey 5 then Win
+                let array = Array.init 6 (fun i -> Array.create 3 0)
+                for rowGroup in rows.[player] do
+                    for row in rowGroup.Value do
+                        if row.Length <= 5 then
+                            let trimmedLength = min row.Length 5
+                            array.[trimmedLength].[row.Rank] <- array.[trimmedLength].[row.Rank] + 1
+                array
+            let numOfRows length rank = rowStats.[length].[rank]
+            if rowStats.[5] |> Array.exists (fun n -> n > 0) then Win
             else if numOfRows 4 2 >= 1 then WinIn1Turn
             else if numOfRows 4 1 >= 2 then WinIn2Turns
             else if numOfRows 3 2 >= 2 then WinIn2Turns
             else if numOfRows 3 2 >= 1 && numOfRows 4 1 >= 1 then WinIn2Turns
-            else Probability(rowStats |> Map.toSeq |> Seq.sumBy (fun (length, ranks) -> ranks |> Map.toSeq |> Seq.sumBy (fun (rank, count) -> (float count) * Math.Pow(2.0 * (float length), 1.0 + (float rank)))))
+            else 
+                let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * Math.Pow(2.0 * (float length), 1.0 + (float rank))) |> Array.sum
+                Probability(rowStats |> Array.mapi sumRanks |> Array.sum)
         Map.ofList [(Player1, calcFitness Player1); (Player2, calcFitness Player2)])
 
     let bestMoves = lazy (
