@@ -25,7 +25,13 @@
     </Page.BottomAppBar>
     
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
-        <ItemsControl ItemsSource="{Binding Board.Cells}" Background="Green">
+        <Image VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Stretch="Fill" Grid.RowSpan="3">
+            <Image.Source>
+                <BitmapImage UriSource="/Assets/bcg.jpg" />
+            </Image.Source>
+        </Image>
+        
+        <ItemsControl ItemsSource="{Binding Board.Cells}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <comp:BoardPanel />
@@ -34,16 +40,15 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Grid Width="60" Height="60">
-                        <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
-                        <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                        <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="8 8" Fill="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,-1,-1" />
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=X}">
                             <Grid>
-                                <Line Stroke="Red" StrokeThickness="3" X1="0" Y1="0" X2="60" Y2="60" />
-                                <Line Stroke="Red" StrokeThickness="3" X1="60" Y1="0" X2="0" Y2="60" />
+                                <Line Stroke="White" StrokeThickness="8" X1="0" Y1="0" X2="60" Y2="60" />
+                                <Line Stroke="White" StrokeThickness="8" X1="60" Y1="0" X2="0" Y2="60" />
                             </Grid>
                         </Viewbox>
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}">
-                            <Ellipse Stroke="Blue" StrokeThickness="3" Width="60" Height="60" />
+                            <Ellipse Stroke="DarkGreen" StrokeThickness="8" Width="60" Height="60" />
                         </Viewbox>
                     </Grid>
                 </DataTemplate>

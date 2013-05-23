@@ -8,6 +8,12 @@
     mc:Ignorable="d">
 
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+        <Image VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Stretch="Fill" Grid.RowSpan="3">
+            <Image.Source>
+                <BitmapImage UriSource="/Assets/bcg.jpg" />
+            </Image.Source>
+        </Image>
+        
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <StackPanel>

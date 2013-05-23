@@ -20,6 +20,8 @@ type BoardView(startingBoard: Board) =
 
     member x.Moves with get() = moves
 
+    member x.FiveInRows with get() = boards.Head.Rows |> Seq.filter (fun r -> r.Length >= 5)
+
     member x.Set (i, j) =
         moves <- (i, j) :: moves
         x.OnPropertyChanged(<@ x.Moves @>)
@@ -31,7 +33,8 @@ type BoardView(startingBoard: Board) =
             boards <- board :: boards
             for ((i, j), fitness) in board.BestMoves do
                 cells.[i - 1].[j - 1].Fitness <- fitness
-            x.OnPropertyChanged(<@ x.Rows @>)  
+            x.OnPropertyChanged(<@ x.Rows @>)
+            x.OnPropertyChanged(<@ x.FiveInRows @>)
         | None -> ()
 
     member x.MakeAIMove() =
@@ -44,6 +47,7 @@ type BoardView(startingBoard: Board) =
                 cells.[i - 1].[j - 1].Value <- Empty
                 cells.[i - 1].[j - 1].Fitness <- 0.0
         x.OnPropertyChanged(<@ x.Rows @>)
+        x.OnPropertyChanged(<@ x.FiveInRows @>)
 
     member x.Winner 
         with get() = 

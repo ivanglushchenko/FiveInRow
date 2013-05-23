@@ -68,10 +68,7 @@ namespace FiveInRow.UI.Metro.Components
             else
             {
                 var p = e.GetCurrentPoint(_owner).Position;
-                var index = new Tuple<int, int>(
-                    (int)((p.X - _offset.X) / _cellWidth) + 1,
-                    (int)((p.Y - _offset.Y) / _cellHeigth) + 1);
-                _vm.Set(index);
+                _vm.Set((int)((p.Y - _offset.Y) / _cellHeigth) + 1, (int)((p.X - _offset.X) / _cellWidth) + 1);
             }
         }
 
@@ -123,19 +120,17 @@ namespace FiveInRow.UI.Metro.Components
                 if (!_isPositioned)
                 {
                     _isPositioned = true;
-                    var maxI = Children.OfType<FrameworkElement>().Select(c => c.DataContext).OfType<Cell>().Select(c => c.X).Max();
-                    var maxJ = Children.OfType<FrameworkElement>().Select(c => c.DataContext).OfType<Cell>().Select(c => c.Y).Max();
 
-                    var dx = (finalSize.Width - maxI * _cellWidth) / 2.0;
-                    var dy = (finalSize.Height - maxJ * _cellHeigth) / 2.0;
+                    var dx = (finalSize.Width - GameDef.boardDimension * _cellWidth) / 2.0;
+                    var dy = (finalSize.Height - GameDef.boardDimension * _cellHeigth) / 2.0;
                     AddOffset(dx, dy);
                 }
             }
 
             foreach (var item in Children.OfType<FrameworkElement>())
             {
-                var cell = (Cell)item.DataContext;
-                item.Arrange(new Rect(new Point(_cellWidth * (cell.X - 1), _cellHeigth * (cell.Y - 1)), new Size(_cellWidth, _cellHeigth)));
+                var cell = (CellView)item.DataContext;
+                item.Arrange(new Rect(new Point(_cellWidth * (cell.Col - 1), _cellHeigth * (cell.Row - 1)), new Size(_cellWidth, _cellHeigth)));
             }
             return finalSize;
         }

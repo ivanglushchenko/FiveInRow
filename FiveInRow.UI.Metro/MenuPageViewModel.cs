@@ -37,7 +37,7 @@ namespace FiveInRow.UI.Metro
             return new GameStartingParams()
             {
                 BoardSize = BoardSize19 ? 19 : 51,
-                AILevel = OpponentAI ? 1 : 0
+                AILevel = OpponentAI ? AILevel.Easy : AILevel.Human
             };
         }
 

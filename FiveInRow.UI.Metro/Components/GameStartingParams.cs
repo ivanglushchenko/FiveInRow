@@ -10,9 +10,15 @@ namespace FiveInRow.UI.Metro.Components
     {
         #region Properties
 
-        public int AILevel { get; set; }
+        public AILevel AILevel { get; set; }
         public int BoardSize { get; set; }
 
         #endregion Properties
+    }
+
+    public enum AILevel
+    {
+        Human,
+        Easy
     }
 }

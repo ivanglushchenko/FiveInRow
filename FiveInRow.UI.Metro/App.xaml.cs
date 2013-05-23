@@ -31,8 +31,6 @@ namespace FiveInRow.UI.Metro
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
-
-            var c = FiveInRow.Foundation.CellValue.X;
         }
 
         /// <summary>

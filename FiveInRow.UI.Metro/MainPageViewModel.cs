@@ -17,19 +17,24 @@ namespace FiveInRow.UI.Metro
 
         public MainPageViewModel(GameStartingParams gameParams)
         {
-            Board = Board.CreateNew(gameParams.BoardSize, gameParams.BoardSize);
-            Board.ControlsXPlayer = true;
-            Board.ControlsOPlayer = gameParams.AILevel == 0;
+            _params = gameParams;
+            Board = BoardView.Create(gameParams.BoardSize);
         }
 
         #endregion .ctors
+
+        #region Fields
+
+        private GameStartingParams _params;
+
+        #endregion Fields
 
         #region Properties
 
         /// <summary>
         /// Gets/sets Board.
         /// </summary>
-        public Board Board
+        public BoardView Board
         {
             [System.Diagnostics.DebuggerStepThrough]
             get { return p_Board; }
@@ -44,7 +49,7 @@ namespace FiveInRow.UI.Metro
                 }
             }
         }
-        private Board p_Board;
+        private BoardView p_Board;
         partial void OnBoardChanged();
 
         /// <summary>
@@ -72,20 +77,21 @@ namespace FiveInRow.UI.Metro
 
         #region Methods
 
-        public async void Set(Tuple<int, int> index)
+        public async void Set(int row, int col)
         {
             if (IsCompleted) return;
 
-            var result = Board.Set(index);
-            if (result != null)
+            Board.Set(row, col);
+            if (Board.Winner == null && _params.AILevel != AILevel.Human) Board.MakeAIMove();
+            if (Board.Winner != null)
             {
                 IsCompleted = true;
 
-                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game", result.Value == CellValue.X ? "1" : "2"));
+                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
                 dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => 
                 {
                     IsCompleted = false;
-                    Board = Board.CreateNew(51, 51);
+                    Board.Clear();
                 })));
                 dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => 
                 {

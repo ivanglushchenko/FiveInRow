@@ -17,11 +17,15 @@ namespace FiveInRow.UI.Metro.Converters
             {
                 return value == null ? Visibility.Visible : Visibility.Collapsed;
             }
-
-            return
-                ((value == CellValue.X && (string)parameter == "X") || (value == CellValue.O && (string)parameter == "O")) 
-                ? Visibility.Visible 
-                : Visibility.Collapsed;
+            if (value is FiveInRow.Foundation.GameDef.CellValue.Occupied)
+            {
+                var occupied = value as FiveInRow.Foundation.GameDef.CellValue.Occupied;
+                return
+                    ((occupied.Item == GameDef.Player.Player1 && (string)parameter == "X") || (occupied.Item == GameDef.Player.Player2 && (string)parameter == "O"))
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
+            return Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
