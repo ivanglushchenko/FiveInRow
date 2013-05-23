@@ -39,7 +39,7 @@ type BoardPanel() as this =
             if _isDragging then _isDragging <- false
             else
                 let c = p - _offset
-                let index = (int(c.X / _cellWidth) + 1, int(c.Y / _cellHeigth) + 1)
+                let index = (int(c.Y / _cellWidth) + 1, int(c.X / _cellHeigth) + 1)
                 vm.Set index
 
         let onMouseMove(p: Point) =
@@ -75,7 +75,7 @@ type BoardPanel() as this =
 
     override x.ArrangeOverride finalSize =
         for el in x.InternalChildren |> Seq.cast<FrameworkElement> do
-            let cell = el.DataContext :?> Cell
-            Rect(Point(_cellWidth * float(cell.X - 1), _cellHeigth * float(cell.Y - 1)), Size(_cellWidth, _cellHeigth)) |> el.Arrange
+            let cell = el.DataContext :?> CellView
+            Rect(Point(_cellWidth * float(cell.Col - 1), _cellHeigth * float(cell.Row - 1)), Size(_cellWidth, _cellHeigth)) |> el.Arrange
         finalSize
 

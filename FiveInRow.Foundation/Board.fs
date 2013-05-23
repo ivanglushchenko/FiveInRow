@@ -1,102 +1,119 @@
 ﻿namespace FiveInRow.Foundation
 
+open GameDef
 open System
 open System.ComponentModel
 
-type Board(cols:int, rows:int, vertices: Cell list, nextValue: CellValue) =
-    inherit ObservableObject()
+type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Player, Map<RowKey, Row list>>) =
+    let listOfCells = lazy (
+        seq { for row in cells do
+                for cell in row.Value do
+                    yield cell.Value })
 
-    let mutable _value = nextValue
-    let _map = vertices |> List.map (fun t -> (t.Index, t)) |> Map.ofList
-    let mutable _graphX = new Graph([], [], _map)
-    let mutable _graphO = new Graph([], [], _map)
-    let mutable _controlsXPlayer = true
-    let mutable _controlsOPlayer = false
+    let listOfRows = lazy (
+        seq { for playerRows in rows do
+                for rowGroup in playerRows.Value do
+                    for row in rowGroup.Value do
+                        yield row })
 
-    new(cols, rows, vertices) = Board(cols, rows, vertices, X)
+    let neighboursOf (cell: Cell) = 
+        seq { for i in fst cell.Pos - 1..fst cell.Pos + 1 do
+                for j in snd cell.Pos - 1..snd cell.Pos + 1 do
+                    if isValid (i, j) && (i <> fst cell.Pos || j <> snd cell.Pos) then
+                        yield cells.[i].[j] }
 
-    member x.Colums with get() = cols
+    let replaceCell (cell: Cell) = 
+        cells |> Map.map (fun row value -> 
+            if row = fst cell.Pos then value |> Map.remove (snd cell.Pos) |> Map.add (snd cell.Pos) cell
+            else value)
 
-    member x.Rows with get() = rows
+    let extendWith player (cell: Cell) = 
+        let nearbyCells = neighboursOf cell |> Seq.filter (fun c -> c.IsOccupiedBy player) |> List.ofSeq
+        let newRows = [ for c in nearbyCells -> Row.Create cell.Pos c.Pos ]
 
-    member x.Map with get() = _map
+        let mergeRow (row: Row) (map: Map<RowKey, Row list>) =
+            if map |> Map.containsKey row.Key then
+                let rec loop (rows: Row list) = 
+                    match rows with
+                    | hd :: nk :: tl ->
+                        if neighbours hd.To nk.From then Row.Merge hd nk :: tl |> loop
+                        else hd :: loop (nk :: tl)
+                    | _ -> rows
+                let mergedRows = row :: map.[row.Key] |> List.sortBy (fun r -> r.StartPoint) |> loop
+                map.Remove row.Key |> Map.add row.Key mergedRows
+            else map.Add(row.Key, [ row ])
 
-    member x.NextValue 
-        with get() = _value
-        and  set(v) =
-            _value <- v
-            x.OnPropertyChanged(<@ x.NextValue @>)
+        let merge map = newRows |> List.fold (fun acc row -> mergeRow row acc) map
 
-    member x.ControlsOPlayer 
-        with get() = _controlsOPlayer
-        and  set(v) =
-            _controlsOPlayer <- v
-            x.OnPropertyChanged(<@ x.ControlsOPlayer @>)
+        let nextCells = Cell(cell.Pos, Occupied(player)) |> replaceCell
+        let nextRows = rows |> Map.map (fun p value -> if p = player then merge value else value)
 
-    member x.ControlsXPlayer 
-        with get() = _controlsXPlayer
-        and  set(v) =
-            _controlsXPlayer <- v
-            x.OnPropertyChanged(<@ x.ControlsXPlayer @>)
+        for playerRows in nextRows do
+            for rowGroup in playerRows.Value do
+                for row in rowGroup.Value do
+                    row.ResetRank nextCells
 
-    member x.Cells with get() = vertices
+        Board(next player, nextCells, nextRows)
 
-    static member CreateNew(cols:int, rows:int) =
-        let vertices = 
-            let getNeighbors c r =
-                [ for i in c - 1 .. c + 1 do
-                  for j in r - 1 .. r + 1 do
-                  if i > 0 && j > 0 && i <= cols && j <= rows then yield (i, j) ]
-            [ for c in 1..cols do
-              for r in 1..rows do
-              yield (c,r) ]
-            |> List.map (fun (i, j) -> new Cell((i, j), getNeighbors i j, Unset))
-        new Board(cols, rows, vertices)
+    let fitness = lazy (
+        let calcFitness player = 
+            let rowStats =
+                seq { for rowGroup in rows.[player] do
+                        for row in rowGroup.Value do
+                            if row.Rank > 0 then yield (row.Length, row.Rank) }
+                |> Seq.groupBy fst
+                |> Seq.map (fun (k, v) -> (k, v |> Seq.map snd |> Seq.groupBy (fun t -> t) |> Seq.map (fun (k, v) -> (k, v |> Seq.length)) |> Map.ofSeq))
+                |> Map.ofSeq
+            let numOfRows length rank = 
+                if rowStats.ContainsKey length && rowStats.[length].ContainsKey rank then rowStats.[length].[rank]
+                else 0
+            if rowStats.ContainsKey 5 then Win
+            else if numOfRows 4 2 >= 1 then WinIn1Turn
+            else if numOfRows 4 1 >= 2 then WinIn2Turns
+            else if numOfRows 3 2 >= 2 then WinIn2Turns
+            else if numOfRows 3 2 >= 1 && numOfRows 4 1 >= 1 then WinIn2Turns
+            else Probability(rowStats |> Map.toSeq |> Seq.sumBy (fun (length, ranks) -> ranks |> Map.toSeq |> Seq.sumBy (fun (rank, count) -> (float count) * Math.Pow(2.0 * (float length), 1.0 + (float rank)))))
+        Map.ofList [(Player1, calcFitness Player1); (Player2, calcFitness Player2)])
 
-    member x.Set(i: (int * int)) =
-        let v = _map.[i]
-        if v.IsEmpty() then
-            v.Set(_value)
-            match _value with 
-            | X -> 
-                _graphX <- _graphX.Extend(v)
-                _graphO.RefreshDegreesOfFreedom()
-                x.NextValue <- O
-                if _graphX.IsTheWinner() then Some(X) else if x.ControlsOPlayer = false then x.MakeAIMove() else None
-            | O -> 
-                _graphO <- _graphO.Extend(v)
-                _graphX.RefreshDegreesOfFreedom()
-                x.NextValue <- X
-                if _graphO.IsTheWinner() then Some(O) else if x.ControlsXPlayer = false then x.MakeAIMove() else None
-            | _ -> raise (NotSupportedException())
-        else
-            None
+    let setAs (i, j) player =
+        match cells.[i].[j].Value with
+        | Occupied(_) -> None
+        | Empty       -> Some(extendWith player cells.[i].[j])
 
-    member x.MakeAIMove() =
-        let nextMove = 
-            match _value with
-            | X -> 
-                _graphX.MarkPossibleChoices(_graphO)
-            | O ->
-                _graphO.MarkPossibleChoices(_graphX);
-            | _ -> raise (NotSupportedException())
-        x.Set(nextMove.Index)
+    static member Create dim =
+        boardDimension <- dim
+        let cells = Map.ofList [ for i in 1..dim -> (i, Map.ofList [ for j in 1..dim -> (j, Cell((i, j), Empty)) ]) ]
+        let rows = [ Player1; Player2] |> List.map (fun p -> (p, Map.empty<RowKey, Row list>)) |> Map.ofList
+        Board(Player1, cells, rows)
 
-    member x.HighlightBestMoves() =
-        match _value with
-        | X ->
-            _graphX.MarkPossibleChoices(_graphO) |> ignore
-            _graphX
-        | O ->
-            _graphO.MarkPossibleChoices(_graphX) |> ignore
-            _graphO
-        | _ -> raise (NotSupportedException())
-         
-    member x.Graph with get() = match _value with | X -> _graphX | _ -> _graphO
+    member x.Set (i, j) = setAs (i, j) currentPlayer
 
-    member x.Clear() =
-        for v in vertices do
-            v.Set(Unset)
-        _value <- X
-        _graphX <- new Graph([], [], _map)
-        _graphO <- new Graph([], [], _map)
+    member x.Player with get() = currentPlayer
+
+    member x.Cells with get() = listOfCells.Value
+
+    member x.Rows with get() = listOfRows.Value
+
+    override x.ToString() =
+        let sb = new System.Text.StringBuilder()
+        for row in cells do
+            for cell in row.Value do
+                (match cell.Value.Value with
+                | Empty -> sb.Append "."
+                | Occupied(Player1) -> sb.Append "x"
+                | Occupied(Player2) -> sb.Append "o") |> ignore
+                sb.AppendLine() |> ignore
+        sb.ToString()
+
+    member x.Fitness with get() = fitness.Value
+
+    member x.CalculateBestMove() =
+        let possibleMoves = 
+            seq { for cell in x.Cells do
+                    if cell.IsEmpty then
+                        if neighboursOf cell |> Seq.exists (fun c -> c.IsEmpty = false) then
+                            yield cell }
+        let opponent = next currentPlayer
+        let possibleBoards = possibleMoves |> Seq.map (fun c -> (c, x.Set c.Pos, setAs c.Pos opponent))
+
+        []

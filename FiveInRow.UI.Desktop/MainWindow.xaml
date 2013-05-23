@@ -9,6 +9,7 @@
     <Window.Resources>
         <sys:Double x:Key="CellWidth">50</sys:Double>
         <local:RowLocationConverter x:Key="RowLocationConverter" />
+        <local:CellValueToStrConverter x:Key="CellValueToStrConverter" />
     </Window.Resources>
 
     <Grid>
@@ -28,7 +29,7 @@
                     <Grid Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}">
                         <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
                         <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                        <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="Collapsed" Text="{Binding Probability}" />
+                        <!--<TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="Visible" Text="{Binding Fitness}" />-->
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
                             <Grid>
                                 <Line Stroke="Red" StrokeThickness="3" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
@@ -43,27 +44,27 @@
                         <MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
-                                <Condition Binding="{Binding Path=Value}" Value="{x:Static f:CellValue.Unset}"/>
+                                <Condition Binding="{Binding Path=Value, Converter={StaticResource CellValueToStrConverter}}" Value="Empty"/>
                             </MultiDataTrigger.Conditions>
                             <Setter TargetName="el" Property="Opacity" Value="0.7" />
                         </MultiDataTrigger>
-                        <DataTrigger Binding="{Binding Value}" Value="{x:Static f:CellValue.X}">
+                        <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player1">
                             <Setter TargetName="pX" Property="Visibility" Value="Visible" />
                             <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Value}" Value="{x:Static f:CellValue.O}">
+                        <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player2">
                             <Setter TargetName="pO" Property="Visibility" Value="Visible" />
                             <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding Value}" Value="{x:Static f:CellValue.AI_UnderConsideration}">
+                        <!--<DataTrigger Binding="{Binding Value}" Value="{x:Static f:CellValue.AI_UnderConsideration}">
                             <Setter TargetName="txt" Property="Visibility" Value="Visible" />
-                        </DataTrigger>
+                        </DataTrigger>-->
                     </DataTemplate.Triggers>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <ItemsControl ItemsSource="{Binding Graph.Rows}" IsHitTestVisible="False">
+        <ItemsControl ItemsSource="{Binding Board.Rows}" IsHitTestVisible="False">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Canvas />
@@ -74,25 +75,25 @@
                     <Line Stroke="Green" StrokeThickness="3">
                         <Line.X1>
                             <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
-                                <Binding Path="From.X" />
+                                <Binding Path="From.Item2" />
                                 <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                             </MultiBinding>
                         </Line.X1>
                         <Line.Y1>
                             <MultiBinding Converter="{StaticResource RowLocationConverter}">
-                                <Binding Path="From.Y" />
+                                <Binding Path="From.Item1" />
                                 <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                             </MultiBinding>
                         </Line.Y1>
                         <Line.X2>
                             <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
-                                <Binding Path="To.X" />
+                                <Binding Path="To.Item2" />
                                 <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                             </MultiBinding>
                         </Line.X2>
                         <Line.Y2>
                             <MultiBinding Converter="{StaticResource RowLocationConverter}">
-                                <Binding Path="To.Y" />
+                                <Binding Path="To.Item1" />
                                 <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
                             </MultiBinding>
                         </Line.Y2>
@@ -102,10 +103,21 @@
         </ItemsControl>
         
         <Border Grid.Column="1" Background="LightGray" VerticalAlignment="Stretch">
-            <StackPanel HorizontalAlignment="Center" Margin="10">
-                <CheckBox Content="Player 1" IsChecked="{Binding Player1}" />
-                <CheckBox Content="Player 2" IsChecked="{Binding Player2}" />
-            </StackPanel>
+            <ScrollViewer>
+                <StackPanel>
+                    <StackPanel HorizontalAlignment="Center" Margin="10" DockPanel.Dock="Top">
+                        <CheckBox Content="Use AI" IsChecked="{Binding UseAI}" />
+                    </StackPanel>
+
+                    <TextBlock Text="Rows"/>
+                    <ItemsControl ItemsSource="{Binding Board.Rows}" />
+                
+                    <StackPanel Margin="0,20,0,0">
+                        <TextBlock Text="Moves"/>
+                        <ItemsControl ItemsSource="{Binding Board.Moves}" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
     </Grid>
 </Window>

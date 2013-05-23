@@ -1,87 +1,64 @@
 ﻿namespace FiveInRow.Foundation
 
+open GameDef
 open System
 
-type Direction =
-    | N
-    | NE
-    | E
-    | SE
+type Row(posFrom: CellPos, posTo: CellPos) =
+    let length = 
+        if fst posFrom = fst posTo then 1 + (snd posFrom - snd posTo |> abs)
+        else 1 + (fst posTo - fst posFrom)
 
-type Row(direction: Direction, vFrom: Cell, vTo: Cell, map: Map<(int*int), Cell>) =
-    let _zero = 
+    let direction = 
+        match (compare (fst posFrom) (fst posTo), compare (snd posFrom) (snd posTo)) with
+        | (0, _) -> E
+        | (_, 0) -> S
+        | (1, 1) | (-1, -1) -> SE
+        | _      -> SW
+
+    let zero = 
         match direction with
-        | N -> fst vFrom.Index
-        | NE -> fst vFrom.Index + snd vFrom.Index
-        | E -> snd vFrom.Index
-        | SE -> fst vFrom.Index - snd vFrom.Index
+        | S -> snd posFrom
+        | E -> fst posFrom
+        | SE -> snd posFrom - fst posFrom
+        | SW -> snd posFrom + fst posFrom
 
-    let _length = 
+    let startPoint =
         match direction with
-        | N | NE -> Math.Abs(snd vFrom.Index - snd vTo.Index) + 1
-        | E | SE -> Math.Abs(fst vFrom.Index - fst vTo.Index) + 1
+        | E -> snd posFrom
+        | _ -> fst posFrom
+                
+    let mutable rank = 0
 
-    let mutable _degreesOfFreedom = -1
+    static member Create posFrom posTo =
+        match (compare (fst posFrom) (fst posTo), compare (snd posFrom) (snd posTo)) with
+        | (-1, _) -> Row(posFrom, posTo)
+        | (1, _)  -> Row(posTo, posFrom)
+        | (_, -1) -> Row(posFrom, posTo)
+        | (_, 1)  -> Row(posTo, posFrom)
+        | _       -> raise (Exception())
 
-    static member Create(v1: Cell, v2: Cell, map: Map<(int*int), Cell>) = 
-        let direction = 
-            let cFrom, rFrom = v1.Index
-            let cTo, rTo = v2.Index
-            if cFrom = cTo && rFrom = rTo then failwith "Bad row"
-            if cFrom = cTo then
-                N
-            else
-                if rFrom = rTo then
-                    E
-                else
-                    if (cFrom - cTo) * (rFrom - rTo) > 0 then
-                        SE
-                    else
-                        NE
-        match direction with
-        | N | NE -> if snd v1.Index > snd v2.Index then new Row(direction, v2, v1, map) else new Row(direction, v1, v2, map)
-        | E | SE -> if fst v1.Index > fst v2.Index then new Row(direction, v2, v1, map) else new Row(direction, v1, v2, map)
+    static member Merge (rowStart: Row) (rowEnd: Row) = Row.Create rowStart.From rowEnd.To
 
-    member x.From with get() = vFrom
+    member x.From with get() = posFrom
 
-    member x.To with get() = vTo
+    member x.To with get() = posTo
 
-    member x.Direction with get() = direction
+    member x.Length with get() = length
 
-    member x.Zero with get() = _zero
+    member x.Key with get() = (direction, zero)
 
-    member x.Width with get() = fst vTo.Index - fst vFrom.Index
+    member x.StartPoint with get() = startPoint
 
-    member x.Height with get() = snd vTo.Index - snd vFrom.Index
+    member x.Rank with get() = rank
 
-    member x.Length with get() = _length
+    override x.ToString() = sprintf "(%i:%i)->(%i:%i)" (fst posFrom) (snd posFrom) (fst posTo) (snd posTo)
 
-    member x.DegreesOfFreedom with get() = _degreesOfFreedom
-
-    member x.RefreshDegreesOfFreedom() = 
-        let check (x, y) =
-            if map.ContainsKey(x, y) then 
-                if map.[(x, y)].IsEmpty() then 1 else 0
-            else 0
-        _degreesOfFreedom <-
+    member x.ResetRank (cells: Map<int, Map<int, Cell>>) = 
+        let add (pos: CellPos) dr dc = (fst pos + dr, snd pos + dc)
+        let candidates = 
             match direction with
-            | N -> 
-                if snd vFrom.Index < snd vTo.Index then
-                    check (fst vFrom.Index, snd vFrom.Index - 1) + check (fst vTo.Index, snd vTo.Index + 1)
-                else
-                    check (fst vTo.Index, snd vTo.Index - 1) + check (fst vFrom.Index, snd vFrom.Index + 1)
-            | NE -> 
-                if fst vFrom.Index < fst vTo.Index then
-                    check (fst vFrom.Index - 1, snd vFrom.Index + 1) + check (fst vTo.Index + 1, snd vTo.Index - 1)
-                else
-                    check (fst vTo.Index - 1, snd vTo.Index + 1) + check (fst vFrom.Index + 1, snd vFrom.Index - 1)
-            | E ->
-                if fst vFrom.Index < fst vTo.Index then
-                    check (fst vFrom.Index - 1, snd vFrom.Index) + check (fst vTo.Index + 1, snd vTo.Index)
-                else
-                    check (fst vTo.Index - 1, snd vTo.Index) + check (fst vFrom.Index + 1, snd vFrom.Index)
-            | SE ->
-                if fst vFrom.Index < fst vTo.Index then
-                    check (fst vFrom.Index - 1, snd vFrom.Index - 1) + check (fst vTo.Index + 1, snd vTo.Index + 1)
-                else
-                    check (fst vTo.Index - 1, snd vTo.Index - 1) + check (fst vFrom.Index + 1, snd vFrom.Index + 1)
+            | S -> [ add posFrom -1 0; add posTo 1 0 ]
+            | E -> [ add posFrom 0 -1; add posTo 0 1 ]
+            | SE -> [ add posFrom -1 -1; add posTo 1 1 ]
+            | SW -> [ add posFrom -1 1; add posTo 1 -1 ]
+        rank <- candidates |> List.filter (fun pos -> isValid pos && cells.[fst pos].[snd pos].IsEmpty) |> List.length

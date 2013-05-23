@@ -44,6 +44,7 @@
     <None Include="packages.config" />
     <Resource Include="ApplicationResources.xaml" />
     <Compile Include="RowLocationConverter.fs" />
+    <Compile Include="CellValueToStrConverter.fs" />
     <Resource Include="MainWindow.xaml" />
     <Compile Include="MainWindowViewModel.fs" />
     <Compile Include="BoardPanel.fs" />

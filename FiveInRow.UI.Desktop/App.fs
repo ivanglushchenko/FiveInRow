@@ -9,6 +9,30 @@ open FiveInRow.UI.Desktop
 
 type MainWindow = XAML<"MainWindow.xaml">
 
+//let b0 = Board.Create(9)
+//
+//let moves = [   (7, 8); (7, 7); 
+//                (8, 7); (9, 8); 
+//                (9, 7); (8, 6);
+//                (9, 6); (8, 8);
+//                (8, 9) ]
+//
+
+//
+//let t1 = exec b0 moves
+//t1.CalculateBestMove() |> ignore
+
+
+let moves = [ (1, 1); (1, 2); 
+              (2, 2); (2, 1); 
+              (3, 1); (3, 2); ]
+
+//let exec b (moves: (int * int) list) = moves |> List.fold (fun (acc: Board) m -> acc.Set m |> Option.get) b
+
+
+
+
+
 let window = 
     let window = MainWindow()
     window.Root
@@ -52,6 +76,6 @@ let setupWindow (window: Window) =
     window.MouseMove.Add (fun e -> eventProc.Moved(e.GetPosition(window)))
     window.ManipulationStarting.Add onManipulationStarting
     window
-
+    
 [<STAThread>]
 window |> setupWindow |> (new Application()).Run |> ignore
