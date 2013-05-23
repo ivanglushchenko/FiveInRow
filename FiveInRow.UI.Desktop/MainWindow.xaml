@@ -10,7 +10,8 @@
         <sys:Double x:Key="CellWidth">50</sys:Double>
         <local:RowLocationConverter x:Key="RowLocationConverter" />
         <local:CellValueToStrConverter x:Key="CellValueToStrConverter" />
-    </Window.Resources>
+        <local:FitnessVisibilityConverter x:Key="FitnessVisibilityConverter" />
+     </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -29,7 +30,7 @@
                     <Grid Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}">
                         <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
                         <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                        <!--<TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="Visible" Text="{Binding Fitness}" />-->
+                        <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="{Binding Fitness, Converter={StaticResource FitnessVisibilityConverter}}" Text="{Binding Fitness}" />
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
                             <Grid>
                                 <Line Stroke="Red" StrokeThickness="3" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
@@ -56,9 +57,6 @@
                             <Setter TargetName="pO" Property="Visibility" Value="Visible" />
                             <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
-                        <!--<DataTrigger Binding="{Binding Value}" Value="{x:Static f:CellValue.AI_UnderConsideration}">
-                            <Setter TargetName="txt" Property="Visibility" Value="Visible" />
-                        </DataTrigger>-->
                     </DataTemplate.Triggers>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
@@ -107,6 +105,7 @@
                 <StackPanel>
                     <StackPanel HorizontalAlignment="Center" Margin="10" DockPanel.Dock="Top">
                         <CheckBox Content="Use AI" IsChecked="{Binding UseAI}" />
+                        <Button Content="Restart" Margin="0,10,0,0" x:Name="btnRestart" />
                     </StackPanel>
 
                     <TextBlock Text="Rows"/>

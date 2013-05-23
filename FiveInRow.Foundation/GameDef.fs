@@ -17,7 +17,7 @@ type Fitness =
     | WinIn2Turns
     | Probability of float 
 
-// Util functions
+// Util functions and state
 let mutable boardDimension = 0
 
 let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd pos <= boardDimension

@@ -45,6 +45,7 @@
     <Resource Include="ApplicationResources.xaml" />
     <Compile Include="RowLocationConverter.fs" />
     <Compile Include="CellValueToStrConverter.fs" />
+    <Compile Include="FitnessVisibilityConverter.fs" />
     <Resource Include="MainWindow.xaml" />
     <Compile Include="MainWindowViewModel.fs" />
     <Compile Include="BoardPanel.fs" />

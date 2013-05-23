@@ -55,6 +55,11 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
 
         Board(next player, nextCells, nextRows)
 
+    let setAs (i, j) player =
+        match cells.[i].[j].Value with
+        | Occupied(_) -> None
+        | Empty       -> Some(extendWith player cells.[i].[j])
+
     let fitness = lazy (
         let calcFitness player = 
             let rowStats =
@@ -75,10 +80,40 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
             else Probability(rowStats |> Map.toSeq |> Seq.sumBy (fun (length, ranks) -> ranks |> Map.toSeq |> Seq.sumBy (fun (rank, count) -> (float count) * Math.Pow(2.0 * (float length), 1.0 + (float rank)))))
         Map.ofList [(Player1, calcFitness Player1); (Player2, calcFitness Player2)])
 
-    let setAs (i, j) player =
-        match cells.[i].[j].Value with
-        | Occupied(_) -> None
-        | Empty       -> Some(extendWith player cells.[i].[j])
+    let bestMoves = lazy (
+        let possibleMoves = 
+            seq { for cell in listOfCells.Value do
+                    if cell.IsEmpty then
+                        if neighboursOf cell |> Seq.exists (fun c -> c.IsEmpty = false) then
+                            yield cell }
+        let opponent = next currentPlayer
+        let getFitness pos player = (setAs pos player |> Option.get).Fitness |> Map.find player
+        let possibleBoards = possibleMoves |> Seq.map (fun c -> (c, getFitness c.Pos currentPlayer, getFitness c.Pos opponent))  |> Seq.toList
+
+        let myWins = possibleBoards |> List.filter (fun (v, f1, f2) -> match f1 with | Probability _ -> false | _ -> true) |> List.map (fun (v, f1, f2) -> f1) |> Set.ofList
+        let opWins = possibleBoards |> List.filter (fun (v, f1, f2) -> match f2 with | Probability _ -> false | _ -> true) |> List.map (fun (v, f1, f2) -> f2) |> Set.ofList
+
+        let noMyWin = myWins.Contains Win = false
+        let noOpWin = opWins.Contains Win = false
+        let noWin = noMyWin && noOpWin
+        let noMyWinIn1Turn = myWins.Contains WinIn1Turn = false
+        let noOpWinIn1Turn = opWins.Contains WinIn1Turn = false
+        let noWinIn1Turn = noMyWinIn1Turn && noOpWinIn1Turn
+        let noMyWinIn2Turns = myWins.Contains WinIn2Turns = false
+        let noOpWinIn2Turns = opWins.Contains WinIn2Turns = false
+        let noWinIn2Turns = noMyWinIn2Turns && noOpWinIn2Turns
+
+        let combine f1 f2 =
+            match (f1, f2) with
+            | (Win, _)                                                                     -> Double.PositiveInfinity
+            | (_, Win)                       when noMyWin                                  -> Double.PositiveInfinity
+            | (WinIn1Turn, _)                when noWin                                    -> Double.PositiveInfinity
+            | (_, WinIn1Turn)                when noWin && noMyWinIn1Turn                  -> Double.PositiveInfinity
+            | (WinIn2Turns, _)               when noWin && noWinIn1Turn                    -> Double.PositiveInfinity
+            | (_, WinIn2Turns)               when noWin && noWinIn1Turn && noMyWinIn2Turns -> Double.PositiveInfinity
+            | _ -> (match f1 with | Probability p -> p | _ -> 0.0) + (match f2 with | Probability p -> p | _ -> 0.0)
+
+        [ for (cell, f1, f2) in possibleBoards -> (cell.Pos, combine f1 f2) ] |> List.sortBy (fun (k, v) -> -v))
 
     static member Create dim =
         boardDimension <- dim
@@ -107,13 +142,4 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
 
     member x.Fitness with get() = fitness.Value
 
-    member x.CalculateBestMove() =
-        let possibleMoves = 
-            seq { for cell in x.Cells do
-                    if cell.IsEmpty then
-                        if neighboursOf cell |> Seq.exists (fun c -> c.IsEmpty = false) then
-                            yield cell }
-        let opponent = next currentPlayer
-        let possibleBoards = possibleMoves |> Seq.map (fun c -> (c, x.Set c.Pos, setAs c.Pos opponent))
-
-        []
+    member x.BestMoves with get() = bestMoves.Value

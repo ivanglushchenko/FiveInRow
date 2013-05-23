@@ -55,7 +55,10 @@ type BoardView(board: Board) =
         match boards.Head.Set (i, j) with
         | Some(board) -> 
             cells.[i - 1].[j - 1].Value <- Occupied(boards.Head.Player)
+            cells.[i - 1].[j - 1].Fitness <- 0.0
             boards <- board :: boards
+            for ((i, j), fitness) in board.BestMoves do
+                cells.[i - 1].[j - 1].Fitness <- fitness
             x.OnPropertyChanged(<@ x.Rows @>)
         | None -> ()
 

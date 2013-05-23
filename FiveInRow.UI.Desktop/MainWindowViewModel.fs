@@ -28,3 +28,6 @@ type MainWindowViewModel() =
     member x.UseAI
         with get() = boardView.UseAI
         and set(v) = boardView.UseAI <- v
+
+    member x.Restart() =
+        ()
