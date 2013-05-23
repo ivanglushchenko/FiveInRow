@@ -13,11 +13,16 @@ type MainWindowViewModel() =
     inherit ObservableObject()
 
     let mutable offset = Vector(0.0, 0.0)
+    let mutable useAI = false
+    let mutable showResults = false
     let boardView = BoardView.Create(51)
 
     member x.Board with get() = boardView
 
-    member x.Set index = boardView.Set index
+    member x.Set index = 
+        if x.IsCompleted = false then
+            boardView.Set index
+            if x.IsCompleted = false && useAI then boardView.MakeAIMove()
 
     member x.Offset
         with get() = offset
@@ -26,8 +31,18 @@ type MainWindowViewModel() =
             x.OnPropertyChanged(<@ x.Offset @>)
 
     member x.UseAI
-        with get() = boardView.UseAI
-        and set(v) = boardView.UseAI <- v
+        with get() = useAI
+        and set(v) = useAI <- v
 
-    member x.Restart() =
-        ()
+    member x.Restart() = boardView.Clear()
+
+    member x.IsCompleted with get() = boardView.Winner |> Option.isSome
+
+    member x.ShowResults
+        with get() = showResults
+        and set(v) =
+            if v <> showResults then
+                showResults <- v
+                if v then
+                    let winningRow = boardView.Rows |> Seq.filter (fun r -> r.Length >= 5)
+                    ()

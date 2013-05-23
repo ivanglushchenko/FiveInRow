@@ -2,34 +2,10 @@
 
 open GameDef
 
-type CellView(row: int, col: int) =
+type BoardView(startingBoard: Board) =
     inherit ObservableObject()
 
-    let mutable value = Empty
-    let mutable fitness = 0.0
-
-    member x.Row with get() = row
-
-    member x.Col with get() = col
-
-    member x.Value
-        with get() = value
-        and set(v) =
-            value <- v
-            x.OnPropertyChanged(<@ x.Value @>)
-
-    member x.Fitness
-        with get() = fitness
-        and set(v) =
-            fitness <- v
-            x.OnPropertyChanged(<@ x.Fitness @>)
-
-
-type BoardView(board: Board) =
-    inherit ObservableObject()
-
-    let mutable useAI = true
-    let mutable boards = [ board ]
+    let mutable boards = [ startingBoard ]
     let mutable moves = []
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
@@ -37,10 +13,6 @@ type BoardView(board: Board) =
         let board = Board.Create dim
         boardDimension <- dim
         BoardView(board)
-
-    member x.UseAI
-        with get() = useAI
-        and set(v) = useAI <- v
 
     member x.Cells = cells |> Array.collect (fun t -> t)
 
@@ -59,6 +31,22 @@ type BoardView(board: Board) =
             boards <- board :: boards
             for ((i, j), fitness) in board.BestMoves do
                 cells.[i - 1].[j - 1].Fitness <- fitness
-            x.OnPropertyChanged(<@ x.Rows @>)
+            x.OnPropertyChanged(<@ x.Rows @>)  
         | None -> ()
 
+    member x.MakeAIMove() =
+        if boards.Head.BestMoves.IsEmpty = false then x.Set (fst boards.Head.BestMoves.Head)
+
+    member x.Clear() =
+        boards <- [ startingBoard ]
+        for i in 1..boardDimension do
+            for j in 1..boardDimension do
+                cells.[i - 1].[j - 1].Value <- Empty
+                cells.[i - 1].[j - 1].Fitness <- 0.0
+        x.OnPropertyChanged(<@ x.Rows @>)
+
+    member x.Winner 
+        with get() = 
+            match boards.Head.Fitness |> Map.toList |> List.filter (fun (p, f) -> f = Win) |> List.map fst with
+            | hd :: tl -> Some(hd)
+            | [] -> None

@@ -48,10 +48,13 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
         let nextCells = Cell(cell.Pos, Occupied(player)) |> replaceCell
         let nextRows = rows |> Map.map (fun p value -> if p = player then merge value else value)
 
+        let affectedRowKeys = neighboursOf cell |> Seq.filter (fun c -> c.IsEmpty = false) |> Seq.map (fun c -> Row.Create cell.Pos c.Pos) |> Seq.map (fun r -> r.Key) |> Seq.toList
+
         for playerRows in nextRows do
-            for rowGroup in playerRows.Value do
-                for row in rowGroup.Value do
-                    row.ResetRank nextCells
+            for rowKey in affectedRowKeys do
+                if playerRows.Value.ContainsKey rowKey then
+                    for row in playerRows.Value.[rowKey] do
+                        row.ResetRank nextCells
 
         Board(next player, nextCells, nextRows)
 

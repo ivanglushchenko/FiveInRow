@@ -38,6 +38,7 @@
     <Compile Include="Cell.fs" />
     <Compile Include="Row.fs" />
     <Compile Include="Board.fs" />
+    <Compile Include="CellView.fs" />
     <Compile Include="BoardView.fs" />
   </ItemGroup>
   <ItemGroup>

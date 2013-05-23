@@ -100,7 +100,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
         
-        <Border Grid.Column="1" Background="LightGray" VerticalAlignment="Stretch">
+        <Border Grid.Column="1" Background="#afd0d0d0" VerticalAlignment="Stretch">
             <ScrollViewer>
                 <StackPanel>
                     <StackPanel HorizontalAlignment="Center" Margin="10" DockPanel.Dock="Top">
@@ -108,10 +108,12 @@
                         <Button Content="Restart" Margin="0,10,0,0" x:Name="btnRestart" />
                     </StackPanel>
 
-                    <TextBlock Text="Rows"/>
-                    <ItemsControl ItemsSource="{Binding Board.Rows}" />
-                
-                    <StackPanel Margin="0,20,0,0">
+                    <StackPanel Margin="10,20,0,0">
+                        <TextBlock Text="Rows"/>
+                        <ItemsControl ItemsSource="{Binding Board.Rows}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="10,20,0,0">
                         <TextBlock Text="Moves"/>
                         <ItemsControl ItemsSource="{Binding Board.Moves}" />
                     </StackPanel>

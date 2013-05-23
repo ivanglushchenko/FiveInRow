@@ -54,11 +54,12 @@ type Row(posFrom: CellPos, posTo: CellPos) =
     override x.ToString() = sprintf "(%i:%i)->(%i:%i)" (fst posFrom) (snd posFrom) (fst posTo) (snd posTo)
 
     member x.ResetRank (cells: Map<int, Map<int, Cell>>) = 
-        let add (pos: CellPos) dr dc = (fst pos + dr, snd pos + dc)
+        let inline add (pos: CellPos) dr dc = (fst pos + dr, snd pos + dc)
+        let inline check pos = if isValid pos && cells.[fst pos].[snd pos].IsEmpty then 1 else 0
         let candidates = 
             match direction with
-            | S -> [ add posFrom -1 0; add posTo 1 0 ]
-            | E -> [ add posFrom 0 -1; add posTo 0 1 ]
-            | SE -> [ add posFrom -1 -1; add posTo 1 1 ]
-            | SW -> [ add posFrom -1 1; add posTo 1 -1 ]
-        rank <- candidates |> List.filter (fun pos -> isValid pos && cells.[fst pos].[snd pos].IsEmpty) |> List.length
+            | S -> [| add posFrom -1 0; add posTo 1 0 |]
+            | E -> [| add posFrom 0 -1; add posTo 0 1 |]
+            | SE -> [| add posFrom -1 -1; add posTo 1 1 |]
+            | SW -> [| add posFrom -1 1; add posTo 1 -1 |]
+        rank <- check candidates.[0] + check candidates.[1]

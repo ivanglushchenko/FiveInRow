@@ -10,9 +10,9 @@ open FiveInRow.UI.Desktop
 type MainWindow = XAML<"MainWindow.xaml">
 
 //let t = System.Environment.TickCount
-//let b = FiveInRow.Foundation.BoardView.Create(19)
-//for i in 1..19 do
-//    for j in 1..19 do
+//let b = FiveInRow.Foundation.BoardView.Create(35)
+//for i in 1..35 do
+//    for j in 1..35 do
 //        b.Set (i, j)
 //let dt = System.Environment.TickCount - t
 //System.Diagnostics.Debug.Write(dt)
