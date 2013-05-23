@@ -5,6 +5,7 @@
     xmlns:local="using:FiveInRow.UI.Metro"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Controls="using:WinRTXamlToolkit.Controls"
     mc:Ignorable="d">
 
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
@@ -17,19 +18,34 @@
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel Orientation="Horizontal">
                 <StackPanel>
-                    <TextBlock Text="Your opponent:" Style="{StaticResource SubheaderTextStyle}"/>
-                    <RadioButton Content="Human vs Computer" IsChecked="{Binding OpponentAI, Mode=TwoWay}" GroupName="A" Margin="0,10,0,5"/>
-                    <RadioButton Content="Human vs Human" IsChecked="{Binding OpponentHuman, Mode=TwoWay}" GroupName="A" />
+                    <TextBlock Text="Your opponent:" Style="{StaticResource HeaderTextStyle}" FontSize="50"/>
+                    <RadioButton IsChecked="{Binding OpponentAI, Mode=TwoWay}" GroupName="A" Margin="0,20,0,0">
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Computer" Margin="10,-11,0,0"/>
+                    </RadioButton>
+                    <!--<RadioButton IsChecked="{Binding OpponentAI_Player2, Mode=TwoWay}" GroupName="A" Margin="0,10,0,0">
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Computer (you move second)" Margin="10,-11,0,0"/>
+                    </RadioButton>-->
+                    <RadioButton IsChecked="{Binding OpponentHuman, Mode=TwoWay}" GroupName="A" Margin="0,10,0,0">
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Human" Margin="10,-11,0,0"/>
+                    </RadioButton>
                 </StackPanel>
 
-                <StackPanel Margin="70,0,0,0">
-                    <TextBlock Text="Board size:" Style="{StaticResource SubheaderTextStyle}" />
-                    <RadioButton Content="19 x 19" IsChecked="{Binding BoardSize19, Mode=TwoWay}" GroupName="B" Margin="0,10,0,5"/>
-                    <RadioButton Content="51 x 51" IsChecked="{Binding BoardSize51, Mode=TwoWay}" GroupName="B"/>
+                <StackPanel Margin="120,0,0,0">
+                    <TextBlock Text="Board size:" Style="{StaticResource HeaderTextStyle}" FontSize="50"/>
+                    <RadioButton IsChecked="{Binding BoardSize19, Mode=TwoWay}" GroupName="B" Margin="0,20,0,0">
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="19 x 19" Margin="10,-11,0,0"/>
+                    </RadioButton>
+                    <RadioButton IsChecked="{Binding BoardSize51, Mode=TwoWay}" GroupName="B" Margin="0,10,0,0">
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="51 x 51" Margin="10,-11,0,0" />
+                    </RadioButton>
                 </StackPanel>
             </StackPanel>
 
-            <Button Content="Start >" HorizontalAlignment="Center" Margin="20" Padding="5" Click="Button_Click" />
+            <Controls:ImageButton HorizontalAlignment="Center" NormalStateImageUriSource="/Assets/right.png" PressedStateImageUriSource="/Assets/rightPressed.png" HoverStateImageUriSource="/Assets/rightPressed.png" Click="Button_Click" Margin="20" RenderTransformOrigin="0.5,0.5">
+                <Controls:ImageButton.RenderTransform>
+                    <RotateTransform Angle="9" />
+                </Controls:ImageButton.RenderTransform>
+            </Controls:ImageButton>
         </StackPanel>
     </Grid>
 </Page>

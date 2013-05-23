@@ -22,19 +22,32 @@ namespace FiveInRow.UI.Metro
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        #region .ctors
+
         public MainPage()
         {
             this.InitializeComponent();
         }
 
-        /// <summary>
-        /// Invoked when this page is about to be displayed in a Frame.
-        /// </summary>
-        /// <param name="e">Event data that describes how this page was reached.  The Parameter
-        /// property is typically used to configure the page.</param>
+        #endregion .ctors
+
+        #region Methods
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             DataContext = new MainPageViewModel((GameStartingParams)e.Parameter);
         }
+
+        private void OnGoBack(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainPageViewModel) ((MainPageViewModel)DataContext).GoToMainMenu();
+        }
+
+        private void OnRestart(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainPageViewModel) ((MainPageViewModel)DataContext).Restart();
+        }
+
+        #endregion Methods
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.UI;
 
 namespace FiveInRow.UI.Metro
 {
@@ -23,6 +24,7 @@ namespace FiveInRow.UI.Metro
         #region Properties
 
         public bool OpponentAI { get; set; }
+        public bool OpponentAI_Player2 { get; set; }
         public bool OpponentHuman { get; set; }
 
         public bool BoardSize19 { get; set; }

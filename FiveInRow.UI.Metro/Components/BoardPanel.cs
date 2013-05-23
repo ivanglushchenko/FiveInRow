@@ -48,6 +48,7 @@ namespace FiveInRow.UI.Metro.Components
 
             _owner = ItemsControl.GetItemsOwner(this);
             _vm = (MainPageViewModel)_owner.DataContext;
+            _vm.SetOffset(_offset);
 
             _owner.PointerPressed += owner_PointerPressed;
             _owner.PointerReleased += owner_PointerReleased;
@@ -63,6 +64,7 @@ namespace FiveInRow.UI.Metro.Components
         void owner_PointerReleased(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             _isCaptured = false;
+            ReleasePointerCapture(e.Pointer);
 
             if (_isDragging)_isDragging = false;
             else
@@ -81,6 +83,7 @@ namespace FiveInRow.UI.Metro.Components
                 var dy = p.Y - _lastPos.Y;
                 if (_isDragging || (dx * dx + dy * dy > 36))
                 {
+                    CapturePointer(e.Pointer);
                     _isDragging = true;
                     AddOffset(dx, dy);
                     _lastPos = p;
@@ -90,10 +93,11 @@ namespace FiveInRow.UI.Metro.Components
 
         private void AddOffset(double dx, double dy)
         {
-            _offset.X += dx;
-            _offset.Y += dy;
+            _offset.X = this.ActualWidth > 0 ? Math.Max(-0.5 * GameDef.boardDimension * _cellWidth, Math.Min(this.ActualWidth * 0.5, _offset.X + dx)) : _offset.X + dx;
+            _offset.Y = this.ActualHeight > 0 ? Math.Max(-0.5 * GameDef.boardDimension * _cellHeigth, Math.Min(this.ActualHeight * 0.5, _offset.Y + dy)) : _offset.Y + dy;
             _tTransform.X = _offset.X;
             _tTransform.Y = _offset.Y;
+            if (_vm != null) _vm.SetOffset(_offset);
         }
 
         protected override Size MeasureOverride(Size availableSize)

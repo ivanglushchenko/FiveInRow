@@ -1,0 +1,32 @@
+﻿<Page
+    x:Class="FiveInRow.UI.Metro.PrivacyPolicyPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:FiveInRow.UI.Metro"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="87"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Back button and page title -->
+        <Grid >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="backButton" Click="GoBack" IsEnabled="{Binding Frame.CanGoBack, ElementName=pageRoot}" Style="{StaticResource SettingsBackButtonStyle}" Margin="20" Padding="0"/>
+            <TextBlock x:Name="pageTitle" Grid.Column="1" Text="Privacy policy" IsHitTestVisible="false" Style="{StaticResource SubheaderTextStyle}" Foreground="White" Margin="0,0,0,10" Padding="0" VerticalAlignment="Center"/>
+        </Grid>
+        
+        <TextBlock Margin="36" Grid.Row="1" TextWrapping="Wrap" Style="{StaticResource ItemTextStyle}" Text="Five in a Row! application doesn't collect, store or share any personal data. At all. trust me.">
+
+        </TextBlock>
+
+    </Grid>
+</Page>
