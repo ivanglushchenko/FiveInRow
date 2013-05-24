@@ -23,18 +23,15 @@ type BoardView(startingBoard: Board) =
     member x.FiveInRows with get() = boards.Head.Rows |> Seq.filter (fun r -> r.Length >= 5)
 
     member x.Set (i, j) =
-        moves <- (i, j) :: moves
-        x.OnPropertyChanged(<@ x.Moves @>)
-
         match boards.Head.Set (i, j) with
         | Some(board) -> 
+            moves <- (i, j) :: moves
             cells.[i - 1].[j - 1].Value <- Occupied(boards.Head.Player)
             cells.[i - 1].[j - 1].Fitness <- 0.0
             boards <- board :: boards
             for ((i, j), fitness) in board.BestMoves do
                 cells.[i - 1].[j - 1].Fitness <- fitness
-            x.OnPropertyChanged(<@ x.Rows @>)
-            x.OnPropertyChanged(<@ x.FiveInRows @>)
+            x.Refresh()
         | None -> ()
 
     member x.MakeAIMove() =
@@ -42,15 +39,35 @@ type BoardView(startingBoard: Board) =
 
     member x.Clear() =
         boards <- [ startingBoard ]
+        moves <- []
         for i in 1..boardDimension do
             for j in 1..boardDimension do
                 cells.[i - 1].[j - 1].Value <- Empty
                 cells.[i - 1].[j - 1].Fitness <- 0.0
-        x.OnPropertyChanged(<@ x.Rows @>)
-        x.OnPropertyChanged(<@ x.FiveInRows @>)
+        x.Refresh()
 
     member x.Winner 
         with get() = 
             match boards.Head.Fitness |> Map.toList |> List.filter (fun (p, f) -> f = Win) |> List.map fst with
             | hd :: tl -> Some(hd)
             | [] -> None
+
+    member x.Undo() =
+        if boards.Head <> startingBoard then
+            boards <- boards.Tail
+            moves <- moves.Tail
+            for i in 1..boardDimension do
+                for j in 1..boardDimension do
+                    cells.[i - 1].[j - 1].Value <- Empty
+                    cells.[i - 1].[j - 1].Fitness <- 0.0
+            for c in boards.Head.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
+                cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
+            x.Refresh()
+
+    member x.NextTurn with get() = boards.Head.Player
+
+    member x.Refresh() =
+        x.OnPropertyChanged(<@ x.Moves @>)
+        x.OnPropertyChanged(<@ x.Rows @>)
+        x.OnPropertyChanged(<@ x.FiveInRows @>)
+        x.OnPropertyChanged(<@ x.NextTurn @>)

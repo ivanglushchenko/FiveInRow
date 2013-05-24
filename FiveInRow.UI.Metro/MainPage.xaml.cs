@@ -45,7 +45,13 @@ namespace FiveInRow.UI.Metro
 
         private void OnRestart(object sender, RoutedEventArgs e)
         {
+            ab.IsOpen = false;
             if (DataContext is MainPageViewModel) ((MainPageViewModel)DataContext).Restart();
+        }
+
+        private void OnUndo(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainPageViewModel) ((MainPageViewModel)DataContext).Undo();
         }
 
         #endregion Methods

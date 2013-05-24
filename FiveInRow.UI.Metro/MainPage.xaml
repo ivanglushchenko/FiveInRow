@@ -16,7 +16,7 @@
     </Page.Resources>
     
     <Page.BottomAppBar>
-        <AppBar>
+        <AppBar x:Name="ab">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100" />
@@ -30,7 +30,7 @@
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
                     <Button Style="{StaticResource FavoriteAppBarButtonStyle}" Click="OnRestart" />
-                    <!--<Button Style="{StaticResource UndoAppBarButtonStyle}" />-->
+                    <Button Style="{StaticResource UndoAppBarButtonStyle}" Click="OnUndo" />
                 </StackPanel>
             </Grid>
         </AppBar>

@@ -20,11 +20,11 @@
                 <StackPanel>
                     <TextBlock Text="Your opponent:" Style="{StaticResource HeaderTextStyle}" FontSize="50"/>
                     <RadioButton IsChecked="{Binding OpponentAI, Mode=TwoWay}" GroupName="A" Margin="0,20,0,0">
-                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Computer" Margin="10,-11,0,0"/>
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Computer (you move first)" Margin="10,-11,0,0"/>
                     </RadioButton>
-                    <!--<RadioButton IsChecked="{Binding OpponentAI_Player2, Mode=TwoWay}" GroupName="A" Margin="0,10,0,0">
+                    <RadioButton IsChecked="{Binding OpponentAI_Player2, Mode=TwoWay}" GroupName="A" Margin="0,10,0,0">
                         <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Computer (you move second)" Margin="10,-11,0,0"/>
-                    </RadioButton>-->
+                    </RadioButton>
                     <RadioButton IsChecked="{Binding OpponentHuman, Mode=TwoWay}" GroupName="A" Margin="0,10,0,0">
                         <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="Human" Margin="10,-11,0,0"/>
                     </RadioButton>
@@ -34,6 +34,9 @@
                     <TextBlock Text="Board size:" Style="{StaticResource HeaderTextStyle}" FontSize="50"/>
                     <RadioButton IsChecked="{Binding BoardSize19, Mode=TwoWay}" GroupName="B" Margin="0,20,0,0">
                         <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="19 x 19" Margin="10,-11,0,0"/>
+                    </RadioButton>
+                    <RadioButton IsChecked="{Binding BoardSize35, Mode=TwoWay}" GroupName="B" Margin="0,10,0,0">
+                        <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="35 x 35" Margin="10,-11,0,0" />
                     </RadioButton>
                     <RadioButton IsChecked="{Binding BoardSize51, Mode=TwoWay}" GroupName="B" Margin="0,10,0,0">
                         <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="51 x 51" Margin="10,-11,0,0" />

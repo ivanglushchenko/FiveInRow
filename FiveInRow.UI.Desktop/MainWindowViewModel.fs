@@ -46,3 +46,5 @@ type MainWindowViewModel() =
                 if v then
                     let winningRow = boardView.Rows |> Seq.filter (fun r -> r.Length >= 5)
                     ()
+
+    member x.MakeMove() = boardView.MakeAIMove()

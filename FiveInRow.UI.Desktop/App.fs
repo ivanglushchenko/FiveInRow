@@ -28,6 +28,7 @@ let createWindow =
     let window = MainWindow()
     let viewModel = new MainWindowViewModel()
     window.BtnRestart.Click.Add (fun _ -> viewModel.Restart())
+    window.BtnMakeMove.Click.Add (fun _ -> viewModel.MakeMove())
     window.Root.DataContext <- viewModel
     window.Root.RenderTransformOrigin <- Point(0.5, 0.5)
     window.Root

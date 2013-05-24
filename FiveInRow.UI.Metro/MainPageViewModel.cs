@@ -20,6 +20,7 @@ namespace FiveInRow.UI.Metro
         {
             _params = gameParams;
             Board = BoardView.Create(gameParams.BoardSize);
+            Start();
         }
 
         #endregion .ctors
@@ -28,6 +29,7 @@ namespace FiveInRow.UI.Metro
 
         private GameStartingParams _params;
         private Point _offset;
+        private BoardPanel _panel;
 
         #endregion Fields
 
@@ -79,6 +81,11 @@ namespace FiveInRow.UI.Metro
 
         #region Methods
 
+        public void SetPanel(BoardPanel panel)
+        {
+            _panel = panel;
+        }
+
         public async void Set(int row, int col)
         {
             if (Board.Winner != null) return;
@@ -101,6 +108,8 @@ namespace FiveInRow.UI.Metro
         {
             Board.Clear();
             WinningRow = null;
+            if (_panel != null) _panel.Centrify();
+            Start();
         }
 
         public void GoToMainMenu()
@@ -116,6 +125,29 @@ namespace FiveInRow.UI.Metro
         {
             _offset = offset;
             RefreshWinningRow();
+        }
+
+        public void Undo()
+        {
+            if (Board.Winner != null) return;
+
+            switch (_params.AILevel)
+            {
+                case AILevel.Easy_P1:
+                    if (Board.Moves.Length >= 3)
+                    {
+                        Board.Undo();
+                        Board.Undo();
+                    }
+                    break;
+                case AILevel.Easy_P2:
+                    Board.Undo();
+                    Board.Undo();
+                    break;
+                case AILevel.Human:
+                    Board.Undo();
+                    break;
+            }
         }
 
         private void RefreshWinningRow()
@@ -135,6 +167,14 @@ namespace FiveInRow.UI.Metro
                     X2 = (row.To.Item2 - 0.5) * 60.0 + _offset.X,
                     Y2 = (row.To.Item1 - 0.5) * 60.0 + _offset.Y
                 };
+            }
+        }
+
+        private void Start()
+        {
+            if (_params.AILevel == AILevel.Easy_P1)
+            {
+                Board.MakeAIMove();
             }
         }
 

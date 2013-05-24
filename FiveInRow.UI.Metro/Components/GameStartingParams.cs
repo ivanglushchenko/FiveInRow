@@ -19,6 +19,7 @@ namespace FiveInRow.UI.Metro.Components
     public enum AILevel
     {
         Human,
-        Easy
+        Easy_P2,
+        Easy_P1
     }
 }

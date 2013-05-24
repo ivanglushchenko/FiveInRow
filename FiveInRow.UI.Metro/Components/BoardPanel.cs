@@ -42,12 +42,25 @@ namespace FiveInRow.UI.Metro.Components
 
         #region Methods
 
+        public void Centrify()
+        {
+            Centrify(new Size(ActualWidth, ActualHeight));
+        }
+
+        private void Centrify(Size finalSize)
+        {
+            var dx = (finalSize.Width - GameDef.boardDimension * _cellWidth) / 2.0;
+            var dy = (finalSize.Height - GameDef.boardDimension * _cellHeigth) / 2.0;
+            AddOffset(dx - _offset.X, dy - _offset.Y);
+        }
+
         void BoardPanel_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             Loaded -= BoardPanel_Loaded;
 
             _owner = ItemsControl.GetItemsOwner(this);
             _vm = (MainPageViewModel)_owner.DataContext;
+            _vm.SetPanel(this);
             _vm.SetOffset(_offset);
 
             _owner.PointerPressed += owner_PointerPressed;
@@ -125,9 +138,7 @@ namespace FiveInRow.UI.Metro.Components
                 {
                     _isPositioned = true;
 
-                    var dx = (finalSize.Width - GameDef.boardDimension * _cellWidth) / 2.0;
-                    var dy = (finalSize.Height - GameDef.boardDimension * _cellHeigth) / 2.0;
-                    AddOffset(dx, dy);
+                    Centrify(finalSize);
                 }
             }
 

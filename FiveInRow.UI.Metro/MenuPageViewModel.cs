@@ -28,6 +28,7 @@ namespace FiveInRow.UI.Metro
         public bool OpponentHuman { get; set; }
 
         public bool BoardSize19 { get; set; }
+        public bool BoardSize35 { get; set; }
         public bool BoardSize51 { get; set; }
 
         #endregion Properties
@@ -38,8 +39,8 @@ namespace FiveInRow.UI.Metro
         {
             return new GameStartingParams()
             {
-                BoardSize = BoardSize19 ? 19 : 51,
-                AILevel = OpponentAI ? AILevel.Easy : AILevel.Human
+                BoardSize = BoardSize19 ? 19 : (BoardSize35 ? 35 : 51),
+                AILevel = OpponentAI ? AILevel.Easy_P2 : (OpponentAI_Player2 ? AILevel.Easy_P1 : AILevel.Human)
             };
         }
 

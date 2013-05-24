@@ -21,12 +21,18 @@ namespace FiveInRow.UI.Metro
     /// </summary>
     public sealed partial class MenuPage : Page
     {
+        #region .ctors
+
         public MenuPage()
         {
             this.InitializeComponent();
 
             DataContext = new MenuPageViewModel();
         }
+
+        #endregion .ctors
+
+        #region Methods
 
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
@@ -41,5 +47,7 @@ namespace FiveInRow.UI.Metro
         {
             Frame.Navigate(typeof(MainPage), ((MenuPageViewModel)DataContext).ToGameParams());
         }
+
+        #endregion Methods
     }
 }
