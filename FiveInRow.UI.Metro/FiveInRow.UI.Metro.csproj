@@ -114,8 +114,10 @@
     </Compile>
     <Compile Include="Components\BoardPanel.cs" />
     <Compile Include="Components\GameStartingParams.cs" />
+    <Compile Include="Converters\CellBkgConverter.cs" />
     <Compile Include="Converters\CellValue2VisibilityConverter.cs" />
-    <Compile Include="Converters\NotBoolToVisibilityConverter.cs" />
+    <Compile Include="Converters\DiffColorConverter.cs" />
+    <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>

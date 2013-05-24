@@ -10,7 +10,8 @@
     mc:Ignorable="d">
 
     <Page.Resources>
-        <conv:NotBoolToVisibilityConverter x:Key="NotBoolToVisibilityConverter" />
+        <conv:DiffColorConverter x:Key="DiffColorConverter" />
+        <conv:NotConverter x:Key="NotConverter" />
     </Page.Resources>
     
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
@@ -142,27 +143,24 @@
             </Rectangle>
         </Grid>
 
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.Row="2" Orientation="Horizontal" Margin="0,50,0,0" Visibility="{Binding OpponentHuman, Converter={StaticResource NotBoolToVisibilityConverter}}" RenderTransformOrigin="0.5,0.5">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.Row="2" Orientation="Horizontal" Margin="0,50,0,0" RenderTransformOrigin="0.5,0.5">
             <StackPanel.RenderTransform>
                 <RotateTransform Angle="-4" />
             </StackPanel.RenderTransform>
-            
-            <TextBlock Text="Difficulty:" Style="{StaticResource HeaderTextStyle}" FontSize="50"/>
-            <RadioButton IsChecked="{Binding DiffEasy, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0">
+
+            <TextBlock Text="Difficulty:" Style="{StaticResource HeaderTextStyle}" FontSize="50" Foreground="{Binding OpponentHuman, Converter={StaticResource DiffColorConverter}}"/>
+            <RadioButton IsChecked="{Binding DiffEasy, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0" IsEnabled="{Binding OpponentHuman, Converter={StaticResource NotConverter}}">
                 <RadioButton.RenderTransform>
                     <RotateTransform Angle="2" />
                 </RadioButton.RenderTransform>
-                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="easy" Margin="10,-11,0,0" />
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="easy" Margin="10,-11,0,0" Foreground="{Binding OpponentHuman, Converter={StaticResource DiffColorConverter}}"/>
             </RadioButton>
-            <RadioButton IsChecked="{Binding DiffHard, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0">
+            <RadioButton IsChecked="{Binding DiffHard, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0" IsEnabled="{Binding OpponentHuman, Converter={StaticResource NotConverter}}">
                 <RadioButton.RenderTransform>
                     <RotateTransform Angle="-3" />
                 </RadioButton.RenderTransform>
-                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="hard" Margin="10,-11,0,0" />
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="hard" Margin="10,-11,0,0" Foreground="{Binding OpponentHuman, Converter={StaticResource DiffColorConverter}}"/>
             </RadioButton>
-            <!--<RadioButton IsChecked="{Binding BoardSize35, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0">
-                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="experimental" Margin="10,-11,0,0" />
-            </RadioButton>-->
         </StackPanel>
 
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="3" Grid.Row="3">
@@ -172,7 +170,5 @@
                 </Controls:ImageButton.RenderTransform>
             </Controls:ImageButton>
         </StackPanel>
-        
-        
     </Grid>
 </Page>
