@@ -17,6 +17,7 @@ namespace FiveInRow.UI.Metro
         {
             OpponentAI = true;
             BoardSize19 = true;
+            DiffEasy = true;
         }
 
         #endregion .ctors
@@ -25,11 +26,32 @@ namespace FiveInRow.UI.Metro
 
         public bool OpponentAI { get; set; }
         public bool OpponentAI_Player2 { get; set; }
-        public bool OpponentHuman { get; set; }
+
+        /// <summary>
+        /// Gets/sets OpponentHuman.
+        /// </summary>
+        public bool OpponentHuman
+        {
+            [System.Diagnostics.DebuggerStepThrough]
+            get { return p_OpponentHuman; }
+            [System.Diagnostics.DebuggerStepThrough]
+            set
+            {
+                if (p_OpponentHuman != value)
+                {
+                    p_OpponentHuman = value;
+                    OnPropertyChanged("OpponentHuman");
+                }
+            }
+        }
+        private bool p_OpponentHuman;
 
         public bool BoardSize19 { get; set; }
         public bool BoardSize35 { get; set; }
         public bool BoardSize51 { get; set; }
+
+        public bool DiffEasy { get; set; }
+        public bool DiffHard { get; set; }
 
         #endregion Properties
 
@@ -40,7 +62,8 @@ namespace FiveInRow.UI.Metro
             return new GameStartingParams()
             {
                 BoardSize = BoardSize19 ? 19 : (BoardSize35 ? 35 : 51),
-                AILevel = OpponentAI ? AILevel.Easy_P2 : (OpponentAI_Player2 ? AILevel.Easy_P1 : AILevel.Human)
+                Opponent = OpponentAI ? OpponentType.Easy_P2 : (OpponentAI_Player2 ? OpponentType.Easy_P1 : OpponentType.Human),
+                Difficulty = DiffEasy ? GameDef.Difficulty.Easy : GameDef.Difficulty.Medium
             };
         }
 

@@ -7,6 +7,7 @@ open System.ComponentModel
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 
+open FiveInRow.Foundation.GameDef
 open FiveInRow.Foundation
 
 type MainWindowViewModel() = 
@@ -15,7 +16,7 @@ type MainWindowViewModel() =
     let mutable offset = Vector(0.0, 0.0)
     let mutable useAI = false
     let mutable showResults = false
-    let boardView = BoardView.Create(51)
+    let boardView = BoardView.Create(GameSettings(51, Easy))
 
     member x.Board with get() = boardView
 

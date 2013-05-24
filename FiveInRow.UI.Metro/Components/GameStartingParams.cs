@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FiveInRow.Foundation;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,17 +7,16 @@ using System.Threading.Tasks;
 
 namespace FiveInRow.UI.Metro.Components
 {
-    public class GameStartingParams
+    public class GameStartingParams : GameSettings
     {
         #region Properties
 
-        public AILevel AILevel { get; set; }
-        public int BoardSize { get; set; }
+        public OpponentType Opponent { get; set; }
 
         #endregion Properties
     }
 
-    public enum AILevel
+    public enum OpponentType
     {
         Human,
         Easy_P2,

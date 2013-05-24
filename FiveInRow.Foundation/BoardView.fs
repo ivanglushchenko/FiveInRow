@@ -9,9 +9,10 @@ type BoardView(startingBoard: Board) =
     let mutable moves = []
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
-    static member Create dim =
-        let board = Board.Create dim
-        boardDimension <- dim
+    static member Create (settings: GameSettings) =
+        let board = Board.Create settings.BoardSize
+        boardDimension <- settings.BoardSize
+        difficulty <- settings.Difficulty
         BoardView(board)
 
     member x.Cells = cells |> Array.collect (fun t -> t)

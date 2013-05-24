@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="ObservableObject.fs" />
     <Compile Include="GameDef.fs" />
+    <Compile Include="GameSettings.fs" />
     <Compile Include="Cell.fs" />
     <Compile Include="Row.fs" />
     <Compile Include="Board.fs" />

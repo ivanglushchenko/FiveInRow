@@ -64,16 +64,19 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
         | Empty       -> Some(extendWith player cells.[i].[j])
 
     let fitness = lazy (
-//        let inline score length rank =
-//            match length, rank with
-//            | l, _ when l >= 5 -> Int32.MaxValue |> float
-//            | 4, 2 -> 1000000.0
-//            | 4, 1 -> 100.0
-//            | 4, 0 -> 1.0
-//            | 3, 2 -> 1000.0
-//            | 3, 1 -> 10.0
-//            | 3, 0 -> 1.0
-//            | _ -> rank * rank |> float
+        let inline score length rank =
+            match difficulty with
+            | Easy -> Math.Pow(2.0 * (float length), 1.0 + (float rank))
+            | Medium ->
+                match length, rank with
+                | l, _ when l >= 5 -> Int32.MaxValue |> float
+                | 4, 2 -> 1000000.0
+                | 4, 1 -> 100.0
+                | 4, 0 -> 1.0
+                | 3, 2 -> 10000.0
+                | 3, 1 -> 10.0
+                | 3, 0 -> 1.0
+                | _ -> rank * rank |> float
 
         let calcFitness player = 
             let rowStats =
@@ -91,8 +94,7 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
             else if numOfRows 3 2 >= 2 then WinIn2Turns
             else if numOfRows 3 2 >= 1 && numOfRows 4 1 >= 1 then WinIn2Turns
             else 
-                let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * Math.Pow(2.0 * (float (length * length)), 1.0 + (float rank))) |> Array.sum
-                //let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
+                let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
                 Probability(rowStats |> Array.mapi sumRanks |> Array.sum)
         Map.ofList [(Player1, calcFitness Player1); (Player2, calcFitness Player2)])
 
@@ -127,7 +129,10 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
             | (_, WinIn1Turn)                when noWin && noMyWinIn1Turn                  -> Double.PositiveInfinity
             | (WinIn2Turns, _)               when noWin && noWinIn1Turn                    -> Double.PositiveInfinity
             | (_, WinIn2Turns)               when noWin && noWinIn1Turn && noMyWinIn2Turns -> Double.PositiveInfinity
-            | _ -> (match f1 with | Probability p -> p | _ -> 0.0) + (match f2 with | Probability p -> p | _ -> 0.0)
+            | _ ->
+                match difficulty with
+                | Easy -> (match f1 with | Probability p -> p | _ -> 0.0) + (match f2 with | Probability p -> p | _ -> 0.0)
+                | Medium -> (match f1 with | Probability p -> p | _ -> 0.0) + (match f2 with | Probability p -> p / 2.0 | _ -> 0.0)
 
         if possibleBoards.IsEmpty then
             let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)

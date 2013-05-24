@@ -19,7 +19,7 @@ namespace FiveInRow.UI.Metro
         public MainPageViewModel(GameStartingParams gameParams)
         {
             _params = gameParams;
-            Board = BoardView.Create(gameParams.BoardSize);
+            Board = BoardView.Create(gameParams);
             Start();
         }
 
@@ -91,7 +91,7 @@ namespace FiveInRow.UI.Metro
             if (Board.Winner != null) return;
 
             Board.Set(row, col);
-            if (Board.Winner == null && _params.AILevel != AILevel.Human) Board.MakeAIMove();
+            if (Board.Winner == null && _params.Opponent != OpponentType.Human) Board.MakeAIMove();
             if (Board.Winner != null)
             {
                 RefreshWinningRow();
@@ -131,20 +131,20 @@ namespace FiveInRow.UI.Metro
         {
             if (Board.Winner != null) return;
 
-            switch (_params.AILevel)
+            switch (_params.Opponent)
             {
-                case AILevel.Easy_P1:
+                case OpponentType.Easy_P1:
                     if (Board.Moves.Length >= 3)
                     {
                         Board.Undo();
                         Board.Undo();
                     }
                     break;
-                case AILevel.Easy_P2:
+                case OpponentType.Easy_P2:
                     Board.Undo();
                     Board.Undo();
                     break;
-                case AILevel.Human:
+                case OpponentType.Human:
                     Board.Undo();
                     break;
             }
@@ -172,7 +172,7 @@ namespace FiveInRow.UI.Metro
 
         private void Start()
         {
-            if (_params.AILevel == AILevel.Easy_P1)
+            if (_params.Opponent == OpponentType.Easy_P1)
             {
                 Board.MakeAIMove();
             }
