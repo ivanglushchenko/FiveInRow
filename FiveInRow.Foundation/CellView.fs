@@ -7,6 +7,7 @@ type CellView(row: int, col: int) =
 
     let mutable value = Empty
     let mutable fitness = 0.0
+    let mutable isLast = false
 
     member x.Row with get() = row
 
@@ -25,3 +26,10 @@ type CellView(row: int, col: int) =
             if v <> fitness then
                 fitness <- v
                 x.OnPropertyChanged(<@ x.Fitness @>)
+
+    member x.IsLast
+        with get() = isLast
+        and set(v) =
+            if v <> isLast then
+                isLast <- v
+                x.OnPropertyChanged(<@ x.IsLast @>)

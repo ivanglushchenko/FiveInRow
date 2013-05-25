@@ -9,6 +9,13 @@ type BoardView(startingBoard: Board) =
     let mutable moves = []
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
+    let clearBoard() =
+        for i in 1..boardDimension do
+            for j in 1..boardDimension do
+                cells.[i - 1].[j - 1].Value <- Empty
+                cells.[i - 1].[j - 1].Fitness <- 0.0
+                cells.[i - 1].[j - 1].IsLast <- false
+
     do
         for c in startingBoard.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
             cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
@@ -37,9 +44,11 @@ type BoardView(startingBoard: Board) =
     member x.Set (i, j) =
         match boards.Head.Set (i, j) with
         | Some(board) -> 
+            if moves.IsEmpty = false then cells.[fst moves.Head - 1].[snd moves.Head - 1].IsLast <- false
             moves <- (i, j) :: moves
             cells.[i - 1].[j - 1].Value <- Occupied(boards.Head.Player)
             cells.[i - 1].[j - 1].Fitness <- 0.0
+            cells.[i - 1].[j - 1].IsLast <- true
             boards <- board :: boards
             for ((i, j), fitness) in board.BestMoves do
                 cells.[i - 1].[j - 1].Fitness <- fitness
@@ -52,10 +61,7 @@ type BoardView(startingBoard: Board) =
     member x.Clear() =
         boards <- [ startingBoard ]
         moves <- []
-        for i in 1..boardDimension do
-            for j in 1..boardDimension do
-                cells.[i - 1].[j - 1].Value <- Empty
-                cells.[i - 1].[j - 1].Fitness <- 0.0
+        clearBoard()
         x.Refresh()
 
     member x.Winner 
@@ -68,10 +74,7 @@ type BoardView(startingBoard: Board) =
         if boards.Head <> startingBoard then
             boards <- boards.Tail
             moves <- moves.Tail
-            for i in 1..boardDimension do
-                for j in 1..boardDimension do
-                    cells.[i - 1].[j - 1].Value <- Empty
-                    cells.[i - 1].[j - 1].Fitness <- 0.0
+            clearBoard()
             for c in boards.Head.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
                 cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
             x.Refresh()

@@ -14,6 +14,7 @@
     <Page.Resources>
         <conv:CellValue2VisibilityConverter x:Key="CP2VisibilityConverter" />
         <conv:CellBkgConverter x:Key="CellBkgConverter" />
+        <conv:TrueToVisibilityConverter x:Key="TrueToVisibilityConverter" />
     </Page.Resources>
     
     <Page.BottomAppBar>
@@ -58,15 +59,12 @@
                 <DataTemplate>
                     <Grid Width="60" Height="60">
                         <Rectangle Stroke="{Binding Converter={StaticResource CellBkgConverter}}" StrokeThickness="1" StrokeDashArray="8 10" Fill="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,-1,-1" />
-                        <Viewbox StretchDirection="DownOnly" Margin="7,7,5,5" x:Name="pX" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=X}">
-                            <Grid>
-                                <Line Stroke="White" StrokeThickness="9" X1="0" Y1="0" X2="60" Y2="60" />
-                                <Line Stroke="White" StrokeThickness="9" X1="60" Y1="0" X2="0" Y2="60" />
-                            </Grid>
-                        </Viewbox>
-                        <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}">
-                            <Ellipse Stroke="#FF00b000" StrokeThickness="9" Width="60" Height="60" />
-                        </Viewbox>
+                        <Grid Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=X}">
+                            <Line Stroke="White" StrokeThickness="9" X1="9" Y1="9" X2="51" Y2="51" />
+                            <Line Stroke="White" StrokeThickness="9" X1="51" Y1="9" X2="9" Y2="51" />
+                        </Grid>
+                        <Ellipse Stroke="#FF00b000" StrokeThickness="7" Width="50" Height="50" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}" />
+                        <Ellipse Fill="Red" Width="9" Height="9" Margin="2" Visibility="{Binding IsLast, Converter={StaticResource TrueToVisibilityConverter}}" HorizontalAlignment="Right" VerticalAlignment="Top" />
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
