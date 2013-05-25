@@ -422,6 +422,12 @@
         <Setter Property="AutomationProperties.Name" Value="Save moves"/>
         <Setter Property="Content" Value="&#xE159;"/>
     </Style>
+
+    <Style x:Key="GoAppBarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource AppBarButtonStyle}">
+        <Setter Property="AutomationProperties.AutomationId" Value="GoAppBarButton"/>
+        <Setter Property="AutomationProperties.Name" Value="Highlight last move"/>
+        <Setter Property="Content" Value="&#xE143;"/>
+    </Style>
     
     <!--
         BackButtonStyle is used to style a Button for use in the title area of a page.  Margins appropriate for

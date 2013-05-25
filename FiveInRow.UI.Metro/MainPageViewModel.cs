@@ -91,17 +91,19 @@ namespace FiveInRow.UI.Metro
         {
             if (Board.Winner != null) return;
 
-            Board.Set(row, col);
-            if (Board.Winner == null && _params.Opponent != OpponentType.Human) Board.MakeAIMove();
-            if (Board.Winner != null)
+            if (Board.Set(row, col))
             {
-                RefreshWinningRow();
+                if (Board.Winner == null && _params.Opponent != OpponentType.Human) Board.MakeAIMove();
+                if (Board.Winner != null)
+                {
+                    RefreshWinningRow();
 
-                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
-                dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
-                dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
-                dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));
-                await dialog.ShowAsync();
+                    var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
+                    dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
+                    dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
+                    dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));
+                    await dialog.ShowAsync();
+                }
             }
         }
 

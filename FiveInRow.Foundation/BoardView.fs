@@ -53,10 +53,11 @@ type BoardView(startingBoard: Board) =
             for ((i, j), fitness) in board.BestMoves do
                 cells.[i - 1].[j - 1].Fitness <- fitness
             x.Refresh()
-        | None -> ()
+            true
+        | None -> false
 
     member x.MakeAIMove() =
-        if boards.Head.BestMoves.IsEmpty = false then x.Set (fst boards.Head.BestMoves.Head)
+        if boards.Head.BestMoves.IsEmpty = false then x.Set (fst boards.Head.BestMoves.Head) else false
 
     member x.Clear() =
         boards <- [ startingBoard ]

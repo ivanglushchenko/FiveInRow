@@ -60,5 +60,10 @@ namespace FiveInRow.UI.Metro
         }
 
         #endregion Methods
+
+        private void OnCellLoaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

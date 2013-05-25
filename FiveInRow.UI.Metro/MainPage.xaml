@@ -9,6 +9,7 @@
     xmlns:conv="using:FiveInRow.UI.Metro.Converters"
     xmlns:f="using:FiveInRow.Foundation"
     xmlns:sys="using:System"
+    xmlns:Controls="using:WinRTXamlToolkit.Controls"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -33,6 +34,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
                     <Button Style="{StaticResource FavoriteAppBarButtonStyle}" Click="OnRestart" />
                     <Button Style="{StaticResource UndoAppBarButtonStyle}" Click="OnUndo" />
+                    <Button Style="{StaticResource GoAppBarButtonStyle}" />
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
@@ -64,7 +66,8 @@
                             <Line Stroke="White" StrokeThickness="9" X1="51" Y1="9" X2="9" Y2="51" />
                         </Grid>
                         <Ellipse Stroke="#FF00b000" StrokeThickness="7" Width="50" Height="50" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}" />
-                        <Ellipse Fill="Red" Width="9" Height="9" Margin="2" Visibility="{Binding IsLast, Converter={StaticResource TrueToVisibilityConverter}}" HorizontalAlignment="Right" VerticalAlignment="Top" />
+
+                        <TextBlock Text="&#xE10B;" FontFamily="Segoe UI Symbol" Margin="0,-1,-1,0" Foreground="Yellow" Visibility="{Binding IsLast, Converter={StaticResource TrueToVisibilityConverter}}" HorizontalAlignment="Right" VerticalAlignment="Top"/>
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
