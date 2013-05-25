@@ -40,7 +40,11 @@ local.properties
 *.suo
 *.user
 *.sln.docstates
+*.pfx
+Package.appxmanifest
+Package.StoreAssociation.xml
 
+AppPackages/
 # Build results
 
 [Dd]ebug/

@@ -35,7 +35,7 @@
                     <Button Style="{StaticResource UndoAppBarButtonStyle}" Click="OnUndo" />
                 </StackPanel>
                 
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
                     <Button Style="{StaticResource SaveLocalAppBarButtonStyle}" Click="OnPersistMoves" />
                 </StackPanel>
             </Grid>
