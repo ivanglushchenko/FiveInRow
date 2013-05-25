@@ -26,6 +26,11 @@ type Row(posFrom: CellPos, posTo: CellPos) =
         match direction with
         | E -> snd posFrom
         | _ -> fst posFrom
+
+    let endPoint =
+        match direction with
+        | E -> snd posTo
+        | _ -> fst posTo
                 
     let mutable rank = 0
 
@@ -48,6 +53,8 @@ type Row(posFrom: CellPos, posTo: CellPos) =
     member x.Key with get() = (direction, zero)
 
     member x.StartPoint with get() = startPoint
+
+    member x.EndPoint with get() = endPoint
 
     member x.Rank with get() = rank
 

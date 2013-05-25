@@ -37,6 +37,7 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
                     match rows with
                     | hd :: nk :: tl ->
                         if neighbours hd.To nk.From then Row.Merge hd nk :: tl |> loop
+                        else if hd.EndPoint > nk.EndPoint then hd :: tl |> loop
                         else hd :: loop (nk :: tl)
                     | _ -> rows
                 let mergedRows = row :: map.[row.Key] |> List.sortBy (fun r -> r.StartPoint) |> loop

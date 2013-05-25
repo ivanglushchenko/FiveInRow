@@ -6,6 +6,7 @@ open System.Windows.Media
 open System.Windows.Controls
 open FSharpx
 open FiveInRow.UI.Desktop
+open FiveInRow.Foundation
 
 type MainWindow = XAML<"MainWindow.xaml">
 
@@ -17,12 +18,6 @@ type MainWindow = XAML<"MainWindow.xaml">
 //let dt = System.Environment.TickCount - t
 //System.Diagnostics.Debug.Write(dt)
 //printfn ""
-
-//let b0 = Board.Create(9)
-//let moves = [ (1, 1); (1, 2); 
-//              (2, 2); (2, 1); 
-//              (3, 1); (3, 2); ]
-//let exec b (moves: (int * int) list) = moves |> List.fold (fun (acc: Board) m -> acc.Set m |> Option.get) b
 
 let createWindow =
     let window = MainWindow()

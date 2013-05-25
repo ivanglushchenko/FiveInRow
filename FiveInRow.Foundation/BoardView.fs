@@ -9,11 +9,22 @@ type BoardView(startingBoard: Board) =
     let mutable moves = []
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
+    do
+        for c in startingBoard.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
+            cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
+
     static member Create (settings: GameSettings) =
         let board = Board.Create settings.BoardSize
         boardDimension <- settings.BoardSize
         difficulty <- settings.Difficulty
         BoardView(board)
+
+    static member CreateFrom (settings: GameSettings, moves) =
+        let exec (moves: (int * int) list) b = moves |> List.fold (fun (acc: Board) m -> acc.Set m |> Option.get) b
+        let board = Board.Create settings.BoardSize
+        boardDimension <- settings.BoardSize
+        difficulty <- settings.Difficulty
+        BoardView(board |> exec moves)
 
     member x.Cells = cells |> Array.collect (fun t -> t)
 
@@ -66,6 +77,8 @@ type BoardView(startingBoard: Board) =
             x.Refresh()
 
     member x.NextTurn with get() = boards.Head.Player
+
+    member x.BestMove with get() = fst boards.Head.BestMoves.Head
 
     member x.Refresh() =
         x.OnPropertyChanged(<@ x.Moves @>)

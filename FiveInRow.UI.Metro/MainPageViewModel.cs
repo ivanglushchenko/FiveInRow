@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
@@ -147,6 +148,23 @@ namespace FiveInRow.UI.Metro
                 case OpponentType.Human:
                     Board.Undo();
                     break;
+            }
+        }
+
+        public void PersistMoves()
+        {
+            var moves = string.Join("; ", Board.Moves.Reverse().Select(t => string.Format("({0}, {1})", t.Item1, t.Item2)).ToArray());
+            if (!string.IsNullOrWhiteSpace(moves))
+            {
+                try
+                {
+                    var dp = new DataPackage();
+                    dp.SetText(moves);
+                    Clipboard.SetContent(dp);
+                }
+                catch
+                {
+                }
             }
         }
 

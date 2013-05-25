@@ -33,6 +33,10 @@
                     <Button Style="{StaticResource FavoriteAppBarButtonStyle}" Click="OnRestart" />
                     <Button Style="{StaticResource UndoAppBarButtonStyle}" Click="OnUndo" />
                 </StackPanel>
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Style="{StaticResource SaveLocalAppBarButtonStyle}" Click="OnPersistMoves" />
+                </StackPanel>
             </Grid>
         </AppBar>
     </Page.BottomAppBar>

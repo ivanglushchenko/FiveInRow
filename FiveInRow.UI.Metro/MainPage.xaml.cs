@@ -54,6 +54,11 @@ namespace FiveInRow.UI.Metro
             if (DataContext is MainPageViewModel) ((MainPageViewModel)DataContext).Undo();
         }
 
+        private void OnPersistMoves(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainPageViewModel) ((MainPageViewModel)DataContext).PersistMoves();
+        }
+
         #endregion Methods
     }
 }

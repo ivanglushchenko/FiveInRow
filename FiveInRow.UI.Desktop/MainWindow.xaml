@@ -34,13 +34,18 @@
                         <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="{Binding Fitness, Converter={StaticResource FitnessVisibilityConverter}}" Text="{Binding Fitness}" />
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
                             <Grid>
-                                <Line Stroke="Red" StrokeThickness="3" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
-                                <Line Stroke="Red" StrokeThickness="3" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
+                                <Line Stroke="Red" StrokeThickness="8" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
+                                <Line Stroke="Red" StrokeThickness="8" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
                             </Grid>
                         </Viewbox>
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="Collapsed">
-                            <Ellipse Stroke="Blue" StrokeThickness="3" Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}" />
+                            <Ellipse Stroke="Blue" StrokeThickness="8" Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}" />
                         </Viewbox>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                            <TextBlock Text="{Binding Row}" FontSize="8"/>
+                            <TextBlock Text=":" FontSize="6"/>
+                            <TextBlock Text="{Binding Col}" FontSize="8"/>
+                        </StackPanel>
                     </Grid>
                     <DataTemplate.Triggers>
                         <MultiDataTrigger>
@@ -121,7 +126,8 @@
 
                     <StackPanel Margin="10,20,0,0">
                         <TextBlock Text="Moves"/>
-                        <ItemsControl ItemsSource="{Binding Board.Moves}" />
+                        <TextBox IsReadOnly="True" Text="{Binding Moves, Mode=OneWay}" />
+                        <!--<ItemsControl ItemsSource="{Binding Board.Moves}" />-->
                     </StackPanel>
                 </StackPanel>
             </ScrollViewer>
