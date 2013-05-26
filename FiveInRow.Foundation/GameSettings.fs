@@ -2,13 +2,14 @@
 
 open GameDef
 
-type GameSettings(boardSize_, difficulty_) =
+type GameSettings(boardSize_, difficulty_, opponent_) =
     inherit ObservableObject()
 
     let mutable boardSize = boardSize_
     let mutable difficulty = difficulty_
+    let mutable opponent = opponent_
 
-    new() = GameSettings(0, Easy)
+    new() = GameSettings(0, Easy, AI(Player2))
     
     member x.BoardSize
         with get() = boardSize
@@ -24,3 +25,9 @@ type GameSettings(boardSize_, difficulty_) =
                 difficulty <- v
                 x.OnPropertyChanged(<@ x.Difficulty @>)
 
+    member x.Opponent
+        with get() = opponent
+        and set(v) =
+            if v <> opponent then
+                opponent <- v
+                x.OnPropertyChanged(<@ x.Opponent @>)

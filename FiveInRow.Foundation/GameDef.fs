@@ -19,10 +19,14 @@ type Fitness =
 
 type Difficulty = Easy | Medium
 
+type OpponentType = Human | AI of Player
+
 // Util functions and state
 let mutable boardDimension = 0
 
 let mutable difficulty = Easy
+
+let mutable opponent = AI(Player2)
 
 let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd pos <= boardDimension
 

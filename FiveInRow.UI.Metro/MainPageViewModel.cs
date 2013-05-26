@@ -17,18 +17,17 @@ namespace FiveInRow.UI.Metro
     {
         #region .ctors
 
-        public MainPageViewModel(GameStartingParams gameParams)
+        public MainPageViewModel(GameSettings gameParams)
         {
             _params = gameParams;
             Board = BoardView.Create(gameParams);
-            Start();
         }
 
         #endregion .ctors
 
         #region Fields
 
-        private GameStartingParams _params;
+        private GameSettings _params;
         private Point _offset;
         private BoardPanel _panel;
 
@@ -90,20 +89,16 @@ namespace FiveInRow.UI.Metro
         public async void Set(int row, int col)
         {
             if (Board.Winner != null) return;
-
-            if (Board.Set(row, col))
+            Board.Set(row, col);
+            if (Board.Winner != null)
             {
-                if (Board.Winner == null && _params.Opponent != OpponentType.Human) Board.MakeAIMove();
-                if (Board.Winner != null)
-                {
-                    RefreshWinningRow();
+                RefreshWinningRow();
 
-                    var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
-                    dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
-                    dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
-                    dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));
-                    await dialog.ShowAsync();
-                }
+                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
+                dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
+                dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
+                dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));
+                await dialog.ShowAsync();
             }
         }
 
@@ -112,7 +107,7 @@ namespace FiveInRow.UI.Metro
             Board.Clear();
             WinningRow = null;
             if (_panel != null) _panel.Centrify();
-            Start();
+            Board.Start();
         }
 
         public void GoToMainMenu()
@@ -133,24 +128,7 @@ namespace FiveInRow.UI.Metro
         public void Undo()
         {
             if (Board.Winner != null) return;
-
-            switch (_params.Opponent)
-            {
-                case OpponentType.Easy_P1:
-                    if (Board.Moves.Length >= 3)
-                    {
-                        Board.Undo();
-                        Board.Undo();
-                    }
-                    break;
-                case OpponentType.Easy_P2:
-                    Board.Undo();
-                    Board.Undo();
-                    break;
-                case OpponentType.Human:
-                    Board.Undo();
-                    break;
-            }
+            Board.Undo();
         }
 
         public void PersistMoves()
@@ -179,7 +157,6 @@ namespace FiveInRow.UI.Metro
             else
             {
                 var row = Board.FiveInRows.First();
-                var rnd = new Random();
                 WinningRow = new
                 {
                     X1 = (row.From.Item2 - 0.5) * 60.0 + _offset.X,
@@ -187,14 +164,6 @@ namespace FiveInRow.UI.Metro
                     X2 = (row.To.Item2 - 0.5) * 60.0 + _offset.X,
                     Y2 = (row.To.Item1 - 0.5) * 60.0 + _offset.Y
                 };
-            }
-        }
-
-        private void Start()
-        {
-            if (_params.Opponent == OpponentType.Easy_P1)
-            {
-                Board.MakeAIMove();
             }
         }
 

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 
 namespace FiveInRow.UI.Metro.Components
@@ -20,20 +21,17 @@ namespace FiveInRow.UI.Metro.Components
             Loaded += BoardPanel_Loaded;
             RenderTransformOrigin = new Point(0.5, 0.5);
             RenderTransform = _tTransform;
+
+            _eventProc = new EventProcImpl() { Panel = this, CellWidth = 60, CellHeight = 60 };
         }
 
         #endregion .ctors
 
         #region Fields
 
-        private double _cellWidth;
-        private double _cellHeigth;
+        private EventProc _eventProc;
         private bool _isPositioned;
 
-        private bool _isCaptured;
-        private bool _isDragging;
-        private Point _lastPos;
-        private Point _offset;
         private TranslateTransform _tTransform = new TranslateTransform();
         private ItemsControl _owner;
         private MainPageViewModel _vm;
@@ -44,15 +42,10 @@ namespace FiveInRow.UI.Metro.Components
 
         public void Centrify()
         {
-            Centrify(new Size(ActualWidth, ActualHeight));
+            _eventProc.Centrify();
         }
 
-        private void Centrify(Size finalSize)
-        {
-            var dx = (finalSize.Width - GameDef.boardDimension * _cellWidth) / 2.0;
-            var dy = (finalSize.Height - GameDef.boardDimension * _cellHeigth) / 2.0;
-            AddOffset(dx - _offset.X, dy - _offset.Y);
-        }
+        private Tuple<double, double> ToTuple(Point p) { return new Tuple<double, double>(p.X, p.Y); }
 
         void BoardPanel_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
@@ -61,71 +54,21 @@ namespace FiveInRow.UI.Metro.Components
             _owner = ItemsControl.GetItemsOwner(this);
             _vm = (MainPageViewModel)_owner.DataContext;
             _vm.SetPanel(this);
-            _vm.SetOffset(_offset);
 
-            _owner.PointerPressed += owner_PointerPressed;
-            _owner.PointerReleased += owner_PointerReleased;
-            _owner.PointerMoved += owner_PointerMoved;
-        }
-
-        void owner_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            _isCaptured = true;
-            _lastPos = e.GetCurrentPoint(_owner).Position;
-        }
-
-        void owner_PointerReleased(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            _isCaptured = false;
-            ReleasePointerCapture(e.Pointer);
-
-            if (_isDragging)_isDragging = false;
-            else
-            {
-                var p = e.GetCurrentPoint(_owner).Position;
-                _vm.Set((int)((p.Y - _offset.Y) / _cellHeigth) + 1, (int)((p.X - _offset.X) / _cellWidth) + 1);
-            }
-        }
-
-        void owner_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-        {
-            if (_isCaptured)
-            {
-                var p = e.GetCurrentPoint(_owner).Position;
-                var dx = p.X - _lastPos.X;
-                var dy = p.Y - _lastPos.Y;
-                if (_isDragging || (dx * dx + dy * dy > 36))
-                {
-                    CapturePointer(e.Pointer);
-                    _isDragging = true;
-                    AddOffset(dx, dy);
-                    _lastPos = p;
-                }
-            }
-        }
-
-        private void AddOffset(double dx, double dy)
-        {
-            _offset.X = this.ActualWidth > 0 ? Math.Max(-0.5 * GameDef.boardDimension * _cellWidth, Math.Min(this.ActualWidth * 0.5, _offset.X + dx)) : _offset.X + dx;
-            _offset.Y = this.ActualHeight > 0 ? Math.Max(-0.5 * GameDef.boardDimension * _cellHeigth, Math.Min(this.ActualHeight * 0.5, _offset.Y + dy)) : _offset.Y + dy;
-            _tTransform.X = _offset.X;
-            _tTransform.Y = _offset.Y;
-            if (_vm != null) _vm.SetOffset(_offset);
+            _owner.PointerPressed += (s, arg) => _eventProc.OnPointerPressed(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
+            _owner.PointerReleased += (s, arg) => _eventProc.OnPointerReleased(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
+            _owner.PointerMoved += (s, arg) => _eventProc.OnPointerMoved(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
         }
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            if (Children.Count == 0)
-                return base.MeasureOverride(availableSize);
+            if (Children.Count == 0) return base.MeasureOverride(availableSize);
             else
             {
                 foreach (var item in Children)
                 {
                     item.Measure(availableSize);
                 }
-                _cellWidth = Children.Select(t => t.DesiredSize.Width).Max();
-                _cellHeigth = Children.Select(t => t.DesiredSize.Height).Max();
-
                 return availableSize;
             }
         }
@@ -137,19 +80,53 @@ namespace FiveInRow.UI.Metro.Components
                 if (!_isPositioned)
                 {
                     _isPositioned = true;
-
-                    Centrify(finalSize);
+                    _eventProc.Centrify(finalSize.Width, finalSize.Height);
                 }
             }
 
             foreach (var item in Children.OfType<FrameworkElement>())
             {
                 var cell = (CellView)item.DataContext;
-                item.Arrange(new Rect(new Point(_cellWidth * (cell.Col - 1), _cellHeigth * (cell.Row - 1)), new Size(_cellWidth, _cellHeigth)));
+                item.Arrange(new Rect(new Point(_eventProc.CellWidth * (cell.Col - 1), _eventProc.CellHeight * (cell.Row - 1)), new Size(_eventProc.CellWidth, _eventProc.CellHeight)));
             }
             return finalSize;
         }
 
         #endregion Methods
+
+        #region Internal classes
+
+        private class EventProcImpl : EventProc
+        {
+            public BoardPanel Panel { get; set; }
+
+            public override double Width { get { return Panel.ActualWidth; } }
+
+            public override double Height { get { return Panel.ActualHeight; } }
+            
+            public override void CapturePointer(object obj)
+            {
+                Panel.CapturePointer((Pointer)obj);
+            }
+
+            public override void ReleasePointer(object obj)
+            {
+                Panel.ReleasePointerCapture((Pointer)obj);
+            }
+
+            public override void Set(int row, int col)
+            {
+                Panel._vm.Set(row, col);
+            }
+
+            public override void SetOffset(double dx, double dy)
+            {
+                Panel._tTransform.X = dx;
+                Panel._tTransform.Y = dy;
+                if (Panel._vm != null) Panel._vm.SetOffset(new Point(dx, dy));
+            }
+        }
+
+        #endregion Internal classes
     }
 }

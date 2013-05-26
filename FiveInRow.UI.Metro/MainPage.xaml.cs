@@ -1,4 +1,5 @@
-﻿using FiveInRow.UI.Metro.Components;
+﻿using FiveInRow.Foundation;
+using FiveInRow.UI.Metro.Components;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,7 +36,7 @@ namespace FiveInRow.UI.Metro
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            DataContext = new MainPageViewModel((GameStartingParams)e.Parameter);
+            DataContext = new MainPageViewModel((GameSettings)e.Parameter);
         }
 
         private void OnGoBack(object sender, RoutedEventArgs e)

@@ -41,6 +41,7 @@
     <Compile Include="Board.fs" />
     <Compile Include="CellView.fs" />
     <Compile Include="BoardView.fs" />
+    <Compile Include="EventProc.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
