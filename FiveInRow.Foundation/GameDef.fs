@@ -17,16 +17,12 @@ type Fitness =
     | WinIn2Turns
     | Probability of float 
 
-type Difficulty = Easy | Medium
+type Difficulty = Easy | Medium | Hard
 
 type OpponentType = Human | AI of Player
 
 // Util functions and state
 let mutable boardDimension = 0
-
-let mutable difficulty = Easy
-
-let mutable opponent = AI(Player2)
 
 let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd pos <= boardDimension
 

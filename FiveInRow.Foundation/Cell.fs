@@ -21,8 +21,10 @@ type Cell(pos: CellPos, value: CellValue) =
         | Occupied(Player1) -> sprintf "[%i:%i-> x ]" (fst pos) (snd pos)
         | Occupied(Player2) -> sprintf "[%i:%i-> o ]" (fst pos) (snd pos)
 
-    static member Neighbours (cell: Cell) (cells: Map<int, Map<int, Cell>>) =
-        seq { for i in fst cell.Pos - 1..fst cell.Pos + 1 do
-                for j in snd cell.Pos - 1..snd cell.Pos + 1 do
+    static member K_Neighbours (cell: Cell) (cells: Map<int, Map<int, Cell>>) k =
+        seq { for i in fst cell.Pos - k..fst cell.Pos + k do
+                for j in snd cell.Pos - k..snd cell.Pos + k do
                     if isValid (i, j) && (i <> fst cell.Pos || j <> snd cell.Pos) then
                         yield cells.[i].[j] }
+
+    static member Neighbours (cell: Cell) (cells: Map<int, Map<int, Cell>>) = Cell.K_Neighbours cell cells 1

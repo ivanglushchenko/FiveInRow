@@ -54,6 +54,7 @@ namespace FiveInRow.UI.Metro.Components
             _owner = ItemsControl.GetItemsOwner(this);
             _vm = (MainPageViewModel)_owner.DataContext;
             _vm.SetPanel(this);
+            _vm.SetOffset(new Point(_tTransform.X, _tTransform.Y));
 
             _owner.PointerPressed += (s, arg) => _eventProc.OnPointerPressed(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
             _owner.PointerReleased += (s, arg) => _eventProc.OnPointerReleased(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));

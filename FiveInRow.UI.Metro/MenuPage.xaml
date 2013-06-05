@@ -155,9 +155,15 @@
                 </RadioButton.RenderTransform>
                 <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="easy" Margin="10,-11,0,0" Foreground="{Binding OpponentHuman, Converter={StaticResource DiffColorConverter}}"/>
             </RadioButton>
+            <RadioButton IsChecked="{Binding DiffMedium, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0" IsEnabled="{Binding OpponentHuman, Converter={StaticResource NotConverter}}">
+                <RadioButton.RenderTransform>
+                    <RotateTransform Angle="-1" />
+                </RadioButton.RenderTransform>
+                <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="medium" Margin="10,-11,0,0" Foreground="{Binding OpponentHuman, Converter={StaticResource DiffColorConverter}}"/>
+            </RadioButton>
             <RadioButton IsChecked="{Binding DiffHard, Mode=TwoWay}" GroupName="C" Margin="20,10,0,0" IsEnabled="{Binding OpponentHuman, Converter={StaticResource NotConverter}}">
                 <RadioButton.RenderTransform>
-                    <RotateTransform Angle="-3" />
+                    <RotateTransform Angle="1" />
                 </RadioButton.RenderTransform>
                 <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="hard" Margin="10,-11,0,0" Foreground="{Binding OpponentHuman, Converter={StaticResource DiffColorConverter}}"/>
             </RadioButton>

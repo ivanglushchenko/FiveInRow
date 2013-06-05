@@ -8,6 +8,7 @@ type BoardInfo = { board: Board; ai: AI }
 type BoardView(startingBoard: Board, ai: Board -> AI) =
     inherit ObservableObject()
 
+    let mutable opponent = Human
     let mutable boards = [ { board = startingBoard; ai = ai startingBoard } ]
     let mutable moves = []
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
@@ -36,13 +37,13 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         let exec (moves: (int * int) list) b = moves |> List.fold (fun (acc: Board) m -> acc.Set m |> Option.get) b
         let board = Board.Create settings.BoardSize
         boardDimension <- settings.BoardSize
-        difficulty <- settings.Difficulty
-        opponent <- settings.Opponent
         let finalBoard = board |> exec moves
         let view =
             match settings.Difficulty with
             | Easy -> BoardView(finalBoard, fun b -> EasyAI(b) :> AI)
             | Medium -> BoardView(finalBoard, fun b -> MediumAI(b) :> AI)
+            | Hard -> BoardView(finalBoard, fun b -> HardAI(b) :> AI)
+        view.Opponent <- settings.Opponent
         view.Start()
         view
 
@@ -69,16 +70,17 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 for ((i, j), fitness) in ai.Moves do
                     cells.[i - 1].[j - 1].Fitness <- fitness
                 x.RaisePropertiesChanged()
-
-                if x.IsCompleted = false then
-                    match opponent with
-                    | AI(p) when p = board.Player -> x.MakeAIMove()
-                    | _ -> ()
+                x.MakeMove board.Player
 
             | None -> ()
 
-    member x.MakeAIMove() =
-        if boards.Head.ai.Moves.IsEmpty = false then x.Set (fst boards.Head.ai.Moves.Head)
+    member x.MakeMove player =
+        if x.IsCompleted = false then
+            match opponent with
+                | AI(p) when p = player ->
+                    if boards.Head.ai.Moves.IsEmpty = false then x.Set (fst boards.Head.ai.Moves.Head)
+                | _ -> ()
+        
 
     member x.Clear() =
         boards <- [ { board = startingBoard; ai = ai startingBoard } ]
@@ -88,15 +90,9 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 
     member x.Start() =
         x.Clear()
-        match opponent with
-        | AI(Player1) -> x.MakeAIMove()
-        | _ -> ()
+        x.MakeMove Player1
 
-    member x.Winner 
-        with get() = 
-            match boards.Head.ai.Fitness |> Map.toList |> List.filter (fun (p, f) -> f = Win) |> List.map fst with
-            | hd :: tl -> Some(hd)
-            | [] -> None
+    member x.Winner with get() = boards.Head.ai.Winner
 
     member x.IsCompleted with get() = x.Winner |> Option.isSome
 
@@ -123,3 +119,13 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         x.OnPropertyChanged(<@ x.Rows @>)
         x.OnPropertyChanged(<@ x.FiveInRows @>)
         x.OnPropertyChanged(<@ x.NextTurn @>)
+
+    member x.Opponent
+        with get() = opponent
+        and set(v) =
+            if v <> opponent then
+                opponent <- v
+                x.OnPropertyChanged(<@ x.Opponent @>)
+                match opponent with
+                | AI(p) -> x.MakeMove p
+                | _ -> ()

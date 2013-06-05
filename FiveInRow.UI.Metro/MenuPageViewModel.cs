@@ -46,6 +46,7 @@ namespace FiveInRow.UI.Metro
         public bool BoardSize51 { get; set; }
 
         public bool DiffEasy { get; set; }
+        public bool DiffMedium { get; set; }
         public bool DiffHard { get; set; }
 
         #endregion Properties
@@ -58,7 +59,7 @@ namespace FiveInRow.UI.Metro
             {
                 BoardSize = BoardSize19 ? 19 : (BoardSize35 ? 35 : 51),
                 Opponent = OpponentAI ? GameDef.OpponentType.NewAI(GameDef.Player.Player2) : (OpponentAI_Player2 ? GameDef.OpponentType.NewAI(GameDef.Player.Player1) : GameDef.OpponentType.Human),
-                Difficulty = DiffEasy ? GameDef.Difficulty.Easy : GameDef.Difficulty.Medium
+                Difficulty = DiffEasy ? GameDef.Difficulty.Easy : (DiffMedium ? GameDef.Difficulty.Medium : GameDef.Difficulty.Hard)
             };
         }
 

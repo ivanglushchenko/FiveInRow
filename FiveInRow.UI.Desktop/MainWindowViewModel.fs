@@ -16,7 +16,7 @@ type MainWindowViewModel() =
     let mutable offset = Vector(0.0, 0.0)
     let mutable useAI = false
     let mutable showResults = false
-    let boardView = BoardView.Create(GameSettings(51, Medium, AI(Player2)))
+    let boardView = BoardView.Create(GameSettings(51, Hard, if useAI then AI(Player2) else Human))
     //let boardView = BoardView.CreateFrom(GameSettings(19, Medium), [ (9, 9); (8, 8); (7, 8); (8, 9); (8, 10); (7, 11); (7, 9); (6, 8); (6, 10); (7, 10); (9, 8); (9, 10); (6, 11); (6, 12); (7, 12); (5, 10); (9, 11); (10, 12); (7, 13); (8, 12); (8, 7); (10, 9); (9, 6); (10, 5); (9, 7); (9, 5); (7, 7); (6, 7); (10, 7); (11, 7); (7, 6); (7, 5); (8, 5); (7, 4); (11, 8); (12, 9); (12, 8); (6, 6); (6, 5); (5, 4)])//; (10, 8); (11, 9); (13, 8); (14, 8) ])
 
     member x.Board with get() = boardView
@@ -33,7 +33,8 @@ type MainWindowViewModel() =
 
     member x.UseAI
         with get() = useAI
-        and set(v) = useAI <- v
+        and set(v) = 
+            useAI <- v
 
     member x.ShowResults
         with get() = showResults
@@ -46,4 +47,4 @@ type MainWindowViewModel() =
 
     member x.Start() = boardView.Start()
 
-    member x.MakeMove() = boardView.MakeAIMove() |> ignore
+    member x.MakeMove() = boardView.MakeMove boardView.NextTurn
