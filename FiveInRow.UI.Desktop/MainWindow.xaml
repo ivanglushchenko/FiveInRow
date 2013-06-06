@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:FiveInRow.UI.Desktop;assembly=FiveInRow.UI.Desktop"
         xmlns:f="clr-namespace:FiveInRow.Foundation;assembly=FiveInRow.Foundation"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        Title="" Height="800" Width="950" Background="WhiteSmoke">
+        Title="" Height="1000" Width="1100" Background="WhiteSmoke" WindowState="Maximized">
     
     <Window.Resources>
         <sys:Double x:Key="CellWidth">50</sys:Double>
@@ -110,7 +110,9 @@
             <ScrollViewer>
                 <StackPanel>
                     <StackPanel HorizontalAlignment="Center" Margin="10" DockPanel.Dock="Top">
-                        <CheckBox Content="Use AI" IsChecked="{Binding UseAI}" />
+                        <RadioButton Content="Human" IsChecked="{Binding OpponentHuman}" />
+                        <RadioButton Content="AI Player1" IsChecked="{Binding OpponentPlayer1}" />
+                        <RadioButton Content="AI Player2" IsChecked="{Binding OpponentPlayer2}" />
                         <Button Content="Restart" Margin="0,10,0,0" x:Name="btnRestart" />
                         <Button Content="Make move" Margin="0,10,0,0" x:Name="btnMakeMove" />
                     </StackPanel>

@@ -70,7 +70,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 for ((i, j), fitness) in ai.Moves do
                     cells.[i - 1].[j - 1].Fitness <- fitness
                 x.RaisePropertiesChanged()
-                x.MakeMove board.Player
+                board.Player |> x.MakeMove
 
             | None -> ()
 
@@ -127,5 +127,5 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 opponent <- v
                 x.OnPropertyChanged(<@ x.Opponent @>)
                 match opponent with
-                | AI(p) -> x.MakeMove p
+                | AI(p) when boards.Head.board.Player = p -> x.MakeMove p
                 | _ -> ()

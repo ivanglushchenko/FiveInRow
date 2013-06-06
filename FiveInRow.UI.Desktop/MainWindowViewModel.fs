@@ -14,10 +14,8 @@ type MainWindowViewModel() =
     inherit ObservableObject()
 
     let mutable offset = Vector(0.0, 0.0)
-    let mutable useAI = false
     let mutable showResults = false
-    let boardView = BoardView.Create(GameSettings(51, Hard, if useAI then AI(Player2) else Human))
-    //let boardView = BoardView.CreateFrom(GameSettings(19, Medium), [ (9, 9); (8, 8); (7, 8); (8, 9); (8, 10); (7, 11); (7, 9); (6, 8); (6, 10); (7, 10); (9, 8); (9, 10); (6, 11); (6, 12); (7, 12); (5, 10); (9, 11); (10, 12); (7, 13); (8, 12); (8, 7); (10, 9); (9, 6); (10, 5); (9, 7); (9, 5); (7, 7); (6, 7); (10, 7); (11, 7); (7, 6); (7, 5); (8, 5); (7, 4); (11, 8); (12, 9); (12, 8); (6, 6); (6, 5); (5, 4)])//; (10, 8); (11, 9); (13, 8); (14, 8) ])
+    let boardView = BoardView.Create(GameSettings(19, Hard, Human))
 
     member x.Board with get() = boardView
 
@@ -31,10 +29,26 @@ type MainWindowViewModel() =
             offset <- v
             x.OnPropertyChanged(<@ x.Offset @>)
 
-    member x.UseAI
-        with get() = useAI
-        and set(v) = 
-            useAI <- v
+    member x.OpponentHuman
+        with get() = match boardView.Opponent with | Human -> true | _ -> false
+        and set(v) =
+            if v then
+                boardView.Opponent <- Human
+                x.OnPropertyChanged(<@ x.OpponentHuman @>)
+
+    member x.OpponentPlayer1
+        with get() = match boardView.Opponent with | AI(Player1) -> true | _ -> false
+        and set(v) =
+            if v then
+                boardView.Opponent <- AI(Player1)
+                x.OnPropertyChanged(<@ x.OpponentPlayer1 @>)
+
+    member x.OpponentPlayer2
+        with get() = match boardView.Opponent with | AI(Player2) -> true | _ -> false
+        and set(v) =
+            if v then
+                boardView.Opponent <- AI(Player2)
+                x.OnPropertyChanged(<@ x.OpponentPlayer2 @>)
 
     member x.ShowResults
         with get() = showResults
