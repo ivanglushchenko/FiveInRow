@@ -13,10 +13,6 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     let mutable moves = []
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
-    do
-        for c in startingBoard.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
-            cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
-
     let clearBoard() =
         for i in 1..boardDimension do
             for j in 1..boardDimension do
@@ -90,6 +86,8 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 
     member x.Start() =
         x.Clear()
+        for c in startingBoard.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
+            cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
         x.MakeMove Player1
 
     member x.Winner with get() = boards.Head.ai.Winner

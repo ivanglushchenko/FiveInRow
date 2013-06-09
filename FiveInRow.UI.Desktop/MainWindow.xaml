@@ -128,7 +128,7 @@
 
                     <StackPanel Margin="10,20,0,0">
                         <TextBlock Text="Moves"/>
-                        <TextBox IsReadOnly="True" Text="{Binding Moves, Mode=OneWay}" />
+                        <TextBox IsReadOnly="True" Text="{Binding Board.Moves, Mode=OneWay}" />
                         <!--<ItemsControl ItemsSource="{Binding Board.Moves}" />-->
                     </StackPanel>
                 </StackPanel>

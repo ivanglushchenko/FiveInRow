@@ -23,14 +23,24 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
 
     let extendWith player (cell: Cell) = 
         let nearbyCells = Cell.Neighbours cell cells |> Seq.filter (fun c -> c.IsOccupiedBy player) |> List.ofSeq
-        let newRows = [ for c in nearbyCells -> Row.Create cell.Pos c.Pos ]
+        let newRows = [ for c in nearbyCells -> Row.Create cells cell.Pos c.Pos ]
+        
+        let replaceRow (rows: Map<Player, Map<RowKey, Row list>>) (player: Player, oldRow: Row, newRow: Row) =
+            rows |> Map.map 
+                (fun p pRow -> 
+                    if p = player then 
+                        pRow |> Map.map 
+                            (fun rKey rList ->
+                                if rKey = oldRow.Key then newRow :: (rList |> List.filter (fun r -> r <> oldRow))
+                                else rList)
+                    else pRow)
 
         let mergeRow (row: Row) (map: Map<RowKey, Row list>) =
             if map |> Map.containsKey row.Key then
                 let rec loop (rows: Row list) = 
                     match rows with
                     | hd :: nk :: tl ->
-                        if neighbours hd.To nk.From then Row.Merge hd nk :: tl |> loop
+                        if neighbours hd.To nk.From then Row.Merge cells hd nk :: tl |> loop
                         else if hd.EndPoint > nk.EndPoint then hd :: tl |> loop
                         else hd :: loop (nk :: tl)
                     | _ -> rows
@@ -43,15 +53,20 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
         let nextCells = Cell(cell.Pos, Occupied(player)) |> replaceCell
         let nextRows = rows |> Map.map (fun p value -> if p = player then merge value else value)
 
-        let affectedRowKeys = Cell.Neighbours cell cells |> Seq.filter (fun c -> c.IsEmpty = false) |> Seq.map (fun c -> Row.Create cell.Pos c.Pos) |> Seq.map (fun r -> r.Key) |> Seq.toList
+        let affectedRowKeys = Cell.Neighbours cell cells |> Seq.filter (fun c -> c.IsEmpty = false) |> Seq.map (fun c -> Row.Create nextCells cell.Pos c.Pos) |> Seq.map (fun r -> r.Key) |> Seq.toList
 
-        for playerRows in nextRows do
-            for rowKey in affectedRowKeys do
-                if playerRows.Value.ContainsKey rowKey then
-                    for row in playerRows.Value.[rowKey] do
-                        row.ResetRank nextCells
+        let affectedRows = 
+            seq { for playerRows in nextRows do
+                    for rowKey in affectedRowKeys do
+                        if playerRows.Value.ContainsKey rowKey then
+                            for row in playerRows.Value.[rowKey] do
+                                match row.UpdateRank nextCells with
+                                | Some(r) -> yield (playerRows.Key, row, r)
+                                | _ -> () }
+            |> Seq.toList
+        let updatedNextRows = affectedRows |> List.fold (fun acc row -> replaceRow acc row) nextRows
 
-        Board(next player, nextCells, nextRows)
+        Board(next player, nextCells, updatedNextRows)
 
     static member Create dim =
         boardDimension <- dim

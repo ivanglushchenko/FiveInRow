@@ -15,7 +15,8 @@ type MainWindowViewModel() =
 
     let mutable offset = Vector(0.0, 0.0)
     let mutable showResults = false
-    let boardView = BoardView.Create(GameSettings(19, Hard, Human))
+    //let boardView = BoardView.Create(GameSettings(19, Hard, Human))
+    let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(1, 1); (1, 6); (2, 2); (1, 7); (3, 3); (1, 8); (1, 5); (1, 9)])
 
     member x.Board with get() = boardView
 

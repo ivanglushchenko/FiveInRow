@@ -3,7 +3,7 @@
 open GameDef
 open System
 
-type Row(posFrom: CellPos, posTo: CellPos) =
+type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
     let length = 
         if fst posFrom = fst posTo then 1 + (snd posFrom - snd posTo |> abs)
         else 1 + (fst posTo - fst posFrom)
@@ -32,17 +32,28 @@ type Row(posFrom: CellPos, posTo: CellPos) =
         | E -> snd posTo
         | _ -> fst posTo
                 
-    let mutable rank = 0
+    let getRank (cells: Map<int, Map<int, Cell>>) = 
+        let inline add (pos: CellPos) dr dc = (fst pos + dr, snd pos + dc)
+        let inline check pos = if isValid pos && cells.[fst pos].[snd pos].IsEmpty then 1 else 0
+        let candidates = 
+            match direction with
+            | S -> [| add posFrom -1 0; add posTo 1 0 |]
+            | E -> [| add posFrom 0 -1; add posTo 0 1 |]
+            | SE -> [| add posFrom -1 -1; add posTo 1 1 |]
+            | SW -> [| add posFrom -1 1; add posTo 1 -1 |]
+        check candidates.[0] + check candidates.[1]
 
-    static member Create posFrom posTo =
+    let rank = getRank cells
+
+    static member Create (cells: Map<int, Map<int, Cell>>) posFrom posTo =
         match (compare (fst posFrom) (fst posTo), compare (snd posFrom) (snd posTo)) with
-        | (-1, _) -> Row(posFrom, posTo)
-        | (1, _)  -> Row(posTo, posFrom)
-        | (_, -1) -> Row(posFrom, posTo)
-        | (_, 1)  -> Row(posTo, posFrom)
+        | (-1, _) -> Row(cells, posFrom, posTo)
+        | (1, _)  -> Row(cells, posTo, posFrom)
+        | (_, -1) -> Row(cells, posFrom, posTo)
+        | (_, 1)  -> Row(cells, posTo, posFrom)
         | _       -> raise (Exception())
 
-    static member Merge (rowStart: Row) (rowEnd: Row) = Row.Create rowStart.From rowEnd.To
+    static member Merge (cells: Map<int, Map<int, Cell>>) (rowStart: Row) (rowEnd: Row) = Row.Create cells rowStart.From rowEnd.To
 
     member x.From with get() = posFrom
 
@@ -60,13 +71,6 @@ type Row(posFrom: CellPos, posTo: CellPos) =
 
     override x.ToString() = sprintf "(%i:%i)->(%i:%i)" (fst posFrom) (snd posFrom) (fst posTo) (snd posTo)
 
-    member x.ResetRank (cells: Map<int, Map<int, Cell>>) = 
-        let inline add (pos: CellPos) dr dc = (fst pos + dr, snd pos + dc)
-        let inline check pos = if isValid pos && cells.[fst pos].[snd pos].IsEmpty then 1 else 0
-        let candidates = 
-            match direction with
-            | S -> [| add posFrom -1 0; add posTo 1 0 |]
-            | E -> [| add posFrom 0 -1; add posTo 0 1 |]
-            | SE -> [| add posFrom -1 -1; add posTo 1 1 |]
-            | SW -> [| add posFrom -1 1; add posTo 1 -1 |]
-        rank <- check candidates.[0] + check candidates.[1]
+    member x.UpdateRank (cells: Map<int, Map<int, Cell>>) = 
+        let newRank = getRank cells
+        if newRank <> rank then Some(Row.Create cells x.From x.To) else None

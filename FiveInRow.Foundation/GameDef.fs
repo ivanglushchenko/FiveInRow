@@ -17,6 +17,11 @@ type Fitness =
     | WinIn2Turns
     | Probability of float 
 
+type BoardStatus =
+    | Mate of Player * int
+    | Check of Player * int
+    | InProgress of Player * float
+
 type Difficulty = Easy | Medium | Hard
 
 type OpponentType = Human | AI of Player

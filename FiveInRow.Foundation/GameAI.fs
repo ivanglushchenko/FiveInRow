@@ -24,18 +24,17 @@ type BaseAI(board: Board) =
 
     abstract member Fitness: Map<Player, Fitness> with get
 
-    abstract PossibleBoards: (Cell * Fitness * Fitness) list with get
+    abstract PossibleBoards: Board -> (Cell * Fitness * Fitness) list
 
-    default x.PossibleBoards
-        with get() = 
-            let possibleMoves = 
-                seq { for cell in board.Cells do
-                        if cell.IsEmpty then
-                            if Cell.Neighbours cell board.CellsMap |> Seq.exists (fun c -> c.IsEmpty = false) then
-                                yield cell }
-            let opponent = next board.Player
-            let getFitness pos player = x.CreateAI(board.SetAs pos player |> Option.get).Fitness |> Map.find player
-            possibleMoves |> Seq.map (fun c -> (c, getFitness c.Pos board.Player, getFitness c.Pos opponent))  |> Seq.toList
+    default x.PossibleBoards board =
+        let possibleMoves = 
+            seq { for cell in board.Cells do
+                    if cell.IsEmpty then
+                        if Cell.Neighbours cell board.CellsMap |> Seq.exists (fun c -> c.IsEmpty = false) then
+                            yield cell }
+        let opponent = next board.Player
+        let getFitness pos player = x.CreateAI(board.SetAs pos player |> Option.get).Fitness |> Map.find player
+        possibleMoves |> Seq.map (fun c -> (c, getFitness c.Pos board.Player, getFitness c.Pos opponent))  |> Seq.toList
 
     default x.Fitness
         with get() =
@@ -73,7 +72,7 @@ type BaseAI(board: Board) =
     interface AI with
         member x.Moves 
             with get() =
-                let possibleBoards = x.PossibleBoards
+                let possibleBoards = x.PossibleBoards board
 
                 let myWins = possibleBoards |> List.filter (fun (v, f1, f2) -> match f1 with | Probability _ -> false | _ -> true) |> List.map (fun (v, f1, f2) -> f1) |> Set.ofList
                 let opWins = possibleBoards |> List.filter (fun (v, f1, f2) -> match f2 with | Probability _ -> false | _ -> true) |> List.map (fun (v, f1, f2) -> f2) |> Set.ofList
@@ -147,21 +146,135 @@ type MediumAI(board) =
                 1.0                      // length 3, rank 0
             |]
 
+    override x.PossibleBoards board =
+        let possibleMoves = 
+            seq { for cell in board.Cells do
+                    if cell.IsEmpty then
+                        if Cell.K_Neighbours cell board.CellsMap 2 |> Seq.exists (fun c -> c.IsEmpty = false) then
+                            yield cell }
+        let opponent = next board.Player
+        let getFitness pos player = x.CreateAI(board.SetAs pos player |> Option.get).Fitness |> Map.find player
+        possibleMoves |> Seq.map (fun c -> (c, getFitness c.Pos board.Player, getFitness c.Pos opponent))  |> Seq.toList
+
     override x.CombineProbabilities p1 p2 = p1 + p2 / 2.0
 
 
+type Node = { value: Cell; ai: AI } 
+    
+
 type HardAI(board) =
-    inherit MediumAI(board)
+    inherit EasyAI(board)
 
     override x.CreateAI board = HardAI(board) :> BaseAI
 
-    override x.PossibleBoards
-        with get() = 
-            let possibleMoves = 
-                seq { for cell in board.Cells do
-                        if cell.IsEmpty then
-                            if Cell.K_Neighbours cell board.CellsMap 2 |> Seq.exists (fun c -> c.IsEmpty = false) then
-                                yield cell }
-            let opponent = next board.Player
-            let getFitness pos player = x.CreateAI(board.SetAs pos player |> Option.get).Fitness |> Map.find player
-            possibleMoves |> Seq.map (fun c -> (c, getFitness c.Pos board.Player, getFitness c.Pos opponent))  |> Seq.toList
+    override x.Equals that = base.Equals that
+
+    override x.GetHashCode() = base.GetHashCode()
+
+    override x.ToString() =
+        let ps p =
+            match p with
+            | Player1 -> "X"
+            | Player2 -> "O" 
+        match x.BoardStatus with
+        | Mate(p, t) -> sprintf "Mate %s %i" (ps p) t
+        | Check(p, t) -> sprintf "Check %s %i" (ps p) t
+        | InProgress(p, t) -> sprintf "In %s %f" (ps p) t
+
+    interface IComparable with
+        member x.CompareTo other =
+            match (x.BoardStatus, (other :?> HardAI).BoardStatus) with
+            | (Mate(_, t1), Mate(_, t2)) -> t1.CompareTo t2
+            | (Mate(_, _), _) -> -1
+            | (_, Mate(_, _)) -> 1
+            | (Check(_, t1), Check(_, t2)) -> t1.CompareTo t2
+            | (Check(_, _), _) -> -1
+            | (_, Check(_, _)) -> 1
+            | (InProgress(_, t1), InProgress(_, t2)) -> - (t1.CompareTo t2)
+
+    member x.Board with get() = board
+
+    member x.BoardStatus
+        with get() =
+            let inline score length rank =
+                match length, rank with
+                | l, _ when l >= 5 -> x.RowScores.[0]
+                | 4, 2 -> x.RowScores.[1]
+                | 4, 1 -> x.RowScores.[2]
+                | 4, 0 -> x.RowScores.[3]
+                | 3, 2 -> x.RowScores.[4]
+                | 3, 1 -> x.RowScores.[5]
+                | 3, 0 -> x.RowScores.[6]
+                | _ -> rank * rank |> float
+
+            let rowStats =
+                let array = Array.init 2 (fun _ -> Array.init 6 (fun i -> Array.create 3 0))
+                for rowGroup in board.RowsMap do
+                    for rows in rowGroup.Value do
+                        for row in rows.Value do
+                        if row.Length <= 5 then
+                            let playerPos = if board.Player = rowGroup.Key then 0 else 1
+                            let trimmedLength = min row.Length 5
+                            array.[playerPos].[trimmedLength].[row.Rank] <- array.[playerPos].[trimmedLength].[row.Rank] + 1
+                array
+            let numOfRows pi length rank = rowStats.[pi].[length].[rank]
+            let myRows = numOfRows 0
+            let opRows = numOfRows 1
+            let opponent = board.Player |> next
+            if myRows 5 2 > 0 || myRows 5 1 > 0 || myRows 5 0 > 0 then raise (Exception("Game should have stopped 2 rounds ago"))
+            else if opRows 5 2 > 0 || opRows 5 1 > 0 || opRows 5 0 > 0 then Mate(opponent, 0)
+            else if myRows 4 2 > 0 || myRows 4 1 > 0 then Mate(board.Player, 1)
+            else if opRows 4 2 > 0 || opRows 4 1 > 1 then Mate(opponent, 2)
+            else if myRows 3 2 > 0 then Mate(board.Player, 3)
+            else if opRows 3 2 > 1 || (opRows 3 2 > 0 && opRows 4 1 > 0) then Mate(opponent, 4)
+            else if opRows 3 2 > 0 then Check(opponent, 4)
+            else if opRows 4 1 > 0 then Check(opponent, 2)
+            else 
+                let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
+                let sumLengths lengths = lengths |> Array.mapi sumRanks |> Array.sum
+                // The purpose is to estimate how last move affected player's positions. It means we are more interested in board.Player's opponent score.8
+                InProgress(opponent, 0.01 + sumLengths rowStats.[1])// - (sumLengths rowStats.[0]) / 2.0)
+
+    interface AI with
+        member x.Moves 
+            with get() = 
+                let next (board: Board) =
+                    seq { for cell in board.Cells do
+                            if cell.IsEmpty then
+                                if Cell.K_Neighbours cell board.CellsMap 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
+                                    let nextBoard = board.Set cell.Pos
+                                    if nextBoard.IsSome then
+                                        let ai = HardAI(nextBoard.Value)
+                                        yield (cell.Pos, ai) } |> Seq.toList
+                let nextBoards = next board
+//                let t1 = board.Set (1, 5) |> Option.get
+//                let t2 = HardAI(t1)
+//                let t3 = t2.BoardStatus
+//
+//                let t4 = board.Set (1, 2) |> Option.get
+//                let t5 = HardAI(t1)
+//                let t6 = t2.BoardStatus
+
+                let rec analyzeGameTree (start: HardAI) levelsToGo =
+                    if levelsToGo <= 0 then start.BoardStatus
+                    else
+                        match start.BoardStatus with
+                        | Mate(_, _) -> start.BoardStatus
+                        | Check(_, _) -> start.BoardStatus
+                        | InProgress(p, p1) -> 
+                            let nl = next start.Board |> List.map (fun (p, ai) -> (p, analyzeGameTree ai (levelsToGo - 1)))
+                            let bs = nl |> List.sortBy snd |> List.head |> snd
+                            match bs with
+                            | Mate(p, t) -> Mate(p, t + 1)
+                            | Check(p, t) -> Check(p, t + 1)
+                            | InProgress(_, p2) -> InProgress(p, p1 + p2 / 2.0)
+
+                let toNum status =
+                    match status with
+                    | Mate(p, t) -> (if p = board.Player then 1.0 else -1.0) * (5.0 - (float t)) * 1000000.0
+                    | Check(p, t) -> (if p = board.Player then 1.0 else -1.0) * (5.0 - (float t)) * 10000.0
+                    | InProgress(_, p) -> (p * 1000.0 |> int |> float) / 1000.0
+
+                let combinedBoads = nextBoards |> List.map (fun (p, b) -> (p, analyzeGameTree b 1))
+                let moves = combinedBoads |> List.map (fun (p, b) -> (p, toNum b)) |> List.sortBy snd
+                moves
