@@ -171,15 +171,7 @@ type HardAI(board) =
 
     override x.GetHashCode() = base.GetHashCode()
 
-    override x.ToString() =
-        let ps p =
-            match p with
-            | Player1 -> "X"
-            | Player2 -> "O" 
-        match x.BoardStatus with
-        | Mate(p, t) -> sprintf "Mate %s %i" (ps p) t
-        | Check(p, t) -> sprintf "Check %s %i" (ps p) t
-        | InProgress(p, t) -> sprintf "In %s %f" (ps p) t
+    override x.ToString() = x.BoardStatus.ToString()
 
     interface IComparable with
         member x.CompareTo other =
@@ -190,7 +182,7 @@ type HardAI(board) =
             | (Check(_, t1), Check(_, t2)) -> t1.CompareTo t2
             | (Check(_, _), _) -> -1
             | (_, Check(_, _)) -> 1
-            | (InProgress(_, t1), InProgress(_, t2)) -> - (t1.CompareTo t2)
+            | (InProgress(_, t1), InProgress(_, t2)) -> (t1.CompareTo t2)
 
     member x.Board with get() = board
 
@@ -238,43 +230,74 @@ type HardAI(board) =
     interface AI with
         member x.Moves 
             with get() = 
-                let next (board: Board) =
+                let targetPlayer = board.Player
+                let nextAs (board: Board) (player: Player) =
                     seq { for cell in board.Cells do
                             if cell.IsEmpty then
                                 if Cell.K_Neighbours cell board.CellsMap 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
-                                    let nextBoard = board.Set cell.Pos
+                                    let nextBoard = board.SetAs cell.Pos player
                                     if nextBoard.IsSome then
                                         let ai = HardAI(nextBoard.Value)
                                         yield (cell.Pos, ai) } |> Seq.toList
+                let next (board: Board) = nextAs board board.Player
+                let addTestPos x y = ((x, y), HardAI(board.SetAs (x, y) targetPlayer |> Option.get))
+
+                //let tt = addTestPos 10 7
+                //let ss = (snd tt).BoardStatus
                 let nextBoards = next board
-//                let t1 = board.Set (1, 5) |> Option.get
-//                let t2 = HardAI(t1)
-//                let t3 = t2.BoardStatus
-//
-//                let t4 = board.Set (1, 2) |> Option.get
-//                let t5 = HardAI(t1)
-//                let t6 = t2.BoardStatus
+                //let nextBoards = [ addTestPos 11 13; addTestPos 10 7 ]
+                //let nextBoards = [ addTestPos 11 13; addTestPos 10 7 ]
 
                 let rec analyzeGameTree (start: HardAI) levelsToGo =
+                    let myPossibilities = nextAs start.Board targetPlayer |> List.map (fun (p, ai) -> (p, analyzeGameTree ai (levelsToGo - 1))) |> List.sortBy snd
+                    let opPossibilities = next start.Board |> List.map (fun (p, ai) -> (p, analyzeGameTree ai (levelsToGo - 1))) |> List.sortBy snd
+
                     if levelsToGo <= 0 then start.BoardStatus
                     else
                         match start.BoardStatus with
                         | Mate(_, _) -> start.BoardStatus
                         | Check(_, _) -> start.BoardStatus
                         | InProgress(p, p1) -> 
-                            let nl = next start.Board |> List.map (fun (p, ai) -> (p, analyzeGameTree ai (levelsToGo - 1)))
-                            let bs = nl |> List.sortBy snd |> List.head |> snd
-                            match bs with
-                            | Mate(p, t) -> Mate(p, t + 1)
-                            | Check(p, t) -> Check(p, t + 1)
-                            | InProgress(_, p2) -> InProgress(p, p1 + p2 / 2.0)
+                            match (snd myPossibilities.Head, snd opPossibilities.Head) with
+                            | (Mate(_, t1), Mate(p, t2)) -> if t1 < t2 then snd myPossibilities.Head else Mate(p, t2 + 1)
+                            | (Mate(_, _), _) -> snd myPossibilities.Head
+                            | (_, Mate(_, _)) -> snd opPossibilities.Head
+                            | _ ->
+                                let analyzePossibilities (xs: (CellPos * BoardStatus) list) =
+                                    let acc = Array.create 3 0.0
+                                    for (_, bs) in xs do
+                                        match bs with
+                                        | Mate(_, _) -> acc.[0] <- acc.[0] + 1.0
+                                        | Check(_, _) -> acc.[1] <- acc.[1] + 1.0
+                                        | InProgress(_, p) -> if acc.[2] < p then acc.[2] <- p
+                                    acc
+                                let myAnalysis = analyzePossibilities myPossibilities
+                                InProgress(p, p1 * myAnalysis.[1])
+
+
+                            //
+                            //let opAnalysis = analyzePossibilities opPossibilities
+
+
 
                 let toNum status =
                     match status with
-                    | Mate(p, t) -> (if p = board.Player then 1.0 else -1.0) * (5.0 - (float t)) * 1000000.0
-                    | Check(p, t) -> (if p = board.Player then 1.0 else -1.0) * (5.0 - (float t)) * 10000.0
+                    | Mate(p, t) -> (if p = board.Player then 1.0 else -1.0) * (10.0 - (float t)) * 1000000.0
+                    | Check(p, t) -> (if p = board.Player then 1.0 else -1.0) * (10.0 - (float t)) * 10000.0
                     | InProgress(_, p) -> (p * 1000.0 |> int |> float) / 1000.0
 
                 let combinedBoads = nextBoards |> List.map (fun (p, b) -> (p, analyzeGameTree b 1))
-                let moves = combinedBoads |> List.map (fun (p, b) -> (p, toNum b)) |> List.sortBy snd
-                moves
+                let moves = combinedBoads |> List.map (fun (p, b) -> (p, toNum b)) |> List.sortBy snd |> List.rev
+                if moves.IsEmpty then
+                    let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)
+                    if board.CellsMap.[fst center].[snd center].IsEmpty then [ (center, 0.0) ]
+                    else if board.Cells |> Seq.isEmpty then []
+                    else [ ((board.Cells |> Seq.head).Pos, 0.0) ]
+                else
+                    moves |> Seq.take 1 |> Seq.toList
+
+        member x.Winner
+            with get() =
+                match x.BoardStatus with
+                | Mate(p, 0) -> Some(p)
+                | _ -> None

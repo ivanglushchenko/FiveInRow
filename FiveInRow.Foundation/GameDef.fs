@@ -22,6 +22,16 @@ type BoardStatus =
     | Check of Player * int
     | InProgress of Player * float
 
+    override x.ToString() =
+        let ps p =
+            match p with
+            | Player1 -> "X"
+            | Player2 -> "O" 
+        match x with
+        | Mate(p, t) -> sprintf "%s M %i" (ps p) t
+        | Check(p, t) -> sprintf "%s C %i" (ps p) t
+        | InProgress(p, t) -> sprintf "%s ~ %f" (ps p) t
+
 type Difficulty = Easy | Medium | Hard
 
 type OpponentType = Human | AI of Player

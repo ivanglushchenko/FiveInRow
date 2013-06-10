@@ -2,6 +2,7 @@
 
 open GameDef
 open GameAI
+open System.Text
 
 type BoardInfo = { board: Board; ai: AI }
 
@@ -47,7 +48,10 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 
     member x.Rows with get() = boards.Head.board.Rows
 
-    member x.Moves with get() = moves
+    member x.Moves 
+        with get() = 
+            let append (sb: StringBuilder) s = sb.AppendFormat("({0}, {1}); ", (fst s), (snd s))
+            moves |> List.rev |> List.fold append (new StringBuilder())
 
     member x.FiveInRows with get() = boards.Head.board.Rows |> Seq.filter (fun r -> r.Length >= 5)
 
@@ -63,8 +67,9 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 cells.[i - 1].[j - 1].IsLast <- true
                 let ai = ai board
                 boards <- { board = board; ai = ai } :: boards
-                for ((i, j), fitness) in ai.Moves do
-                    cells.[i - 1].[j - 1].Fitness <- fitness
+                if x.IsCompleted = false then
+                    for ((i, j), fitness) in ai.Moves do
+                        cells.[i - 1].[j - 1].Fitness <- fitness
                 x.RaisePropertiesChanged()
                 board.Player |> x.MakeMove
 

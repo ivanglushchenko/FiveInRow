@@ -133,7 +133,7 @@ namespace FiveInRow.UI.Metro
 
         public void PersistMoves()
         {
-            var moves = string.Join("; ", Board.Moves.Reverse().Select(t => string.Format("({0}, {1})", t.Item1, t.Item2)).ToArray());
+            var moves = Board.Moves.ToString();
             if (!string.IsNullOrWhiteSpace(moves))
             {
                 try
