@@ -12,6 +12,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     let mutable opponent = Human
     let mutable boards = [ { board = startingBoard; ai = ai startingBoard } ]
     let mutable moves = []
+    let mutable isRunning = false;
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
     let clearBoard() =
@@ -68,10 +69,14 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 let ai = ai board
                 boards <- { board = board; ai = ai } :: boards
                 if x.IsCompleted = false then
-                    for ((i, j), fitness) in ai.Moves do
-                        cells.[i - 1].[j - 1].Fitness <- fitness
-                x.RaisePropertiesChanged()
-                board.Player |> x.MakeMove
+                    x.IsRunning <- true
+                    Async.Start
+                        (async {
+                            for ((i, j), fitness) in ai.Moves do
+                                cells.[i - 1].[j - 1].Fitness <- fitness 
+                            x.RaisePropertiesChanged()
+                            board.Player |> x.MakeMove
+                            x.IsRunning <- false })
 
             | None -> ()
 
@@ -132,3 +137,10 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 match opponent with
                 | AI(p) when boards.Head.board.Player = p -> x.MakeMove p
                 | _ -> ()
+
+    member x.IsRunning
+        with get() = isRunning
+        and set(v) =
+            if v <> isRunning then
+                isRunning <- v
+                x.OnPropertyChanged(<@ x.IsRunning @>)

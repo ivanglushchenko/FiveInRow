@@ -225,12 +225,14 @@ type HardAI(board) =
                 let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
                 let sumLengths lengths = lengths |> Array.mapi sumRanks |> Array.sum
                 // The purpose is to estimate how last move affected player's positions. It means we are more interested in board.Player's opponent score.8
-                InProgress(opponent, 0.01 + sumLengths rowStats.[1])// - (sumLengths rowStats.[0]) / 2.0)
+                InProgress(opponent, 0.01 + sumLengths rowStats.[1])
 
     interface AI with
         member x.Moves 
             with get() = 
                 let targetPlayer = board.Player
+                let adversary = next board.Player
+
                 let nextAs (board: Board) (player: Player) =
                     seq { for cell in board.Cells do
                             if cell.IsEmpty then
@@ -240,45 +242,9 @@ type HardAI(board) =
                                         let ai = HardAI(nextBoard.Value)
                                         yield (cell.Pos, ai) } |> Seq.toList
                 let next (board: Board) = nextAs board board.Player
-                let addTestPos x y = ((x, y), HardAI(board.SetAs (x, y) targetPlayer |> Option.get))
-
-                //let tt = addTestPos 10 7
-                //let ss = (snd tt).BoardStatus
+                let addTestPos x y = ((x, y), HardAI(board.SetAs (x, y) board.Player |> Option.get))
                 let nextBoards = next board
-                //let nextBoards = [ addTestPos 11 13; addTestPos 10 7 ]
-                //let nextBoards = [ addTestPos 11 13; addTestPos 10 7 ]
-
-                let rec analyzeGameTree (start: HardAI) levelsToGo =
-                    let myPossibilities = nextAs start.Board targetPlayer |> List.map (fun (p, ai) -> (p, analyzeGameTree ai (levelsToGo - 1))) |> List.sortBy snd
-                    let opPossibilities = next start.Board |> List.map (fun (p, ai) -> (p, analyzeGameTree ai (levelsToGo - 1))) |> List.sortBy snd
-
-                    if levelsToGo <= 0 then start.BoardStatus
-                    else
-                        match start.BoardStatus with
-                        | Mate(_, _) -> start.BoardStatus
-                        | Check(_, _) -> start.BoardStatus
-                        | InProgress(p, p1) -> 
-                            match (snd myPossibilities.Head, snd opPossibilities.Head) with
-                            | (Mate(_, t1), Mate(p, t2)) -> if t1 < t2 then snd myPossibilities.Head else Mate(p, t2 + 1)
-                            | (Mate(_, _), _) -> snd myPossibilities.Head
-                            | (_, Mate(_, _)) -> snd opPossibilities.Head
-                            | _ ->
-                                let analyzePossibilities (xs: (CellPos * BoardStatus) list) =
-                                    let acc = Array.create 3 0.0
-                                    for (_, bs) in xs do
-                                        match bs with
-                                        | Mate(_, _) -> acc.[0] <- acc.[0] + 1.0
-                                        | Check(_, _) -> acc.[1] <- acc.[1] + 1.0
-                                        | InProgress(_, p) -> if acc.[2] < p then acc.[2] <- p
-                                    acc
-                                let myAnalysis = analyzePossibilities myPossibilities
-                                InProgress(p, p1 * myAnalysis.[1])
-
-
-                            //
-                            //let opAnalysis = analyzePossibilities opPossibilities
-
-
+                //let nextBoards = [ addTestPos 16 13; addTestPos 14 14 ]
 
                 let toNum status =
                     match status with
@@ -286,7 +252,38 @@ type HardAI(board) =
                     | Check(p, t) -> (if p = board.Player then 1.0 else -1.0) * (10.0 - (float t)) * 10000.0
                     | InProgress(_, p) -> (p * 1000.0 |> int |> float) / 1000.0
 
-                let combinedBoads = nextBoards |> List.map (fun (p, b) -> (p, analyzeGameTree b 1))
+                let incTurns player turns = if player = targetPlayer then turns + 2 else turns + 1
+                let analyzeGameTree (start: HardAI) =
+                    match start.BoardStatus with
+                    | Mate(_, 0) -> start.BoardStatus
+                    | _ ->
+                        let myPossibilities = nextAs start.Board targetPlayer |> List.sortBy snd |> List.map (fun (p, ai) -> (p, ai.BoardStatus))
+                        let opPossibilities = nextAs start.Board adversary |> List.sortBy snd |> List.map (fun (p, ai) -> (p, ai.BoardStatus))
+                        match (snd myPossibilities.Head, snd opPossibilities.Head) with
+                        | (Mate(p1, t1), Mate(p2, t2)) -> if incTurns p1 t1 < incTurns p2 t2 then Mate(p1, t1 + 2) else Mate(p2, t2 + 1)
+                        | (Mate(_, _), _) -> snd myPossibilities.Head
+                        | (_, Mate(_, _)) -> snd opPossibilities.Head
+                        | (Check(_, _), _) -> snd myPossibilities.Head
+                        | _ ->
+                            let analyzePossibilities (xs: (CellPos * BoardStatus) list) =
+                                let acc = Array.create 3 0.0
+                                for (_, bs) in xs do
+                                    match bs with
+                                    | Mate(_, _) -> acc.[0] <- acc.[0] + 1.0
+                                    | Check(_, _) -> acc.[1] <- acc.[1] + 1.0
+                                    | InProgress(_, p) -> if acc.[2] < p then acc.[2] <- p
+                                acc
+                            let myAnalysis = analyzePossibilities myPossibilities
+                            InProgress(start.Board.Player, toNum start.BoardStatus * myAnalysis.[1])
+
+//                let combinedBoads = 
+//                    nextBoards 
+//                    |> List.map (fun (pos, board) -> async { return (pos, analyzeGameTree board) }) 
+//                    |> List.toArray 
+//                    |> Async.Parallel 
+//                    |> Async.RunSynchronously 
+//                    |> Array.toList
+                let combinedBoads = nextBoards |> List.map (fun (pos, board) -> (pos, analyzeGameTree board))
                 let moves = combinedBoads |> List.map (fun (p, b) -> (p, toNum b)) |> List.sortBy snd |> List.rev
                 if moves.IsEmpty then
                     let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)

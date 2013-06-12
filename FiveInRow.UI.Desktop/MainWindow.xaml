@@ -12,6 +12,7 @@
         <local:CellValueToStrConverter x:Key="CellValueToStrConverter" />
         <local:FitnessVisibilityConverter x:Key="FitnessVisibilityConverter" />
         <local:PlayerToStrConverter x:Key="PlayerToStrConverter" />
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
      </Window.Resources>
 
     <Grid>
@@ -134,5 +135,7 @@
                 </StackPanel>
             </ScrollViewer>
         </Border>
+
+        <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="#40ffffff" Visibility="{Binding Board.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
     </Grid>
 </Window>

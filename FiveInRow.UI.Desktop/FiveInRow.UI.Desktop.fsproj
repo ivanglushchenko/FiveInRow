@@ -43,6 +43,7 @@
     </None>
     <None Include="packages.config" />
     <Resource Include="ApplicationResources.xaml" />
+    <Compile Include="BoolToVisibilityConverter.fs" />
     <Compile Include="RowLocationConverter.fs" />
     <Compile Include="CellValueToStrConverter.fs" />
     <Compile Include="FitnessVisibilityConverter.fs" />

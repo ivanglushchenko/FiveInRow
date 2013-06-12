@@ -32,6 +32,7 @@ type BoardStatus =
         | Check(p, t) -> sprintf "%s C %i" (ps p) t
         | InProgress(p, t) -> sprintf "%s ~ %f" (ps p) t
 
+
 type Difficulty = Easy | Medium | Hard
 
 type OpponentType = Human | AI of Player
