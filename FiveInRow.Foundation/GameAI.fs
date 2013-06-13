@@ -244,7 +244,7 @@ type HardAI(board) =
                 let next (board: Board) = nextAs board board.Player
                 let addTestPos x y = ((x, y), HardAI(board.SetAs (x, y) board.Player |> Option.get))
                 let nextBoards = next board
-                //let nextBoards = [ addTestPos 16 13; addTestPos 14 14 ]
+                let nextBoards = [ addTestPos 7 12; addTestPos 13 13 ]
 
                 let toNum status =
                     match status with
@@ -261,9 +261,11 @@ type HardAI(board) =
                         let opPossibilities = nextAs start.Board adversary |> List.sortBy snd |> List.map (fun (p, ai) -> (p, ai.BoardStatus))
                         match (snd myPossibilities.Head, snd opPossibilities.Head) with
                         | (Mate(p1, t1), Mate(p2, t2)) -> if incTurns p1 t1 < incTurns p2 t2 then Mate(p1, t1 + 2) else Mate(p2, t2 + 1)
-                        | (Mate(_, _), _) -> snd myPossibilities.Head
-                        | (_, Mate(_, _)) -> snd opPossibilities.Head
-                        | (Check(_, _), _) -> snd myPossibilities.Head
+                        | (Mate(p1, t1), _) -> Mate(p1, t1 + 2)
+                        | (_, Mate(p, t)) -> Mate(p, t + 1)
+                        | (Check(p1, t1), Check(p2, t2)) -> if incTurns p1 t1 < incTurns p2 t2 then Check(p1, t1 + 2) else Check(p2, t2 + 1)
+                        | (Check(p1, t1), _) -> Check(p1, t1 + 2)
+                        | (_, Check(p, t)) -> Check(p, t + 1)
                         | _ ->
                             let analyzePossibilities (xs: (CellPos * BoardStatus) list) =
                                 let acc = Array.create 3 0.0
