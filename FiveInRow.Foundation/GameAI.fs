@@ -30,7 +30,7 @@ type BaseAI(board: Board) =
         let possibleMoves = 
             seq { for cell in board.Cells do
                     if cell.IsEmpty then
-                        if Cell.Neighbours cell board.CellsMap |> Seq.exists (fun c -> c.IsEmpty = false) then
+                        if Cell.Neighbours cell.Pos board.CellsMap |> Seq.exists (fun c -> c.IsEmpty = false) then
                             yield cell }
         let opponent = next board.Player
         let getFitness pos player = x.CreateAI(board.SetAs pos player |> Option.get).Fitness |> Map.find player
@@ -150,7 +150,7 @@ type MediumAI(board) =
         let possibleMoves = 
             seq { for cell in board.Cells do
                     if cell.IsEmpty then
-                        if Cell.K_Neighbours cell board.CellsMap 2 |> Seq.exists (fun c -> c.IsEmpty = false) then
+                        if Cell.K_Neighbours cell.Pos board.CellsMap 2 |> Seq.exists (fun c -> c.IsEmpty = false) then
                             yield cell }
         let opponent = next board.Player
         let getFitness pos player = x.CreateAI(board.SetAs pos player |> Option.get).Fitness |> Map.find player
@@ -159,10 +159,43 @@ type MediumAI(board) =
     override x.CombineProbabilities p1 p2 = p1 + p2 / 2.0
 
 
-type Node = { value: Cell; ai: AI } 
+type Node(pos: CellPos, p1BoardStatus: BoardStatus, p2BoardStatus: BoardStatus) =
+    let statuses = [| p1BoardStatus; p2BoardStatus |]
+
+    member x.Pos with get() = pos
+
+    member x.BoardStatuses with get() = statuses
+
+    member x.Children with get() = []
+
+    member x.StatusFor player =
+        match player with
+        | Player1 -> p1BoardStatus
+        | Player2 -> p2BoardStatus
+
+    static member Generate (startingBoard: Board) (pos: CellPos) (radius: int) (turnsForward: int) =
+        let adjustFor (player: Player) (boardStatus: BoardStatus) = 
+            if player = startingBoard.Player then boardStatus else boardStatus.Inc 1
+        let statusFor player = 
+            match startingBoard.SetAs pos player with
+            | Some(board) -> HardAI(board).BoardStatus |> adjustFor player
+            | None -> raise (Exception("Bad initial pos provided"))
+
+        Node(pos, statusFor Player1, statusFor Player2)
+        //match (startingBoard.SetAs pos Player1, startingBoard.SetAs pos Player2)  with
+        //| (Some(p1Board), Some(p2Board)) ->
+        //    let (p1AI, p2AI) = (HardAI(p1Board), HardAI(p2Board))
+            
+            //let neighbours = Cell.K_Neighbours pos nextBoard.CellsMap 1 |> Seq.filter (fun c -> c.IsEmpty) |> Seq.map (fun c -> c.Pos) |> Seq.toList
+            //let nextBoards = neighbours |> List.map (fun pos -> (pos, nextBoard.SetAs pos targetPlayer |> Option.get))
+            //let nodes = nextBoards |> List.map (fun (pos, board) -> Node(targetPlayer, pos, HardAI(board).BoardStatus, []))
+            //Node(targetPlayer, pos, ai.BoardStatus, nodes)
+        //| _ -> raise (Exception("Bad initial pos provided"))
+
+    override x.ToString() = sprintf "[%2i, %2i]  %s  |  %s" (fst pos) (snd pos) (p1BoardStatus.ToString()) (p2BoardStatus.ToString())
     
 
-type HardAI(board) =
+and HardAI(board) =
     inherit EasyAI(board)
 
     override x.CreateAI board = HardAI(board) :> BaseAI
@@ -186,7 +219,7 @@ type HardAI(board) =
 
     member x.Board with get() = board
 
-    member x.BoardStatus
+    member x.BoardStatus 
         with get() =
             let inline score length rank =
                 match length, rank with
@@ -227,24 +260,38 @@ type HardAI(board) =
                 // The purpose is to estimate how last move affected player's positions. It means we are more interested in board.Player's opponent score.8
                 InProgress(opponent, 0.01 + sumLengths rowStats.[1])
 
-    interface AI with
+    interface AI with 
         member x.Moves 
-            with get() = 
+            with get() =
                 let targetPlayer = board.Player
                 let adversary = next board.Player
+
+                let allCandidates = 
+                    seq { for cell in board.Cells do
+                            if cell.IsEmpty then
+                                if Cell.K_Neighbours cell.Pos board.CellsMap 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
+                                    yield cell.Pos } |> List.ofSeq
+
+                let allNodes = allCandidates |> List.map (fun pos -> Node.Generate board pos 1 1)
+                let notLoosingNodes = 
+                    allNodes 
+                    |> List.filter (fun node -> match node.StatusFor targetPlayer with | Mate(p, _) when p <> targetPlayer -> false | _ -> true)
 
                 let nextAs (board: Board) (player: Player) =
                     seq { for cell in board.Cells do
                             if cell.IsEmpty then
-                                if Cell.K_Neighbours cell board.CellsMap 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
+                                if Cell.K_Neighbours cell.Pos board.CellsMap 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
                                     let nextBoard = board.SetAs cell.Pos player
                                     if nextBoard.IsSome then
                                         let ai = HardAI(nextBoard.Value)
                                         yield (cell.Pos, ai) } |> Seq.toList
                 let next (board: Board) = nextAs board board.Player
-                let addTestPos x y = ((x, y), HardAI(board.SetAs (x, y) board.Player |> Option.get))
+                let addTestPos x y = 
+                    let ai = HardAI(board.SetAs (x, y) board.Player |> Option.get)
+                    ai.BoardStatus |> ignore
+                    ((x, y), ai)
                 let nextBoards = next board
-                let nextBoards = [ addTestPos 7 12; addTestPos 13 13 ]
+                //let nextBoards = [ addTestPos 7 12 ];//; addTestPos 13 13 ]
 
                 let toNum status =
                     match status with
@@ -278,13 +325,13 @@ type HardAI(board) =
                             let myAnalysis = analyzePossibilities myPossibilities
                             InProgress(start.Board.Player, toNum start.BoardStatus * myAnalysis.[1])
 
-//                let combinedBoads = 
-//                    nextBoards 
-//                    |> List.map (fun (pos, board) -> async { return (pos, analyzeGameTree board) }) 
-//                    |> List.toArray 
-//                    |> Async.Parallel 
-//                    |> Async.RunSynchronously 
-//                    |> Array.toList
+        //                let combinedBoads = 
+        //                    nextBoards 
+        //                    |> List.map (fun (pos, board) -> async { return (pos, analyzeGameTree board) }) 
+        //                    |> List.toArray 
+        //                    |> Async.Parallel 
+        //                    |> Async.RunSynchronously 
+        //                    |> Array.toList
                 let combinedBoads = nextBoards |> List.map (fun (pos, board) -> (pos, analyzeGameTree board))
                 let moves = combinedBoads |> List.map (fun (p, b) -> (p, toNum b)) |> List.sortBy snd |> List.rev
                 if moves.IsEmpty then

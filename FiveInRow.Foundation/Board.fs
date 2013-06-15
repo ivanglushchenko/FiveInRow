@@ -22,7 +22,7 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
             else value)
 
     let extendWith player (cell: Cell) = 
-        let nearbyCells = Cell.Neighbours cell cells |> Seq.filter (fun c -> c.IsOccupiedBy player) |> List.ofSeq
+        let nearbyCells = Cell.Neighbours cell.Pos cells |> Seq.filter (fun c -> c.IsOccupiedBy player) |> List.ofSeq
         let newRows = [ for c in nearbyCells -> Row.Create cells cell.Pos c.Pos ]
         
         let replaceRow (rows: Map<Player, Map<RowKey, Row list>>) (player: Player, oldRow: Row, newRow: Row) =
@@ -53,7 +53,7 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
         let nextCells = Cell(cell.Pos, Occupied(player)) |> replaceCell
         let nextRows = rows |> Map.map (fun p value -> if p = player then merge value else value)
 
-        let affectedRowKeys = Cell.Neighbours cell cells |> Seq.filter (fun c -> c.IsEmpty = false) |> Seq.map (fun c -> Row.Create nextCells cell.Pos c.Pos) |> Seq.map (fun r -> r.Key) |> Seq.toList
+        let affectedRowKeys = Cell.Neighbours cell.Pos cells |> Seq.filter (fun c -> c.IsEmpty = false) |> Seq.map (fun c -> Row.Create nextCells cell.Pos c.Pos) |> Seq.map (fun r -> r.Key) |> Seq.toList
 
         let affectedRows = 
             seq { for playerRows in nextRows do

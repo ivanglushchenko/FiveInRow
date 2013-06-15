@@ -1,7 +1,14 @@
 ﻿module FiveInRow.Foundation.GameDef
 
 // Types
-type Player = Player1 | Player2
+type Player = 
+    | Player1 
+    | Player2
+
+    override x.ToString() =
+        match x with
+        | Player1 -> "x"
+        | Player2 -> "o" 
 
 type CellValue = Empty | Occupied of Player
 
@@ -23,15 +30,18 @@ type BoardStatus =
     | InProgress of Player * float
 
     override x.ToString() =
-        let ps p =
-            match p with
-            | Player1 -> "X"
-            | Player2 -> "O" 
         match x with
-        | Mate(p, t) -> sprintf "%s M %i" (ps p) t
-        | Check(p, t) -> sprintf "%s C %i" (ps p) t
-        | InProgress(p, t) -> sprintf "%s ~ %f" (ps p) t
+        | Mate(p, t) -> sprintf "%s M %i" (p.ToString()) t
+        | Check(p, t) -> sprintf "%s C %i" (p.ToString()) t
+        | InProgress(p, t) -> sprintf "%s   %s" (p.ToString()) (t.ToString("f0"))
 
+    member x.Inc turns =
+        match x with
+        | Mate(p, t) -> Mate(p, t + turns)
+        | Check(p, t) -> Check(p, t + turns)
+        | InProgress(p, t) -> InProgress(p, t)
+
+   // member x.Importance with get() = importance
 
 type Difficulty = Easy | Medium | Hard
 
