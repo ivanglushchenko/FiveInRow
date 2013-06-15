@@ -68,6 +68,12 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
 
         Board(next player, nextCells, updatedNextRows)
 
+    let candidates = lazy ( 
+        seq { for cell in listOfCells.Value do
+                if cell.IsEmpty then
+                    if Cell.K_Neighbours cell.Pos cells 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
+                        yield cell.Pos } |> List.ofSeq)
+
     static member Create dim =
         boardDimension <- dim
         let cells = Map.ofList [ for i in 1..dim -> (i, Map.ofList [ for j in 1..dim -> (j, Cell((i, j), Empty)) ]) ]
@@ -91,6 +97,8 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
 
     member x.RowsMap with get() = rows
 
+    member x.Candidates with get() = candidates.Value
+
     override x.ToString() =
         let sb = new System.Text.StringBuilder()
         for row in cells do
@@ -99,5 +107,5 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
                 | Empty -> sb.Append "."
                 | Occupied(Player1) -> sb.Append "x"
                 | Occupied(Player2) -> sb.Append "o") |> ignore
-                sb.AppendLine() |> ignore
+            sb.AppendLine() |> ignore
         sb.ToString()

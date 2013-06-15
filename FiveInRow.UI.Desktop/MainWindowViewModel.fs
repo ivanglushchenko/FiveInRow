@@ -16,8 +16,13 @@ type MainWindowViewModel() =
     let mutable offset = Vector(0.0, 0.0)
     let mutable showResults = false
     let boardView = BoardView.Create(GameSettings(19, Hard, Human))
-    let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (8, 8); (7, 9)])
+    //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (6, 7); (6, 8); (5, 8); (5, 7); (7, 9); (5, 9); (7, 7); (4, 8); (6, 6); (3, 9); (4, 9);])
+    //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (8, 8); (7, 9)])
+    //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(5, 5); (5, 6); (6, 5); (6, 6);(5, 4); (6, 7); ])
+    //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(5, 5); (5, 6); (6, 5); (6, 6);(5, 4); (6, 7); (6, 3); ])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(8, 10); (9, 11); (8, 12); (8, 11); (7, 11); (10, 11); (6, 12); (11, 11); (12, 11); (9, 9); (9, 10); (12, 12);])// (10, 10); (11, 10);])// (6, 10); (7, 10);])// (6, 11); (13, 13);])// (5, 13); (4, 14); ])
+    //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(6, 8); (5, 7); (5, 9); (7, 7); (4, 8); (3, 7); (4, 7); (4, 6); (4, 10); (4, 9); (5, 8); (3, 8); (3, 11); (2, 12); (3, 9); (7, 8); (5, 11); (6, 12);])// (3, 12); (3, 10); ])
+    let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(6, 9); (5, 8); (5, 10); (7, 8); (4, 9); (5, 9); (6, 11); (3, 8); (6, 10); (6, 8); (4, 8); (4, 10); (3, 11); (6, 12); (4, 11); (5, 11); (3, 9); (5, 7); (7, 12); (8, 13); (4, 13); (5, 12); (3, 12); (2, 13); (5, 14); (6, 15); (3, 14); (3, 13); (4, 14); (6, 14);])// (6, 13); (8, 11); ])
 
     member x.Board with get() = boardView
 
