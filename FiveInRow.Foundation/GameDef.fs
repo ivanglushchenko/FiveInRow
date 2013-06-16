@@ -64,4 +64,4 @@ let compareStatus (bs1: BoardStatus) (bs2: BoardStatus) =
     | (Check(_, t1), Check(_, t2)) -> t1.CompareTo t2
     | (Check(_, _), _) -> -1
     | (_, Check(_, _)) -> 1
-    | (InProgress(_, t1), InProgress(_, t2)) -> (t1.CompareTo t2)
+    | (InProgress(_, t1), InProgress(_, t2)) -> -(t1.CompareTo t2)

@@ -14,6 +14,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     let mutable moves = []
     let mutable isRunning = false
     let mutable showFitness = true
+    let winnerChanged = new Event<Player option>()
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 
     let clearBoard() =
@@ -61,7 +62,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         if x.IsCompleted = false then
             match boards.Head.board.Set (i, j) with
             | Some(board) -> 
-                if moves.IsEmpty = false then 
+                if moves.IsEmpty = false then
                     cells.[fst moves.Head - 1].[snd moves.Head - 1].IsLast <- false
                 moves <- (i, j) :: moves
                 cells.[i - 1].[j - 1].Value <- Occupied(boards.Head.board.Player)
@@ -78,11 +79,12 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                         (async {
                             if showFitness then
                                 for ((i, j), fitness) in ai.Moves do
-                                    cells.[i - 1].[j - 1].Fitness <- fitness 
-                            x.RaisePropertiesChanged()
+                                    cells.[i - 1].[j - 1].Fitness <- fitness
                             board.Player |> x.MakeMove
+                            x.RaisePropertiesChanged()
                             x.IsRunning <- false })
-
+                else
+                    winnerChanged.Trigger(x.Winner)
             | None -> ()
 
     member x.MakeMove player =
@@ -149,3 +151,6 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
             if v <> isRunning then
                 isRunning <- v
                 x.OnPropertyChanged(<@ x.IsRunning @>)
+
+    [<CLIEvent>]
+    member x.WinnerChanged = winnerChanged.Publish

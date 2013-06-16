@@ -161,14 +161,30 @@ type MediumAI(board) =
 
 type StatusStatistics = 
     {
-        Mate: (Player * int) option;
-        Checks: int;
-        MaxFitness: float
+        Mate: (Player * int) option
+        Player1Checks: int
+        Player2Checks: int
+        Player1MaxFitness: float
+        Player2MaxFitness: float
     }
 
+let EmptyStats = { Mate = None; Player1Checks = 0; Player2Checks = 0; Player1MaxFitness = 0.0; Player2MaxFitness = 0.0 }
 
-type Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: float * float * float) =
+
+type Turn(startingBoard) =
+    let q = 0
+
+and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
     let cmp = compareStatus (snd p1) (snd p2)
+
+    new(startingBoard: Board, pos: CellPos) =
+        let adjustFor (player: Player) (boardStatus: BoardStatus) = 
+            if player = startingBoard.Player then boardStatus else boardStatus.Inc 1
+        let statusFor player = 
+            match startingBoard.SetAs pos player with
+            | Some(board) -> (board, HardAI(board).BoardStatus |> adjustFor player)
+            | None -> raise (Exception("Bad initial pos provided"))
+        Node(pos, statusFor Player1, statusFor Player2, [], EmptyStats)
 
     member x.Pos with get() = pos
 
@@ -187,31 +203,29 @@ type Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), ch
             | -1 -> snd p1
             | _ -> snd p2
 
+    member x.CombinedStatusFor player = 
+        match (snd p1, snd p2) with
+        | (InProgress(p1, t1), InProgress(p2, t2)) -> InProgress(player, if player = Player1 then t1 + t2 / 2.0 else t1 / 2.0 + t2)
+        | _ -> x.TopStatus
+
     member x.AdjustStats (stats: StatusStatistics) =
-        match x.TopStatus with
-        | Mate(p1, t1) ->
-            match stats.Mate with
-            | Some(p2, t2) when t1 > t2 -> stats
-            | _ -> { Mate = Some(p1, t1); Checks = stats.Checks; MaxFitness = stats.MaxFitness }
-        | _ -> stats
+        let addStatus status stats =
+            match status with
+            | Mate(p1, t1) ->
+                match stats.Mate with
+                | Some(p2, t2) when t1 > t2 -> stats
+                | _ -> { Mate = Some(p1, t1); Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
+            | Check(Player1, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks + 1; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
+            | Check(Player2, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks + 1; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
+            | InProgress(Player1, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = max t stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
+            | InProgress(Player2, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = max t stats.Player2MaxFitness }
+        stats |> addStatus (snd p1) |> addStatus (snd p2)
 
     member x.Expand player radius =
         let startingBoard = (function | Player1 -> p1 | _ -> p2) player |> fst
-        //let candidates = Cell.K_Neighbours pos startingBoard.CellsMap radius |> Seq.filter (fun c -> c.IsEmpty) |> Seq.map (fun c -> c.Pos) |> Seq.toList
         let children = startingBoard.Candidates |> List.map (fun pos -> Node.New startingBoard pos)
-        let stats = children |> List.fold (fun acc (node: Node) -> node.AdjustStats acc) { Mate = None; Checks = 0; MaxFitness = 0.0 }
-        let analyzePossibilities (nodes: Node list) =
-            let acc = Array.create 3 0.0
-            let inline addStatus (op: float -> float -> float) status =
-                match status with
-                | Mate(_, _) -> acc.[0] <- op acc.[0] 1.0
-                | Check(_, _) -> acc.[1] <- op acc.[1] 1.0
-                | InProgress(_, p) -> if acc.[2] < p then acc.[2] <- p
-            for node in nodes do
-                player |> node.StatusFor |> addStatus (+)
-                player |> next |> node.StatusFor |> addStatus (+)
-            (-acc.[0], -acc.[1], -acc.[2])
-        Node(pos, p1, p2, children, analyzePossibilities children)
+        let stats = children |> List.fold (fun acc (node: Node) -> node.AdjustStats acc) EmptyStats
+        Node(pos, p1, p2, children, stats)
 
     static member New (startingBoard: Board) (pos: CellPos) =
         let adjustFor (player: Player) (boardStatus: BoardStatus) = 
@@ -221,10 +235,24 @@ type Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), ch
             | Some(board) -> (board, HardAI(board).BoardStatus |> adjustFor player)
             | None -> raise (Exception("Bad initial pos provided"))
 
-        Node(pos, statusFor Player1, statusFor Player2, [], (0.0, 0.0, 0.0))
+        Node(pos, statusFor Player1, statusFor Player2, [], EmptyStats)
+
+    static member StartFrom (board: Board) =
+        let targetPlayer = board.Player
+        let adversary = next board.Player
+        let allNodes = board.Candidates |> List.map (fun pos -> Node.New board pos)
+        let notLoosingNodes = 
+            allNodes 
+            |> List.filter (fun node -> match node.StatusFor targetPlayer with | Mate(p, _) when p <> targetPlayer -> false | _ -> true)
+            |> List.sortBy (fun node -> node.TopStatus)
+
+        []
 
     override x.ToString() = sprintf "[%2i, %2i]  %O  |  %O" (fst pos) (snd pos) (snd p1) (snd p2)
     
+    interface IComparable with
+        member x.CompareTo other = compareStatus x.TopStatus (other :?> Node).TopStatus
+
 
 and HardAI(board) =
     inherit EasyAI(board)
@@ -288,18 +316,12 @@ and HardAI(board) =
             with get() =
                 let targetPlayer = board.Player
                 let adversary = next board.Player
-
-                let toNum status =
-                    match status with
-                    | Mate(p, t) -> (if p = board.Player then 1.0 else -1.0) * (10.0 - (float t)) * 1000000.0
-                    | Check(p, t) -> (if p = board.Player then 1.0 else -1.0) * (10.0 - (float t)) * 10000.0
-                    | InProgress(_, p) -> (p * 1000.0 |> int |> float) / 1000.0
-
+                
                 let allNodes = board.Candidates |> List.map (fun pos -> Node.New board pos)
                 let notLoosingNodes = 
                     allNodes 
                     |> List.filter (fun node -> match node.StatusFor targetPlayer with | Mate(p, _) when p <> targetPlayer -> false | _ -> true)
-                    |> List.sortBy (fun node -> node.TopStatus)
+                    |> List.sortWith (fun n1 n2 -> compareStatus (n1.CombinedStatusFor targetPlayer) (n2.CombinedStatusFor targetPlayer))
                 let topMoves =
                     if notLoosingNodes.Length < 2 then notLoosingNodes
                     else
@@ -311,80 +333,41 @@ and HardAI(board) =
                             let myChecks = notLoosingNodes |> List.filter (isCheck targetPlayer)
                             if myChecks.IsEmpty then topBunch()
                             else
-                                let opChecks = notLoosingNodes |> List.filter (isCheck adversary)
+                                let opChecks = myChecks |> List.filter (isCheck adversary)
                                 if opChecks.IsEmpty then myChecks else opChecks
                         | _ -> notLoosingNodes |> Seq.take 5 |> Seq.toList
-
-                        
 
                 match topMoves with
                 | hd :: [] -> [(hd.Pos, 1.0)]
                 | hd :: tl -> 
-                    let expandedNodes = topMoves |> List.map (fun node -> node.Expand targetPlayer 2) |> List.sortBy (fun node -> node.Stats)
-                    [(expandedNodes.Head.Pos, 2.0)]
-                | [] -> [(allNodes.Head.Pos, -1.0)]
-                //else
-
-//                    let nextAs (board: Board) (player: Player) =
-//                        seq { for cell in board.Cells double
-//                                if cell.IsEmpty then
-//                                    if Cell.K_Neighbours cell.Pos board.CellsMap 1 |> Seq.exists (fun c -> c.IsEmpty = false) then
-//                                        let nextBoard = board.SetAs cell.Pos player
-//                                        if nextBoard.IsSome then
-//                                            let ai = HardAI(nextBoard.Value)
-//                                            yield (cell.Pos, ai) } |> Seq.toList
-//                    let next (board: Board) = nextAs board board.Player
-//                    let addTestPos x y = 
-//                        let ai = HardAI(board.SetAs (x, y) board.Player |> Option.get)
-//                        ai.BoardStatus |> ignore
-//                        ((x, y), ai)
-//                    let nextBoards = next board
-//                    //let nextBoards = [ addTestPos 7 12 ];//; addTestPos 13 13 ]
-//
-//
-//
-//                    let incTurns player turns = if player = targetPlayer then turns + 2 else turns + 1
-//                    let analyzeGameTree (start: HardAI) =
-//                        match start.BoardStatus with
-//                        | Mate(_, 0) -> start.BoardStatus
-//                        | _ ->
-//                            let myPossibilities = nextAs start.Board targetPlayer |> List.sortBy snd |> List.map (fun (p, ai) -> (p, ai.BoardStatus))
-//                            let opPossibilities = nextAs start.Board adversary |> List.sortBy snd |> List.map (fun (p, ai) -> (p, ai.BoardStatus))
-//                            match (snd myPossibilities.Head, snd opPossibilities.Head) with
-//                            | (Mate(p1, t1), Mate(p2, t2)) -> if incTurns p1 t1 < incTurns p2 t2 then Mate(p1, t1 + 2) else Mate(p2, t2 + 1)
-//                            | (Mate(p1, t1), _) -> Mate(p1, t1 + 2)
-//                            | (_, Mate(p, t)) -> Mate(p, t + 1)
-//                            | (Check(p1, t1), Check(p2, t2)) -> if incTurns p1 t1 < incTurns p2 t2 then Check(p1, t1 + 2) else Check(p2, t2 + 1)
-//                            | (Check(p1, t1), _) -> Check(p1, t1 + 2)
-//                            | (_, Check(p, t)) -> Check(p, t + 1)
-//                            | _ ->
-//                                let analyzePossibilities (xs: (CellPos * BoardStatus) list) =
-//                                    let acc = Array.create 3 0.0
-//                                    for (_, bs) in xs do
-//                                        match bs with
-//                                        | Mate(_, _) -> acc.[0] <- acc.[0] + 1.0
-//                                        | Check(_, _) -> acc.[1] <- acc.[1] + 1.0
-//                                        | InProgress(_, p) -> if acc.[2] < p then acc.[2] <- p
-//                                    acc
-//                                let myAnalysis = analyzePossibilities myPossibilities
-//                                InProgress(start.Board.Player, toNum start.BoardStatus * myAnalysis.[1])
-//
-//            //                let combinedBoads = 
-//            //                    nextBoards 
-//            //                    |> List.map (fun (pos, board) -> async { return (pos, analyzeGameTree board) }) 
-//            //                    |> List.toArray 
-//            //                    |> Async.Parallel 
-//            //                    |> Async.RunSynchronously 
-//            //                    |> Array.toList
-//                    let combinedBoads = nextBoards |> List.map (fun (pos, board) -> (pos, analyzeGameTree board))
-//                    let moves = combinedBoads |> List.map (fun (p, b) -> (p, toNum b)) |> List.sortBy snd |> List.rev
-//                    if moves.IsEmpty then
-//                        let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)
-//                        if board.CellsMap.[fst center].[snd center].IsEmpty then [ (center, 0.0) ]
-//                        else if board.Cells |> Seq.isEmpty then []
-//                        else [ ((board.Cells |> Seq.head).Pos, 0.0) ]
-//                    else
-//                        moves |> Seq.take 1 |> Seq.toList
+                    match hd.StatusFor targetPlayer with
+                    | Mate(p, 0) when p = targetPlayer ->  [(hd.Pos, 1.0)]
+                    | _ ->
+                        let expandedNodes = topMoves |> List.map (fun node -> node.Expand targetPlayer 2) |> List.sortBy (fun node -> node.Stats)
+                        let notLoosingExpNodes = 
+                            expandedNodes 
+                            |> List.filter (
+                                fun node ->
+                                    match node.Stats.Mate with
+                                    | Some(adversary, _) -> false
+                                    | _ -> true)
+                        if notLoosingExpNodes.IsEmpty then [(expandedNodes.Head.Pos, 2.0)]
+                        else 
+                            let sortedNodes = 
+                                notLoosingExpNodes 
+                                |> List.sortBy (
+                                    fun s -> 
+                                        if targetPlayer = Player1 then (s.Stats.Player1Checks, -s.Stats.Player1MaxFitness - s.Stats.Player2MaxFitness / 2.0) 
+                                        else (s.Stats.Player2Checks, -s.Stats.Player2MaxFitness - s.Stats.Player1MaxFitness / 2.0))
+                            [(sortedNodes.Head.Pos, 2.0)]
+                | [] ->
+                    match allNodes with
+                    | _ :: _ -> [(allNodes.Head.Pos, -1.0)]
+                    | _ ->
+                        let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)
+                        if board.CellsMap.[fst center].[snd center].IsEmpty then [ (center, 0.0) ]
+                        else if board.Cells |> Seq.isEmpty then []
+                        else [ ((board.Cells |> Seq.head).Pos, 0.0) ]
 
         member x.Winner
             with get() =

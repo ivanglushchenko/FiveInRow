@@ -37,7 +37,7 @@
                     <Button Style="{StaticResource GoAppBarButtonStyle}" />
                 </StackPanel>
                 
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Visible">
                     <Button Style="{StaticResource SaveLocalAppBarButtonStyle}" Click="OnPersistMoves" />
                 </StackPanel>
             </Grid>
@@ -67,7 +67,12 @@
                         </Grid>
                         <Ellipse Stroke="#FF00b000" StrokeThickness="7" Width="50" Height="50" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}" />
 
-                        <TextBlock Text="&#xE10B;" FontFamily="Segoe UI Symbol" Margin="0,-1,-1,0" Foreground="Yellow" Visibility="{Binding IsLast, Converter={StaticResource TrueToVisibilityConverter}}" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=X}">
+                            <Polygon Fill="Yellow" Points="0,0,10,0,10,10" Visibility="{Binding IsLast, Converter={StaticResource TrueToVisibilityConverter}}" />
+                        </Border>
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="{Binding Value, Converter={StaticResource CP2VisibilityConverter}, ConverterParameter=O}">
+                            <TextBlock Text="&#xE10B;" FontFamily="Segoe UI Symbol" Margin="0,-1,-1,0" Foreground="Yellow" Visibility="{Binding IsLast, Converter={StaticResource TrueToVisibilityConverter}}"/>
+                        </Border>
                     </Grid>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

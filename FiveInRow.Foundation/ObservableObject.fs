@@ -7,6 +7,8 @@ open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 
 type ObservableObject() = 
+    static let mutable syncContext = System.Threading.SynchronizationContext.Current
+
     let propertyChanged = new Event<_, _>()
 
     interface INotifyPropertyChanged with
@@ -16,7 +18,15 @@ type ObservableObject() =
     abstract member OnPropertyChanged: string -> unit
 
     default x.OnPropertyChanged(propertyName : string) =
-        propertyChanged.Trigger(x, new PropertyChangedEventArgs(propertyName))
+        Async.RunSynchronously
+            (async {
+                // Switch to the UI thread and update the UI. 
+                do! Async.SwitchToContext(syncContext)
+                propertyChanged.Trigger(x, new PropertyChangedEventArgs(propertyName))
+                // Switch back to the thread pool. 
+                do! Async.SwitchToThreadPool()
+            })
+
  
     member x.OnPropertyChanged(expr : Expr) =
         match expr with

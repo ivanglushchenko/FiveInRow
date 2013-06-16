@@ -21,6 +21,7 @@ namespace FiveInRow.UI.Metro
         {
             _params = gameParams;
             Board = BoardView.Create(gameParams);
+            Board.WinnerChanged += Board_WinnerChanged;
         }
 
         #endregion .ctors
@@ -90,16 +91,7 @@ namespace FiveInRow.UI.Metro
         {
             if (Board.Winner != null) return;
             Board.Set(row, col);
-            if (Board.Winner != null)
-            {
-                RefreshWinningRow();
-
-                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
-                dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
-                dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
-                dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));
-                await dialog.ShowAsync();
-            }
+            PersistMoves();
         }
 
         public void Restart()
@@ -164,6 +156,20 @@ namespace FiveInRow.UI.Metro
                     X2 = (row.To.Item2 - 0.5) * 60.0 + _offset.X,
                     Y2 = (row.To.Item1 - 0.5) * 60.0 + _offset.Y
                 };
+            }
+        }
+
+        async void Board_WinnerChanged(object sender, Microsoft.FSharp.Core.FSharpOption<GameDef.Player> args)
+        {
+            if (Board.Winner != null)
+            {
+                RefreshWinningRow();
+
+                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
+                dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
+                dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
+                dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));
+                await dialog.ShowAsync();
             }
         }
 
