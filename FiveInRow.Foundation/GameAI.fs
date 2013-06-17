@@ -177,15 +177,6 @@ type Turn(startingBoard) =
 and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
     let cmp = compareStatus (snd p1) (snd p2)
 
-    new(startingBoard: Board, pos: CellPos) =
-        let adjustFor (player: Player) (boardStatus: BoardStatus) = 
-            if player = startingBoard.Player then boardStatus else boardStatus.Inc 1
-        let statusFor player = 
-            match startingBoard.SetAs pos player with
-            | Some(board) -> (board, HardAI(board).BoardStatus |> adjustFor player)
-            | None -> raise (Exception("Bad initial pos provided"))
-        Node(pos, statusFor Player1, statusFor Player2, [], EmptyStats)
-
     member x.Pos with get() = pos
 
     member x.Children with get() = children
@@ -249,7 +240,7 @@ and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), chi
         []
 
     override x.ToString() = sprintf "[%2i, %2i]  %O  |  %O" (fst pos) (snd pos) (snd p1) (snd p2)
-    
+
     interface IComparable with
         member x.CompareTo other = compareStatus x.TopStatus (other :?> Node).TopStatus
 

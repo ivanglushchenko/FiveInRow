@@ -5,64 +5,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 using Windows.UI;
 
 namespace FiveInRow.UI.Metro
 {
-    public partial class MenuPageViewModel : ObservableObject
+    public partial class MenuPageViewModel : GameSettingsVM
     {
         #region .ctors
 
         public MenuPageViewModel()
         {
-            OpponentAI = true;
-            BoardSize19 = true;
-            DiffEasy = true;
+            LoadSettings();
         }
 
         #endregion .ctors
 
-        #region Properties
-
-        public bool OpponentAI { get; set; }
-        public bool OpponentAI_Player2 { get; set; }
-
-        public bool OpponentHuman
-        {
-            get { return p_OpponentHuman; }
-            set
-            {
-                if (p_OpponentHuman != value)
-                {
-                    p_OpponentHuman = value;
-                    OnPropertyChanged("OpponentHuman");
-                }
-            }
-        }
-        private bool p_OpponentHuman;
-
-        public bool BoardSize19 { get; set; }
-        public bool BoardSize35 { get; set; }
-        public bool BoardSize51 { get; set; }
-
-        public bool DiffEasy { get; set; }
-        public bool DiffMedium { get; set; }
-        public bool DiffHard { get; set; }
-
-        #endregion Properties
-
         #region Methods
 
-        public GameSettings ToGameParams()
+        private async void LoadSettings()
         {
-            return new GameSettings()
+            var gs = await SettingsStore.Get();
+            foreach (var item in gs.GetType().GetTypeInfo().DeclaredProperties)
             {
-                BoardSize = BoardSize19 ? 19 : (BoardSize35 ? 35 : 51),
-                Opponent = OpponentAI ? GameDef.OpponentType.NewAI(GameDef.Player.Player2) : (OpponentAI_Player2 ? GameDef.OpponentType.NewAI(GameDef.Player.Player1) : GameDef.OpponentType.Human),
-                Difficulty = DiffEasy ? GameDef.Difficulty.Easy : (DiffMedium ? GameDef.Difficulty.Medium : GameDef.Difficulty.Hard)
-            };
+                item.SetValue(this, item.GetValue(gs));
+            }
         }
 
-        #endregion Methods
+        public GameSettingsVM GetSettings()
+        {
+            var gs = new GameSettingsVM();
+            foreach (var item in gs.GetType().GetTypeInfo().DeclaredProperties)
+            {
+                item.SetValue(gs, item.GetValue(this));
+            }
+            return gs;
+        }
+
+        #endregion Method
     }
 }

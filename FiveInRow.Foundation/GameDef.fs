@@ -41,8 +41,6 @@ type BoardStatus =
         | Check(p, t) -> Check(p, t + turns)
         | InProgress(p, t) -> InProgress(p, t)
 
-   // member x.Importance with get() = importance
-
 type Difficulty = Easy | Medium | Hard
 
 type OpponentType = Human | AI of Player

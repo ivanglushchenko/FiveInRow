@@ -84,7 +84,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                             x.RaisePropertiesChanged()
                             x.IsRunning <- false })
                 else
-                    winnerChanged.Trigger(x.Winner)
+                    ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
             | None -> ()
 
     member x.MakeMove player =

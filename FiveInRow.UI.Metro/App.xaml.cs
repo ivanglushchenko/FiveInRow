@@ -1,4 +1,6 @@
-﻿using System;
+﻿using FiveInRow.Foundation;
+using Microsoft.FSharp.Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -77,6 +79,10 @@ namespace FiveInRow.UI.Metro
             Window.Current.Activate();
 
             SettingsPane.GetForCurrentView().CommandsRequested += App_CommandsRequested;
+
+            var dispatcher = Window.Current.Dispatcher;
+            ObservableObject.Post = FuncConvert.ToFSharpFunc<FSharpFunc<Unit, Unit>>(
+                async callback => await dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, (Windows.UI.Core.DispatchedHandler)(() => { callback.Invoke((Unit)null); })));
         }
 
         /// <summary>

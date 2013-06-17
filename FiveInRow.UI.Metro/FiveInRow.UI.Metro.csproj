@@ -113,6 +113,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Components\BoardPanel.cs" />
+    <Compile Include="Components\SettingsStore.cs" />
     <Compile Include="Converters\CellBkgConverter.cs" />
     <Compile Include="Converters\CellValue2VisibilityConverter.cs" />
     <Compile Include="Converters\DiffColorConverter.cs" />
