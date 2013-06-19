@@ -8,6 +8,7 @@ open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 
 open FiveInRow.Foundation.GameDef
+open FiveInRow.Foundation.Simulation
 open FiveInRow.Foundation
 
 type MainWindowViewModel() = 
@@ -15,7 +16,7 @@ type MainWindowViewModel() =
 
     let mutable offset = Vector(0.0, 0.0)
     let mutable showResults = false
-    let boardView = BoardView.Create(GameSettings(19, Hard, Human))
+    let boardView = BoardView.Create(GameSettings(19, Easy, Human))
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (6, 7); (6, 8); (5, 8); (5, 7); (7, 9); (5, 9); (7, 7); (4, 8); (6, 6); (3, 9); (4, 9);])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (8, 8); (7, 9)])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(5, 5); (5, 6); (6, 5); (6, 6);(5, 4); (6, 7); ])
@@ -72,3 +73,23 @@ type MainWindowViewModel() =
     member x.Start() = boardView.Start()
 
     member x.MakeMove() = boardView.MakeMove boardView.NextTurn
+
+    member x.Simulate() =
+        let diffs = [ Easy; Medium; Hard ]
+        let pairs =
+            seq { for d1 in diffs do
+                    for d2 in diffs do
+                        if d1 <> d2 then
+                            yield (d1, d2, function | Player1 -> d1 | _ -> d2)
+                            yield (d2, d1, function | Player1 -> d2 | _ -> d1) }
+            |> Seq.toList
+        let test (d1, d2, f) =
+            let battle = Battle(d1, d2)
+            match battle.Play() with
+            | Some(p) -> (d1, d2, Some(f p))
+            | None -> (d1, d2, None)
+        let results = pairs |> List.map test
+
+        for (d1, d2, res) in results do
+            printfn "%O x %O -> %O" d1 d2 res
+        ()

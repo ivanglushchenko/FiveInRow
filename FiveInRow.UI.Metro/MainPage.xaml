@@ -34,7 +34,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
                     <Button Style="{StaticResource FavoriteAppBarButtonStyle}" Click="OnRestart" />
                     <Button Style="{StaticResource UndoAppBarButtonStyle}" Click="OnUndo" />
-                    <Button Style="{StaticResource GoAppBarButtonStyle}" />
+                    <!--<Button Style="{StaticResource GoAppBarButtonStyle}" />-->
                 </StackPanel>
                 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">

@@ -413,7 +413,7 @@
 
     <Style x:Key="FavoriteAppBarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource AppBarButtonStyle}">
         <Setter Property="AutomationProperties.AutomationId" Value="FavoriteAppBarButton"/>
-        <Setter Property="AutomationProperties.Name" Value="Restart game"/>
+        <Setter Property="AutomationProperties.Name" Value="Start new game"/>
         <Setter Property="Content" Value="&#xE113;"/>
     </Style>
 

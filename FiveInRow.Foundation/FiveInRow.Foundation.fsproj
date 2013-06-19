@@ -43,6 +43,7 @@
     <Compile Include="CellView.fs" />
     <Compile Include="BoardView.fs" />
     <Compile Include="EventProc.fs" />
+    <Compile Include="Simulation.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

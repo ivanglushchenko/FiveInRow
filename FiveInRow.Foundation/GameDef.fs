@@ -41,7 +41,16 @@ type BoardStatus =
         | Check(p, t) -> Check(p, t + turns)
         | InProgress(p, t) -> InProgress(p, t)
 
-type Difficulty = Easy | Medium | Hard
+type Difficulty = 
+    | Easy 
+    | Medium 
+    | Hard
+
+    override x.ToString() =
+        match x with
+        | Easy -> "Easy"
+        | Medium -> "Medium"
+        | Hard -> "Hard"
 
 type OpponentType = Human | AI of Player
 

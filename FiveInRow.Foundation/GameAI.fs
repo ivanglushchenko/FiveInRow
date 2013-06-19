@@ -127,6 +127,36 @@ type EasyAI(board) =
                 8.0                      // length 3, rank 0
             |]
 
+    override x.Fitness
+        with get() =
+            let inline score length rank =
+                match length, rank with
+                | l, _ when l >= 5 -> x.RowScores.[0]
+                | 4, 2 -> x.RowScores.[1]
+                | 4, 1 -> x.RowScores.[2]
+                | 4, 0 -> x.RowScores.[3]
+                | 3, 2 -> x.RowScores.[4]
+                | 3, 1 -> x.RowScores.[5]
+                | 3, 0 -> x.RowScores.[6]
+                | _ -> rank * rank |> float
+
+            let calcFitness player = 
+                let rowStats =
+                    let array = Array.init 6 (fun i -> Array.create 3 0)
+                    for rowGroup in board.RowsMap.[player] do
+                        for row in rowGroup.Value do
+                            if row.Length <= 5 then
+                                let trimmedLength = min row.Length 5
+                                array.[trimmedLength].[row.Rank] <- array.[trimmedLength].[row.Rank] + 1
+                    array
+                let numOfRows length rank = rowStats.[length].[rank]
+                if rowStats.[5] |> Array.exists (fun n -> n > 0) then Win
+                else if numOfRows 4 2 >= 1 then WinIn1Turn
+                else 
+                    let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
+                    Probability(rowStats |> Array.mapi sumRanks |> Array.sum)
+            Map.ofList [(Player1, calcFitness Player1); (Player2, calcFitness Player2)]
+
     override x.CombineProbabilities p1 p2 = p1 + p2
 
 

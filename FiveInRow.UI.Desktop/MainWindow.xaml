@@ -116,6 +116,7 @@
                         <RadioButton Content="AI Player2" IsChecked="{Binding OpponentPlayer2}" />
                         <Button Content="Restart" Margin="0,10,0,0" x:Name="btnRestart" />
                         <Button Content="Make move" Margin="0,10,0,0" x:Name="btnMakeMove" />
+                        <Button Content="Simulate" Margin="0,10,0,0" x:Name="btnSimulate" />
                     </StackPanel>
                     
                     <StackPanel Margin="10,20,0,0" Orientation="Horizontal">
