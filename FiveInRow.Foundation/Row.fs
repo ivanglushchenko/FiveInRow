@@ -45,6 +45,17 @@ type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
 
     let rank = getRank cells
 
+    let actionPoints = lazy (
+        let inline get (pos: CellPos) dr dc = 
+            let newPos = (fst pos + dr, snd pos + dc)
+            if isValid newPos && cells.[fst newPos].[snd newPos].IsEmpty then [ newPos ] else []
+        match direction with
+            | S -> get posFrom -1 0 @ get posTo 1 0
+            | E -> get posFrom 0 -1 @ get posTo 0 1
+            | SE -> get posFrom -1 -1 @ get posTo 1 1
+            | SW -> get posFrom -1 1 @ get posTo 1 -1
+        )
+
     static member Create (cells: Map<int, Map<int, Cell>>) posFrom posTo =
         match (compare (fst posFrom) (fst posTo), compare (snd posFrom) (snd posTo)) with
         | (-1, _) -> Row(cells, posFrom, posTo)
@@ -69,8 +80,13 @@ type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
 
     member x.Rank with get() = rank
 
+    member x.ActionPoints with get() = actionPoints.Value
+
     override x.ToString() = sprintf "(%i:%i)->(%i:%i)" (fst posFrom) (snd posFrom) (fst posTo) (snd posTo)
 
     member x.UpdateRank (cells: Map<int, Map<int, Cell>>) = 
         let newRank = getRank cells
         if newRank <> rank then Some(Row.Create cells x.From x.To) else None
+
+    member x.Extend pos =
+        if neighbours posFrom pos then Row.Create cells pos posTo else Row.Create cells posFrom pos

@@ -13,7 +13,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     let mutable boards = [ { board = startingBoard; ai = ai startingBoard } ]
     let mutable moves = []
     let mutable isRunning = false
-    let mutable showFitness = true
+    let mutable showFitness = false
     let winnerChanged = new Event<Player option>()
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
 

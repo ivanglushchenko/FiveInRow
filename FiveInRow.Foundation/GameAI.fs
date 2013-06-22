@@ -1,6 +1,7 @@
 ﻿module FiveInRow.Foundation.GameAI
 
 open GameDef
+open BoardAnalysis
 open System
 
 
@@ -201,8 +202,12 @@ type StatusStatistics =
 let EmptyStats = { Mate = None; Player1Checks = 0; Player2Checks = 0; Player1MaxFitness = 0.0; Player2MaxFitness = 0.0 }
 
 
-type Turn(startingBoard) =
-    let q = 0
+type Turn(board: Board) =
+    let ai = HardAI(board)
+    
+    let nextBoards = board.Candidates |> List.choose (fun pos -> board.Set pos)// |> List.filter (fun 
+
+
 
 and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
     let cmp = compareStatus (snd p1) (snd p2)
@@ -293,44 +298,15 @@ and HardAI(board) =
 
     member x.BoardStatus 
         with get() =
-            let inline score length rank =
-                match length, rank with
-                | l, _ when l >= 5 -> x.RowScores.[0]
-                | 4, 2 -> x.RowScores.[1]
-                | 4, 1 -> x.RowScores.[2]
-                | 4, 0 -> x.RowScores.[3]
-                | 3, 2 -> x.RowScores.[4]
-                | 3, 1 -> x.RowScores.[5]
-                | 3, 0 -> x.RowScores.[6]
-                | _ -> rank * rank |> float
-
-            let rowStats =
-                let array = Array.init 2 (fun _ -> Array.init 6 (fun i -> Array.create 3 0))
-                for rowGroup in board.RowsMap do
-                    for rows in rowGroup.Value do
-                        for row in rows.Value do
-                        if row.Length <= 5 then
-                            let playerPos = if board.Player = rowGroup.Key then 0 else 1
-                            let trimmedLength = min row.Length 5
-                            array.[playerPos].[trimmedLength].[row.Rank] <- array.[playerPos].[trimmedLength].[row.Rank] + 1
-                array
-            let numOfRows pi length rank = rowStats.[pi].[length].[rank]
-            let myRows = numOfRows 0
-            let opRows = numOfRows 1
-            let opponent = board.Player |> next
-            if myRows 5 2 > 0 || myRows 5 1 > 0 || myRows 5 0 > 0 then raise (Exception("Game should have stopped 2 rounds ago"))
-            else if opRows 5 2 > 0 || opRows 5 1 > 0 || opRows 5 0 > 0 then Mate(opponent, 0)
-            else if myRows 4 2 > 0 || myRows 4 1 > 0 then Mate(board.Player, 1)
-            else if opRows 4 2 > 0 || opRows 4 1 > 1 then Mate(opponent, 2)
-            else if myRows 3 2 > 0 then Mate(board.Player, 3)
-            else if opRows 3 2 > 1 || (opRows 3 2 > 0 && opRows 4 1 > 0) then Mate(opponent, 4)
-            else if opRows 3 2 > 0 then Check(opponent, 4)
-            else if opRows 4 1 > 0 then Check(opponent, 2)
-            else 
-                let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
-                let sumLengths lengths = lengths |> Array.mapi sumRanks |> Array.sum
-                // The purpose is to estimate how last move affected player's positions. It means we are more interested in board.Player's opponent score.8
-                InProgress(opponent, 0.01 + sumLengths rowStats.[1])
+            let inline scoreOf (rd: RowDistribution) =
+                (float rd.L5) * x.RowScores.[0] + 
+                (float rd.L4R2) * x.RowScores.[1] + 
+                (float rd.L4R1) * x.RowScores.[2] +
+                (float rd.L3R2) * x.RowScores.[4] +
+                (float rd.L3R1) * x.RowScores.[5] +
+                (float rd.L2R2) * 2.0 +
+                (float rd.L2R1) * 1.0
+            boardStatusOf board scoreOf
 
     interface AI with 
         member x.Moves 
