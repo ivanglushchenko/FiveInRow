@@ -202,11 +202,47 @@ type StatusStatistics =
 let EmptyStats = { Mate = None; Player1Checks = 0; Player2Checks = 0; Player1MaxFitness = 0.0; Player2MaxFitness = 0.0 }
 
 
-type Turn(board: Board) =
-    let ai = HardAI(board)
-    
-    let nextBoards = board.Candidates |> List.choose (fun pos -> board.Set pos)// |> List.filter (fun 
+type Turn(board: Board, targetPlayer: Player, stop: int) =
+    let allBoards = 
+        if stop <= 0 then [] else board.Candidates 
+        |> List.choose (fun pos -> board.Set pos)
+        |> List.map (fun board -> (board, firstCheckOrMate board))
 
+    let notLoosingBoards = 
+        allBoards 
+        |> List.filter (fun (b, bs) -> match bs with | Some(Mate(p, _)) when p <> board.Player -> false | _ -> true)
+
+    let winningBoards = 
+        allBoards 
+        |> List.filter (fun (b, bs) -> match bs with | Some(Mate(p, _)) when p = board.Player -> true | _ -> false)
+
+    let nextBoards =
+        if winningBoards.Length > 0 then []
+        else if notLoosingBoards.Length < allBoards.Length then notLoosingBoards
+        else allBoards |> List.filter (fun (b, bs) -> match bs with | Some(InProgress(_, _)) -> false | None -> false | _ -> true)
+
+    let nextTurns =
+        nextBoards 
+        //|> List.filter (fun (bs, s) -> match s with | Check(_, _) -> true | _ -> false)
+        |> List.map (fun (b, bs) -> Turn(b, targetPlayer, stop - 1))
+
+    //let result =
+    //    if targetPlayer = board.Player then
+    //        if winnnigBoards.Length 
+
+    member x.Board with get() = board
+
+    member x.AllBoards with get() = allBoards
+
+    member x.NotLoosingBoards with get() = notLoosingBoards
+
+    member x.WinningBoards with get() = winningBoards
+
+    member x.NextBoards with get() = nextBoards
+
+    member x.NextTurns with get() = nextTurns
+
+    override x.ToString() = sprintf "%O" board
 
 
 and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
@@ -314,6 +350,8 @@ and HardAI(board) =
                 let targetPlayer = board.Player
                 let adversary = next board.Player
                 
+                let turn = Turn(board, targetPlayer, 10)
+
                 let allNodes = board.Candidates |> List.map (fun pos -> Node.New board pos)
                 let notLoosingNodes = 
                     allNodes 

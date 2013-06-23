@@ -50,7 +50,7 @@ let boardStatusOf (board: Board) (scorer: RowDistribution -> float) =
     else if next.L3R2 > 0 then Check(nextPlayer, 4)
     else if next.L4R1 > 0 then Check(nextPlayer, 2)
     else 
-        // The purpose is to estimate how last move affected player's positions. It means we are more interested in board.Player's opponent score.8
+        // The purpose is to estimate how last move affected player's positions. It means we are more interested in board.Player's opponent score
         InProgress(nextPlayer, 0.01 + (scorer next) + (scorer curr) / 2.0)
 
 let firstCheckOrMate (board: Board) =

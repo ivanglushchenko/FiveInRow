@@ -4,7 +4,7 @@ open GameDef
 open System
 open System.ComponentModel
 
-type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Player, Map<RowKey, Row list>>) =
+type Board(lastPos: CellPos, currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Player, Map<RowKey, Row list>>) =
     let listOfCells = lazy (
         seq { for row in cells do
                 for cell in row.Value do
@@ -66,7 +66,7 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
             |> Seq.toList
         let updatedNextRows = affectedRows |> List.fold (fun acc row -> replaceRow acc row) nextRows
 
-        Board(next player, nextCells, updatedNextRows)
+        Board(cell.Pos, next player, nextCells, updatedNextRows)
 
     let candidates = lazy ( 
         seq { for cell in listOfCells.Value do
@@ -78,7 +78,7 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
         boardDimension <- dim
         let cells = Map.ofList [ for i in 1..dim -> (i, Map.ofList [ for j in 1..dim -> (j, Cell((i, j), Empty)) ]) ]
         let rows = [ Player1; Player2] |> List.map (fun p -> (p, Map.empty<RowKey, Row list>)) |> Map.ofList
-        Board(Player1, cells, rows)
+        Board((-1, -1), Player1, cells, rows)
 
     member x.Set (i, j) = x.SetAs (i, j) currentPlayer
 
@@ -99,7 +99,9 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
 
     member x.Candidates with get() = candidates.Value
 
-    override x.ToString() =
+    member x.LastPos with get() = lastPos
+
+    member x.Print() =
         let sb = new System.Text.StringBuilder()
         for row in cells do
             for cell in row.Value do
@@ -109,3 +111,5 @@ type Board(currentPlayer: Player, cells: Map<int, Map<int, Cell>>, rows: Map<Pla
                 | Occupied(Player2) -> sb.Append "o") |> ignore
             sb.AppendLine() |> ignore
         sb.ToString()
+
+    override x.ToString() = sprintf "%O -> [%i, %i]" (next currentPlayer) (fst lastPos) (snd lastPos) 
