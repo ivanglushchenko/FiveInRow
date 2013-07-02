@@ -190,62 +190,7 @@ type MediumAI(board) =
     override x.CombineProbabilities p1 p2 = p1 + p2 / 2.0
 
 
-type StatusStatistics = 
-    {
-        Mate: (Player * int) option
-        Player1Checks: int
-        Player2Checks: int
-        Player1MaxFitness: float
-        Player2MaxFitness: float
-    }
-
-let EmptyStats = { Mate = None; Player1Checks = 0; Player2Checks = 0; Player1MaxFitness = 0.0; Player2MaxFitness = 0.0 }
-
-
-type Turn(board: Board, targetPlayer: Player, stop: int) =
-    let allBoards = 
-        if stop <= 0 then [] else board.Candidates 
-        |> List.choose (fun pos -> board.Set pos)
-        |> List.map (fun board -> (board, firstCheckOrMate board))
-
-    let notLoosingBoards = 
-        allBoards 
-        |> List.filter (fun (b, bs) -> match bs with | Some(Mate(p, _)) when p <> board.Player -> false | _ -> true)
-
-    let winningBoards = 
-        allBoards 
-        |> List.filter (fun (b, bs) -> match bs with | Some(Mate(p, _)) when p = board.Player -> true | _ -> false)
-
-    let nextBoards =
-        if winningBoards.Length > 0 then []
-        else if notLoosingBoards.Length < allBoards.Length then notLoosingBoards
-        else allBoards |> List.filter (fun (b, bs) -> match bs with | Some(InProgress(_, _)) -> false | None -> false | _ -> true)
-
-    let nextTurns =
-        nextBoards 
-        //|> List.filter (fun (bs, s) -> match s with | Check(_, _) -> true | _ -> false)
-        |> List.map (fun (b, bs) -> Turn(b, targetPlayer, stop - 1))
-
-    //let result =
-    //    if targetPlayer = board.Player then
-    //        if winnnigBoards.Length 
-
-    member x.Board with get() = board
-
-    member x.AllBoards with get() = allBoards
-
-    member x.NotLoosingBoards with get() = notLoosingBoards
-
-    member x.WinningBoards with get() = winningBoards
-
-    member x.NextBoards with get() = nextBoards
-
-    member x.NextTurns with get() = nextTurns
-
-    override x.ToString() = sprintf "%O" board
-
-
-and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
+type Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
     let cmp = compareStatus (snd p1) (snd p2)
 
     member x.Pos with get() = pos
@@ -271,17 +216,7 @@ and Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), chi
         | _ -> x.TopStatus
 
     member x.AdjustStats (stats: StatusStatistics) =
-        let addStatus status stats =
-            match status with
-            | Mate(p1, t1) ->
-                match stats.Mate with
-                | Some(p2, t2) when t1 > t2 -> stats
-                | _ -> { Mate = Some(p1, t1); Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
-            | Check(Player1, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks + 1; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
-            | Check(Player2, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks + 1; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
-            | InProgress(Player1, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = max t stats.Player1MaxFitness; Player2MaxFitness = stats.Player2MaxFitness }
-            | InProgress(Player2, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = max t stats.Player2MaxFitness }
-        stats |> addStatus (snd p1) |> addStatus (snd p2)
+        stats |> adjustBoardStats (snd p1) |> adjustBoardStats (snd p2)
 
     member x.Expand player radius =
         let startingBoard = (function | Player1 -> p1 | _ -> p2) player |> fst
@@ -347,62 +282,71 @@ and HardAI(board) =
     interface AI with 
         member x.Moves 
             with get() =
-                let targetPlayer = board.Player
-                let adversary = next board.Player
+                let currPlayer = board.Player
+                let nextPlayer = next board.Player
                 
-                let turn = Turn(board, targetPlayer, 10)
+                let currPlayerAnalysis = Turn(board, None, currPlayer, 5)
+                let nextPlayerAnalysis = Turn(board.SwitchPlayer(), None, nextPlayer, 5)
 
-                let allNodes = board.Candidates |> List.map (fun pos -> Node.New board pos)
-                let notLoosingNodes = 
-                    allNodes 
-                    |> List.filter (fun node -> match node.StatusFor targetPlayer with | Mate(p, _) when p <> targetPlayer -> false | _ -> true)
-                    |> List.sortWith (fun n1 n2 -> compareStatus (n1.CombinedStatusFor targetPlayer) (n2.CombinedStatusFor targetPlayer))
-                let topMoves =
-                    if notLoosingNodes.Length < 2 then notLoosingNodes
-                    else
-                        let topBunch () = notLoosingNodes.Head :: notLoosingNodes.Tail |> Seq.takeWhile (fun node -> 0 = compareStatus node.TopStatus notLoosingNodes.Head.TopStatus) |> Seq.toList
-                        match notLoosingNodes.Head.TopStatus with
-                        | Mate(_, _) -> topBunch ()
-                        | Check(_, _) ->
-                            let isCheck player (node: Node) = match node.StatusFor player with | Check(_, _) -> true | _ -> false
-                            let myChecks = notLoosingNodes |> List.filter (isCheck targetPlayer)
-                            if myChecks.IsEmpty then topBunch()
-                            else
-                                let opChecks = myChecks |> List.filter (isCheck adversary)
-                                if opChecks.IsEmpty then myChecks else opChecks
-                        | _ -> notLoosingNodes |> Seq.take 5 |> Seq.toList
+                //let tree = turn.ToStringTree()
+                //System.Diagnostics.Debug.WriteLine tree
 
-                match topMoves with
-                | hd :: [] -> [(hd.Pos, 1.0)]
-                | hd :: tl -> 
-                    match hd.StatusFor targetPlayer with
-                    | Mate(p, 0) when p = targetPlayer ->  [(hd.Pos, 1.0)]
-                    | _ ->
-                        let expandedNodes = topMoves |> List.map (fun node -> node.Expand targetPlayer 2) |> List.sortBy (fun node -> node.Stats)
-                        let notLoosingExpNodes = 
-                            expandedNodes 
-                            |> List.filter (
-                                fun node ->
-                                    match node.Stats.Mate with
-                                    | Some(adversary, _) -> false
-                                    | _ -> true)
-                        if notLoosingExpNodes.IsEmpty then [(expandedNodes.Head.Pos, 2.0)]
-                        else 
-                            let sortedNodes = 
-                                notLoosingExpNodes 
-                                |> List.sortBy (
-                                    fun s -> 
-                                        if targetPlayer = Player1 then (s.Stats.Player1Checks, -s.Stats.Player1MaxFitness - s.Stats.Player2MaxFitness / 2.0) 
-                                        else (s.Stats.Player2Checks, -s.Stats.Player2MaxFitness - s.Stats.Player1MaxFitness / 2.0))
-                            [(sortedNodes.Head.Pos, 2.0)]
-                | [] ->
-                    match allNodes with
-                    | _ :: _ -> [(allNodes.Head.Pos, -1.0)]
-                    | _ ->
-                        let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)
-                        if board.CellsMap.[fst center].[snd center].IsEmpty then [ (center, 0.0) ]
-                        else if board.Cells |> Seq.isEmpty then []
-                        else [ ((board.Cells |> Seq.head).Pos, 0.0) ]
+                match (snd currPlayerAnalysis.Result, snd nextPlayerAnalysis.Result) with
+                | (Some(Mate(p1, t1)), Some(Mate(p2, t2))) -> if t1 < t2 then [ (fst currPlayerAnalysis.Result, 1.0) ] else [ (fst nextPlayerAnalysis.Result, 1.0) ]
+                | (Some(Mate(p1, t1)), _) -> [ (fst currPlayerAnalysis.Result, 1.0) ]
+                | (_, Some(Mate(p2, t2))) -> [ (fst nextPlayerAnalysis.Result, 1.0) ]
+                | _ ->
+                    let allNodes = board.Candidates |> List.map (fun pos -> Node.New board pos)
+                    let notLoosingNodes = 
+                        allNodes 
+                        |> List.filter (fun node -> match node.StatusFor currPlayer with | Mate(p, _) when p <> currPlayer -> false | _ -> true)
+                        |> List.sortWith (fun n1 n2 -> compareStatus (n1.CombinedStatusFor currPlayer) (n2.CombinedStatusFor currPlayer))
+                    let topMoves =
+                        if notLoosingNodes.Length < 2 then notLoosingNodes
+                        else
+                            let topBunch () = notLoosingNodes.Head :: notLoosingNodes.Tail |> Seq.takeWhile (fun node -> 0 = compareStatus node.TopStatus notLoosingNodes.Head.TopStatus) |> Seq.toList
+                            match notLoosingNodes.Head.TopStatus with
+                            | Mate(_, _) -> topBunch ()
+                            | Check(_, _) ->
+                                let isCheck player (node: Node) = match node.StatusFor player with | Check(_, _) -> true | _ -> false
+                                let myChecks = notLoosingNodes |> List.filter (isCheck currPlayer)
+                                if myChecks.IsEmpty then topBunch()
+                                else
+                                    let opChecks = myChecks |> List.filter (isCheck nextPlayer)
+                                    if opChecks.IsEmpty then myChecks else opChecks
+                            | _ -> notLoosingNodes |> Seq.take 5 |> Seq.toList
+
+                    match topMoves with
+                    | hd :: [] -> [(hd.Pos, 1.0)]
+                    | hd :: tl -> 
+                        match hd.StatusFor currPlayer with
+                        | Mate(p, 0) when p = currPlayer ->  [(hd.Pos, 1.0)]
+                        | _ ->
+                            let expandedNodes = topMoves |> List.map (fun node -> node.Expand currPlayer 2) |> List.sortBy (fun node -> node.Stats)
+                            let notLoosingExpNodes = 
+                                expandedNodes 
+                                |> List.filter (
+                                    fun node ->
+                                        match node.Stats.Mate with
+                                        | Some(adversary, _) -> false
+                                        | _ -> true)
+                            if notLoosingExpNodes.IsEmpty then [(expandedNodes.Head.Pos, 2.0)]
+                            else 
+                                let sortedNodes = 
+                                    notLoosingExpNodes 
+                                    |> List.sortBy (
+                                        fun s -> 
+                                            if currPlayer = Player1 then (s.Stats.Player1Checks, -s.Stats.Player1MaxFitness - s.Stats.Player2MaxFitness / 2.0) 
+                                            else (s.Stats.Player2Checks, -s.Stats.Player2MaxFitness - s.Stats.Player1MaxFitness / 2.0))
+                                [(sortedNodes.Head.Pos, 2.0)]
+                    | [] ->
+                        match allNodes with
+                        | _ :: _ -> [(allNodes.Head.Pos, -1.0)]
+                        | _ ->
+                            let center = (boardDimension / 2 + 1, boardDimension / 2 + 1)
+                            if board.CellsMap.[fst center].[snd center].IsEmpty then [ (center, 0.0) ]
+                            else if board.Cells |> Seq.isEmpty then []
+                            else [ ((board.Cells |> Seq.head).Pos, 0.0) ]
 
         member x.Winner
             with get() =

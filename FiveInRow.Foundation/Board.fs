@@ -89,6 +89,8 @@ type Board(lastPos: CellPos, currentPlayer: Player, cells: Map<int, Map<int, Cel
 
     member x.Player with get() = currentPlayer
 
+    member x.SwitchPlayer() = Board(lastPos, next currentPlayer, cells, rows)
+
     member x.Cells with get() = listOfCells.Value
 
     member x.CellsMap with get() = cells
@@ -112,4 +114,4 @@ type Board(lastPos: CellPos, currentPlayer: Player, cells: Map<int, Map<int, Cel
             sb.AppendLine() |> ignore
         sb.ToString()
 
-    override x.ToString() = sprintf "%O -> [%i, %i]" (next currentPlayer) (fst lastPos) (snd lastPos) 
+    override x.ToString() = sprintf "curr: %O, last %O -> [%i, %i]" currentPlayer (next currentPlayer) (fst lastPos) (snd lastPos) 
