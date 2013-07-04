@@ -285,12 +285,24 @@ and HardAI(board) =
                 let currPlayer = board.Player
                 let nextPlayer = next board.Player
                 
-                let currPlayerAnalysis = Turn(board, None, currPlayer, 5)
-                let nextPlayerAnalysis = Turn(board.SwitchPlayer(), None, nextPlayer, 5)
+                let cache = TurnCache()
+                let currPlayerAnalysis = Turn(cache, None, board, None, currPlayer, 7).Realize()
+                let nextPlayerAnalysis = Turn(cache, None, board.SwitchPlayer(), None, nextPlayer, 7).Realize()
 
-                //let tree = turn.ToStringTree()
+                //let tree = currPlayerAnalysis.ToStringTree()
                 //System.Diagnostics.Debug.WriteLine tree
 
+                let l1 = currPlayerAnalysis.Boards.Length
+                //let s1 = currPlayerAnalysis.Boards |> List.map (fun b -> b.GroupId) |> Set.ofList// 4461
+                let s3 = currPlayerAnalysis.Boards |> List.map (fun b -> b.Hash) |> Set.ofList
+                //let s2 = currPlayerAnalysis.Boards |> Seq.groupBy (fun b -> b.GroupId) |> Seq.toList
+//                for (groupId, boards) in s2 do
+//                    let distinctIds = boards |> Seq.distinctBy (fun b -> b.Hash) |> Seq.toList
+//                    if distinctIds.Length > 1 then
+//                        for b in distinctIds do
+//                            let s1 = b.Print()
+//                            System.Diagnostics.Debug.WriteLine("b:")
+//                            System.Diagnostics.Debug.WriteLine(s1)
                 match (snd currPlayerAnalysis.Result, snd nextPlayerAnalysis.Result) with
                 | (Some(Mate(p1, t1)), Some(Mate(p2, t2))) -> if t1 < t2 then [ (fst currPlayerAnalysis.Result, 1.0) ] else [ (fst nextPlayerAnalysis.Result, 1.0) ]
                 | (Some(Mate(p1, t1)), _) -> [ (fst currPlayerAnalysis.Result, 1.0) ]

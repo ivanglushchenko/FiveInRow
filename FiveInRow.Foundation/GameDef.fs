@@ -14,9 +14,26 @@ type CellValue = Empty | Occupied of Player
 
 type CellPos = int * int
 
-type Direction = S | E | SE | SW
+type Direction = 
+    | S 
+    | E 
+    | SE 
+    | SW
+
+    override x.ToString() =
+        match x with
+        | S -> "S"
+        | E -> "E"
+        | SE -> "SE"
+        | SW -> "SW"
 
 type RowKey = Direction * int
+
+type RowId = {
+    direction: Direction;
+    zero: int;
+    startPoint: int;
+    endPoint: int }
 
 type Fitness = 
     | Win
@@ -76,3 +93,14 @@ let compareStatus (bs1: BoardStatus) (bs2: BoardStatus) =
 let rnd =
     let r = new System.Random()
     fun max -> r.Next max
+
+let allRowsForPlayer1 = System.Collections.Generic.Dictionary<RowId, int>()
+let allRowsForPlayer2 = System.Collections.Generic.Dictionary<RowId, int>()
+
+let toRowIndex (player: Player) (rowId: RowId) =
+    let (ht, sign) = if player = Player1 then (allRowsForPlayer1, 1) else (allRowsForPlayer2, -1)
+    if ht.ContainsKey rowId then ht.[rowId]
+    else
+        let nextIndex = sign * ht.Count
+        ht.Add(rowId, nextIndex)
+        nextIndex

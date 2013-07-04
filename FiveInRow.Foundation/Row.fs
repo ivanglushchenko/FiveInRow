@@ -74,6 +74,8 @@ type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
 
     member x.Key with get() = (direction, zero)
 
+    member x.Id with get() = { direction = direction; zero = zero; startPoint = startPoint; endPoint = endPoint }
+
     member x.StartPoint with get() = startPoint
 
     member x.EndPoint with get() = endPoint

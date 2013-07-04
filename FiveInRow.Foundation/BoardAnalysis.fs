@@ -1,6 +1,7 @@
 ﻿module FiveInRow.Foundation.BoardAnalysis
 
 open System
+open System.Collections.Generic
 open GameDef
 
 type RowDistribution = 
@@ -97,9 +98,32 @@ let adjustBoardStats status stats =
     | InProgress(Player2, t) -> { Mate = stats.Mate; Player1Checks = stats.Player1Checks; Player2Checks = stats.Player2Checks; Player1MaxFitness = stats.Player1MaxFitness; Player2MaxFitness = max t stats.Player2MaxFitness }
 
 
-type Turn(board: Board, boardStatus: BoardStatus option, targetPlayer: Player, stop: int) =
+type TurnCache() =
+    let turns = new Dictionary<Player * Set<int * int>, Turn>()
+
+    member x.Contains (board: Board) = turns.ContainsKey (board.Player, board.Hash)
+
+    member x.Get (board: Board) = turns.[(board.Player, board.Hash)]
+
+    member x.Put (turn: Turn) =
+        let board: Board = turn.Board
+        turns.Add((board.Player, board.Hash), turn)
+
+    member x.PutOrGet (board: Board) (f: unit -> Turn) : Turn =
+        let t: Turn = f()
+        t.GoDeeper()
+//        if x.Contains board then x.Get board 
+//        else 
+//            let turn = f()
+//            x.Put turn
+//            turn.GoDeeper()
+
+
+and Turn(cache: TurnCache, parent: Turn option, board: Board, boardStatus: BoardStatus option, targetPlayer: Player, level: int, maxLevel: int) as this =
+    let mutable visited = false
+
     let allBoards = 
-        (if stop <= 0 then [] else board.Candidates)
+        (if level >= maxLevel then [] else board.Candidates)
         |> List.choose (fun pos -> board.Set pos)
         |> List.map (fun board -> (board, firstCheckOrMate board))
 
@@ -119,23 +143,23 @@ type Turn(board: Board, boardStatus: BoardStatus option, targetPlayer: Player, s
             notLoosingBoards
             |> List.filter (fun (b, bs) -> match bs with | Some(InProgress(_, _)) -> false | None -> false | _ -> true)
 
-    let nextTurns =
-        if board.Player = targetPlayer then
-            let rec loop l acc =
-                match l with
-                | (b, bs) :: tl ->
-                    let turn = Turn(b, bs, targetPlayer, stop - 1)
-                    match snd turn.Result with
-                    | Some(Mate(p, t)) when p = targetPlayer -> turn :: acc
-                    | _ -> loop tl (turn :: acc)
-                | [] -> acc
-            loop nextBoards []
-        else 
+    let nextTurns = lazy (
+//        if board.Player = targetPlayer then
+//            let rec loop l acc =
+//                match l with
+//                | (b, bs) :: tl ->
+//                    let turn: Turn = (cache.PutOrGet b (fun () -> Turn(cache, b, bs, targetPlayer, level + 1, maxLevel)))
+//                    match snd turn.Result with
+//                    | Some(Mate(p, t)) when p = targetPlayer -> turn :: acc
+//                    | _ -> loop tl (turn :: acc)
+//                | [] -> acc
+//            loop nextBoards []
+//        else 
             nextBoards 
-            |> List.map (fun (b, bs) -> Turn(b, bs, targetPlayer, stop - 1))
+            |> List.map (fun (b, bs) -> cache.PutOrGet b (fun () -> Turn(cache, Some(this), b, bs, targetPlayer, level + 1, maxLevel))))
 
-    let sortedResults = 
-        nextTurns
+    let sortedResults = lazy (
+        nextTurns.Value
         |> List.map 
             (fun turn ->
                 (turn, match snd turn.Result with
@@ -144,23 +168,31 @@ type Turn(board: Board, boardStatus: BoardStatus option, targetPlayer: Player, s
                         | Some(Check(p, t)) when p = targetPlayer -> sprintf "b:%i" t
                         | Some(Check(p, t)) when p <> targetPlayer -> sprintf "y:%i" t
                         | _ -> "k"))
-        |> List.sortBy snd
+        |> List.sortBy snd)
 
-    let result: (CellPos * BoardStatus option) =
+    let result = lazy (
         if winningBoards.Length > 0 then ((fst winningBoards.Head).LastPos, snd winningBoards.Head)
         else
             let (pos, status) = 
-                if sortedResults.IsEmpty then
+                if sortedResults.Value.IsEmpty then
                     if allBoards.IsEmpty then ((-1, -1), None) else
                         let b = allBoards.Head
                         ((fst b).LastPos, snd b)
                 else
-                    let turn = (if board.Player = targetPlayer then sortedResults.Head else sortedResults |> List.rev |> List.head) |> fst
+                    let turn = (if board.Player = targetPlayer then sortedResults.Value.Head else sortedResults.Value |> List.rev |> List.head) |> fst
                     turn.Result
 
             match status with
             | Some(s) -> (pos, Some(s.Inc 1))
-            | None -> (pos, None)
+            | None -> (pos, None))
+
+    let boards = lazy (
+        board :: (nextTurns.Value |> List.collect (fun t -> t.Boards)))
+
+    new(cache: TurnCache, parent: Turn option, board: Board, boardStatus: BoardStatus option, targetPlayer: Player, stop: int)
+        = Turn(cache, parent, board, boardStatus, targetPlayer, 0, stop)
+
+    member x.Parent with get() = parent
 
     member x.Board with get() = board
 
@@ -170,22 +202,54 @@ type Turn(board: Board, boardStatus: BoardStatus option, targetPlayer: Player, s
 
     member x.SortedResults with get() = sortedResults
 
-    member x.NextTurns with get() = nextTurns
+    member x.NextTurns with get() = nextTurns.Value
+
+    member x.GoDeeper() =
+        nextTurns.Value |> ignore
+        x
+
+    member x.Realize() =
+        nextTurns.Value |> ignore
+        x.Result |> ignore
+        x
 
     member x.TurnsCount 
         with get() =
-            1 + (nextTurns |> List.sumBy (fun t -> t.TurnsCount))
+            1 + (nextTurns.Value |> List.sumBy (fun t -> t.TurnsCount))
+
+    member x.Boards with get() = boards.Value
 
     member x.Result
-        with get(): (CellPos * BoardStatus option) = result
+        with get() =
+//            let rec collectParents (p: Turn option) =
+//                match p with
+//                | Some(t) -> (t.GetHashCode()) :: collectParents t.Parent
+//                | None -> []
+//            let parents = collectParents x.Parent |> List.toArray
+//            let children = x.NextTurns |> List.map (fun t -> t.GetHashCode()) |> List.toArray
+//
+//            if x.Visited then
+//                System.Diagnostics.Debug.WriteLine((new String(' ', level * 3)) + "-> " + (x.GetHashCode().ToString()) + "[" + (x.Board.ToString()) + "]" + ": visited" + (if result.IsValueCreated then "" else ", NOT CREATED"))
+//            else
+//                System.Diagnostics.Debug.WriteLine((new String(' ', level * 3)) + "-> " + (x.GetHashCode().ToString()) + "[" + (x.Board.ToString()) + "]"+ ": " + (System.String.Join(", ", children)))
+//                x.Visited <- true
+            result.Value |> ignore
+
+//            System.Diagnostics.Debug.WriteLine((new String(' ', level * 3)) + "<- " +  (x.GetHashCode().ToString()))
+            //System.Diagnostics.Debug.WriteLine("<- " + (x.GetHashCode().ToString()))
+            result.Value
 
     override x.ToString() = sprintf "%O" board
 
     member x.Lines
         with get() =
-            let header = sprintf "%O, %O    result: %O" board boardStatus x.Result
-            let turnLines = nextTurns |> List.fold (fun acc t -> acc @ (t.Lines |> List.map (fun l -> sprintf "\t%s" l))) List.empty<string>
+            let header = sprintf "%O, %O    result: %O      %i/%i" board boardStatus x.Result x.TurnsCount x.NextTurns.Length
+            let turnLines = nextTurns.Value |> List.fold (fun acc t -> acc @ (t.Lines |> List.map (fun l -> sprintf "\t%s" l))) List.empty<string>
             header :: turnLines
 
     member x.ToStringTree() =
         x.Lines |> List.fold (fun (acc: System.Text.StringBuilder) s -> acc.AppendLine s) (new System.Text.StringBuilder())
+
+    member x.Visited
+        with get() = visited
+        and set(v) = visited <- v

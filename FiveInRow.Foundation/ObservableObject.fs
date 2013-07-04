@@ -15,7 +15,6 @@ type ObservableObject() =
                     // Switch to the UI thread and update the UI. 
                     do! Async.SwitchToContext(syncContext)
                     callback()
-                    //propertyChanged.Trigger(x, new PropertyChangedEventArgs(propertyName))
                     // Switch back to the thread pool. 
                     do! Async.SwitchToThreadPool()
                 })
@@ -29,14 +28,6 @@ type ObservableObject() =
     abstract member OnPropertyChanged: string -> unit
 
     default x.OnPropertyChanged(propertyName : string) = post (fun () -> propertyChanged.Trigger(x, new PropertyChangedEventArgs(propertyName)))
-//        Async.RunSynchronously
-//            (async {
-//                // Switch to the UI thread and update the UI. 
-//                do! Async.SwitchToContext(syncContext)
-//                propertyChanged.Trigger(x, new PropertyChangedEventArgs(propertyName))
-//                // Switch back to the thread pool. 
-//                do! Async.SwitchToThreadPool()
-//            })
 
     static member Post 
         with get() = post
