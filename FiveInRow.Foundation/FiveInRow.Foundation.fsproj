@@ -45,6 +45,7 @@
     <Compile Include="BoardView.fs" />
     <Compile Include="EventProc.fs" />
     <Compile Include="Simulation.fs" />
+    <Compile Include="Immutable.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

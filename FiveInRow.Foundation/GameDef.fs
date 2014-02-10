@@ -14,6 +14,8 @@ type CellValue = Empty | Occupied of Player
 
 type CellPos = int * int
 
+type Move = CellPos * Player
+
 type Direction = 
     | S 
     | E 
