@@ -74,7 +74,7 @@ type Difficulty =
 type OpponentType = Human | AI of Player
 
 // Util functions and state
-let mutable boardDimension = 0
+let mutable boardDimension = 51
 
 let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd pos <= boardDimension
 

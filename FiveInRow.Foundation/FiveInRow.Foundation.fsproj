@@ -36,6 +36,7 @@
     <Compile Include="ObservableObject.fs" />
     <Compile Include="GameDef.fs" />
     <Compile Include="GameSettings.fs" />
+    <Compile Include="Immutable.fs" />
     <Compile Include="Cell.fs" />
     <Compile Include="Row.fs" />
     <Compile Include="Board.fs" />
@@ -45,7 +46,6 @@
     <Compile Include="BoardView.fs" />
     <Compile Include="EventProc.fs" />
     <Compile Include="Simulation.fs" />
-    <Compile Include="Immutable.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
