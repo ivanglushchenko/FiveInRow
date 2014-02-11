@@ -7,25 +7,58 @@ type Row = { From: CellPos
              Length: int
              Rank: int }
 
-type Rows = { S: Row option
-              E: Row option
-              SE: Row option
-              SW: Row option }
+module RowX =
+    type RowX = { S: Row option
+                  E: Row option
+                  SE: Row option
+                  SW: Row option }
+
+    let empty = { S = None
+                  E = None
+                  SE = None
+                  SW = None }
+
+    let isEmpty rx =
+        Option.isNone rx.S || Option.isNone rx.E || Option.isNone rx.SE || Option.isNone rx.SW
+
+    let update dir r rx =
+        match dir with
+        | S -> { rx with S = r }
+        | E -> { rx with E = r }
+        | SE -> { rx with SE = r }
+        | SW -> { rx with SW = r }
+
+    let get dir rx =
+        match dir with
+        | S -> rx.S
+        | E -> rx.E
+        | SE -> rx.SE
+        | SW -> rx.SW
 
 type Board = { Moves: Map<CellPos, Player>
-               Rows: Map<CellPos, Rows> }
+               Rows: Map<CellPos, RowX.RowX> }
 
 let EmptyBoard = { Moves = Map.empty
                    Rows = Map.empty } 
 
-let getRows pos board = if board.Rows.ContainsKey pos then Some board.Rows.[pos] else None
+let getRow pos dir rows =
+    if Map.containsKey pos rows then RowX.get dir rows.[pos]
+    else None
 
-let getRow dir rows =
-    match dir with
-    | S -> rows.S
-    | E -> rows.E
-    | SE -> rows.SE
-    | SW -> rows.SW
+let setRow pos dir row rows =
+    if Map.containsKey pos rows then
+        let extRj = rows.[pos]
+        let r = rows.Remove pos
+        let newRj = RowX.update dir (Some row) extRj
+        r.Add (pos, newRj)
+    else
+        rows.Add (pos, RowX.update dir (Some row) RowX.empty)
+
+let nullifyRow pos dir rows =
+    let extRj = Map.find pos rows
+    let newRj = RowX.update dir None extRj
+    if RowX.isEmpty newRj then rows.Remove pos
+    else (rows.Remove pos).Add (pos, newRj)
 
 let enumerateCells row dir =
     match dir with
@@ -40,7 +73,7 @@ let createRow pFrom pTo =
       Length = if fst pFrom = fst pTo then 1 + (snd pFrom - snd pTo |> abs) else 1 + (fst pTo - fst pFrom)
       Rank = -1 }
 
-let createRowWithRank (pFrom, pTo) dir existingMoves =
+let createRowWithRank pFrom pTo dir existingMoves =
     let inline checkCell p = if Map.containsKey p existingMoves then 0 else 1
     { From = pFrom
       To = pTo
@@ -71,28 +104,35 @@ let extend ((row, col), player) board =
         possibleRows 
         |> Seq.choose generateNewRows
 
-    let extendedRows =
-        seq { for (pFrom, pTo, dir) in newRows do
-                let extendedPoints =
-                    let fromRow = getRows pFrom board |> Option.bind (getRow dir)
-                    let extendedFrom = 
-                        match fromRow with
-                        | Some row -> row.From
-                        | None -> pFrom
-                    let toRow = getRows pTo board |> Option.bind (getRow dir)
-                    let extendedTo =
-                        match toRow with
-                        | Some row -> row.To
-                        | None -> pTo
-                    extendedFrom, extendedTo
-                yield createRowWithRank extendedPoints dir board.Moves, dir }
-
     let mergedRows =
         let mutable rows = board.Rows
-        for (row, dir) in extendedRows do
-            ()
+        for (pFrom, pTo, dir) in newRows do
+            let extendedFrom = 
+                match getRow pFrom dir rows with
+                | Some row ->
+                    rows <- nullifyRow row.To dir rows
+                    row.From
+                | None -> pFrom
+            let extendedTo = 
+                match getRow pTo dir rows with
+                | Some row ->
+                    rows <- nullifyRow row.From dir rows
+                    row.To
+                | None -> pTo
+            let newRow = createRowWithRank extendedFrom extendedTo dir board.Moves
+            rows <- setRow extendedFrom dir newRow rows
+            rows <- setRow extendedTo dir newRow rows
         rows
 
     { board with 
         Moves = board.Moves.Add ((row, col), player)
         Rows = mergedRows }
+
+let collectUniqueRows board = 
+    seq { for t in board.Rows do
+            yield t.Value.S
+            yield t.Value.E
+            yield t.Value.SE
+            yield t.Value.SW }
+    |> Seq.choose (fun t -> t)
+    |> Set.ofSeq

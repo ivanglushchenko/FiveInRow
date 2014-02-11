@@ -44,6 +44,80 @@ type BoardTest() =
             |> extend ((0, 0), Player1)
             |> extend ((0, 1), Player1)
         Assert.AreEqual(2, b.Moves.Count)
-        Assert.AreEqual(1, b.Rows.Count)
+        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(1, (collectUniqueRows b).Count)
         Assert.AreEqual(0, EmptyBoard.Moves.Count)
         Assert.AreEqual(0, EmptyBoard.Rows.Count)
+
+    [<TestMethod>]
+    member x.TestAddTwoRows () =
+        let b = 
+            EmptyBoard
+            |> extend ((0, 0), Player1)
+            |> extend ((1, 1), Player1)
+            |> extend ((0, 2), Player1)
+        Assert.AreEqual(3, b.Moves.Count)
+        Assert.AreEqual(3, b.Rows.Count)
+        Assert.AreEqual(2, (collectUniqueRows b).Count)
+        Assert.AreEqual(0, EmptyBoard.Moves.Count)
+        Assert.AreEqual(0, EmptyBoard.Rows.Count)
+
+    [<TestMethod>]
+    member x.TestAddThreeRowsInTriangle () =
+        let b = 
+            EmptyBoard
+            |> extend ((0, 0), Player1)
+            |> extend ((1, 1), Player1)
+            |> extend ((0, 1), Player1)
+        Assert.AreEqual(3, b.Moves.Count)
+        Assert.AreEqual(3, b.Rows.Count)
+        Assert.AreEqual(3, (collectUniqueRows b).Count)
+        Assert.AreEqual(0, EmptyBoard.Moves.Count)
+        Assert.AreEqual(0, EmptyBoard.Rows.Count)
+
+    [<TestMethod>]
+    member x.TestAddOneRowLength3 () =
+        let b = 
+            EmptyBoard
+            |> extend ((2, 2), Player1)
+            |> extend ((1, 1), Player1)
+            |> extend ((0, 0), Player1)
+        Assert.AreEqual(3, b.Moves.Count)
+        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(1, (collectUniqueRows b).Count)
+
+    [<TestMethod>]
+    member x.TestAddOneRowLength3_Another () =
+        let b = 
+            EmptyBoard
+            |> extend ((0, 0), Player1)
+            |> extend ((2, 2), Player1)
+            |> extend ((1, 1), Player1)
+        Assert.AreEqual(3, b.Moves.Count)
+        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(1, (collectUniqueRows b).Count)
+
+    [<TestMethod>]
+    member x.TestAddManyRows () =
+        let b = 
+            EmptyBoard
+            |> extend ((0, 0), Player1)
+            |> extend ((0, 2), Player1)
+            |> extend ((1, 1), Player1)
+            |> extend ((0, 1), Player1)
+        Assert.AreEqual(4, b.Moves.Count)
+        Assert.AreEqual(4, b.Rows.Count)
+        Assert.AreEqual(4, (collectUniqueRows b).Count)
+
+    [<TestMethod>]
+    member x.TestMergeRows1 () =
+        let b = 
+            EmptyBoard
+            |> extend ((1, 1), Player1)
+            |> extend ((0, 0), Player1)
+            |> extend ((3, 3), Player1)
+            |> extend ((4, 4), Player1)
+            |> extend ((2, 2), Player1)
+        Assert.AreEqual(5, b.Moves.Count)
+        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(1, (collectUniqueRows b).Count)
