@@ -2,9 +2,9 @@
 
 open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
-open FiveInRow.Foundation.GameDef
-open FiveInRow.Foundation.Immutable
-open FiveInRow.Foundation.Immutable.Board
+open FiveInRow.GameMechanics
+open FiveInRow.GameMechanics.GameDef
+open FiveInRow.GameMechanics.Board
 
 [<TestClass>]
 type BoardTest() = 
@@ -153,4 +153,19 @@ type BoardTest() =
             |> extend ((2, 2), Player1)
         Assert.AreEqual(5, b.Moves.Count)
         Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(5, Board.getRowLength (0, 0) SE b)
+        Assert.AreEqual(1, Board.getRowRank (0, 0) SE b)
         Assert.AreEqual(1, (collectUniqueRows b).Count)
+
+    [<TestMethod>]
+    member x.TestRows1 () =
+        let b = 
+            Board.empty
+            |> extend ((1, 1), Player2)
+            |> extend ((0, 0), Player1)
+            |> extend ((3, 3), Player2)
+            |> extend ((4, 4), Player1)
+            |> extend ((2, 2), Player1)
+        Assert.AreEqual(5, b.Moves.Count)
+        Assert.AreEqual(0, b.Rows.Count)
+        Assert.AreEqual(0, (collectUniqueRows b).Count)

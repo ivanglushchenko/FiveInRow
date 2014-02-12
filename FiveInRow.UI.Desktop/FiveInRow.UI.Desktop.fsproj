@@ -86,8 +86,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FiveInRow.Foundation\FiveInRow.Foundation.fsproj">
-      <Name>FiveInRow.Foundation</Name>
+    <ProjectReference Include="..\FiveInRow.Foundation\FiveInRow.Old.fsproj">
+      <Name>FiveInRow.Old</Name>
       <Project>{9173f52e-8eb4-4117-9746-4602dd7ac91d}</Project>
       <Private>True</Private>
     </ProjectReference>

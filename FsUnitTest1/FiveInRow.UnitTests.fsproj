@@ -64,9 +64,9 @@
     <None Include="MSTest.runsettings" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FiveInRow.Foundation\FiveInRow.Foundation.fsproj">
-      <Name>FiveInRow.Foundation</Name>
-      <Project>{9173f52e-8eb4-4117-9746-4602dd7ac91d}</Project>
+    <ProjectReference Include="..\FiveInRow.GameMechanics\FiveInRow.GameMechanics.fsproj">
+      <Name>FiveInRow.GameMechanics</Name>
+      <Project>{b41311a6-a4cb-4752-bdf2-03935a343e7b}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

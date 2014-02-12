@@ -5,13 +5,12 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>9173f52e-8eb4-4117-9746-4602dd7ac91d</ProjectGuid>
+    <ProjectGuid>b41311a6-a4cb-4752-bdf2-03935a343e7b</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>FiveInRow.Foundation</RootNamespace>
-    <AssemblyName>FiveInRow.Foundation</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile47</TargetFrameworkProfile>
-    <Name>FiveInRow.Foundation</Name>
+    <RootNamespace>FiveInRow.GameMechanics</RootNamespace>
+    <AssemblyName>FiveInRow.GameMechanics</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <Name>FiveInRow.GameMechanics</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +20,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\FiveInRow.Foundation.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\FiveInRow.GameMechanics.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,32 +29,28 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\FiveInRow.Foundation.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\FiveInRow.GameMechanics.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ObservableObject.fs" />
-    <Compile Include="GameDef.fs" />
-    <Compile Include="GameSettings.fs" />
-    <Compile Include="Immutable.fs" />
-    <Compile Include="Cell.fs" />
-    <Compile Include="Row.fs" />
-    <Compile Include="Board.fs" />
-    <Compile Include="BoardAnalysis.fs" />
-    <Compile Include="GameAI.fs" />
-    <Compile Include="CellView.fs" />
-    <Compile Include="BoardView.fs" />
-    <Compile Include="EventProc.fs" />
-    <Compile Include="Simulation.fs" />
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core, Version=4.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\FSharp\3.0\Runtime\.NETPortable\FSharp.Core.dll</HintPath>
-    </Reference>
+    <Compile Include="GameDef.fs" />
+    <Compile Include="Row.fs" />
+    <Compile Include="RowX.fs" />
+    <Compile Include="Board.fs" />
+    <Compile Include="AI.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.Portable.FSharp.Targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.0\Framework\v4.0\Microsoft.FSharp.Targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

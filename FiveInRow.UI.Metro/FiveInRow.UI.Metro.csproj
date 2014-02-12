@@ -103,9 +103,9 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <ProjectReference Include="..\FiveInRow.Foundation\FiveInRow.Foundation.fsproj">
+    <ProjectReference Include="..\FiveInRow.Foundation\FiveInRow.Old.fsproj">
       <Project>{9173f52e-8eb4-4117-9746-4602dd7ac91d}</Project>
-      <Name>FiveInRow.Foundation</Name>
+      <Name>FiveInRow.Old</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
