@@ -1,6 +1,7 @@
 ﻿module FiveInRow.GameMechanics.Board
 
 open GameDef
+open Row
 open RowX
 
 type Board = { Moves: Map<Position, Player>
@@ -37,6 +38,8 @@ let nullifyRow pos dir rows =
 let extend ((row, col), player) board =
     if board.Moves.ContainsKey (row, col) then failwith "Cell is occupied already"
 
+    let newMoves = board.Moves.Add ((row, col), player)
+
     let possibleRows =
         seq { yield (row - 1, col - 1), (row + 1, col + 1), SE
               yield (row - 1, col), (row + 1, col), S
@@ -67,7 +70,7 @@ let extend ((row, col), player) board =
                     rows <- nullifyRow row.From dir rows
                     row.To
                 | None -> pTo
-            let newRow = Row.createRanked extendedFrom extendedTo dir board.Moves
+            let newRow = Row.createRanked extendedFrom extendedTo dir newMoves
             rows <- setRow extendedFrom dir newRow rows
             rows <- setRow extendedTo dir newRow rows
         rows
@@ -86,19 +89,26 @@ let extend ((row, col), player) board =
         let mutable rows = mergedRows
         for pos, dir in possibleAffectedRows do
             match getRow pos dir rows with
-            | Some row -> rows <- setRow pos dir (Row.updateRank dir rows row) rows
+            | Some row ->
+                let updatedRow = Row.updateRank dir newMoves row
+                rows <- setRow row.From dir updatedRow rows
+                rows <- setRow row.To dir updatedRow rows
             | None -> ()
         rows
 
     { board with 
-        Moves = board.Moves.Add ((row, col), player)
+        Moves = newMoves
         Rows = rankedRows }
 
-let collectUniqueRows board = 
+let getRows board = 
     seq { for t in board.Rows do
-            yield t.Value.S
-            yield t.Value.E
-            yield t.Value.SE
-            yield t.Value.SW }
+            let inline getRow r =
+                match r with
+                | Some row -> if row.From = t.Key then Some row else None
+                | None -> None
+            yield getRow t.Value.S
+            yield getRow t.Value.E
+            yield getRow t.Value.SE
+            yield getRow t.Value.SW }
     |> Seq.choose (fun t -> t)
-    |> Set.ofSeq
+    |> Seq.toArray

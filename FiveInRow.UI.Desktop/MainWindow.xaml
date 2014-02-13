@@ -2,13 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:FiveInRow.UI.Desktop;assembly=FiveInRow.UI.Desktop"
-        xmlns:f="clr-namespace:FiveInRow.Foundation;assembly=FiveInRow.Foundation"
+        xmlns:f="clr-namespace:FiveInRow.Core;assembly=FiveInRow.UI.Core"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="" Height="1000" Width="1100" Background="WhiteSmoke" WindowState="Maximized">
     
     <Window.Resources>
         <sys:Double x:Key="CellWidth">50</sys:Double>
         <local:RowLocationConverter x:Key="RowLocationConverter" />
+        <local:RowColorConverter x:Key="RowColorConverter" />
         <local:CellValueToStrConverter x:Key="CellValueToStrConverter" />
         <local:FitnessVisibilityConverter x:Key="FitnessVisibilityConverter" />
         <local:PlayerToStrConverter x:Key="PlayerToStrConverter" />
@@ -35,17 +36,17 @@
                         <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="{Binding Fitness, Converter={StaticResource FitnessVisibilityConverter}}" Text="{Binding Fitness}" />
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
                             <Grid>
-                                <Line Stroke="Red" StrokeThickness="8" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
-                                <Line Stroke="Red" StrokeThickness="8" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
+                                <Line Stroke="Gray" StrokeThickness="8" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
+                                <Line Stroke="Gray" StrokeThickness="8" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
                             </Grid>
                         </Viewbox>
                         <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="Collapsed">
                             <Ellipse Stroke="Blue" StrokeThickness="8" Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}" />
                         </Viewbox>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-                            <TextBlock Text="{Binding Row}" FontSize="8"/>
+                            <TextBlock Text="{Binding Row}" FontSize="9"/>
                             <TextBlock Text=":" FontSize="6"/>
-                            <TextBlock Text="{Binding Col}" FontSize="8"/>
+                            <TextBlock Text="{Binding Col}" FontSize="9"/>
                         </StackPanel>
                     </Grid>
                     <DataTemplate.Triggers>
@@ -77,7 +78,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Line Stroke="Green" StrokeThickness="3">
+                    <Line Stroke="{Binding Rank, Converter={StaticResource RowColorConverter}}" StrokeThickness="4">
                         <Line.X1>
                             <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
                                 <Binding Path="From.Item2" />

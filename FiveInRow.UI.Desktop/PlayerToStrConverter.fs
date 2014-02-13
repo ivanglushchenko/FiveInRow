@@ -7,7 +7,7 @@ open System.Text
 open System.Windows.Data
 open System.Windows
 
-open FiveInRow.Foundation.GameDef
+open FiveInRow.GameMechanics.GameDef
 
 type PlayerToStrConverter() =
     interface IValueConverter with

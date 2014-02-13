@@ -14,7 +14,7 @@ let empty = { S = None
               SW = None }
 
 let isEmpty rx =
-    Option.isNone rx.S || Option.isNone rx.E || Option.isNone rx.SE || Option.isNone rx.SW
+    Option.isNone rx.S && Option.isNone rx.E && Option.isNone rx.SE && Option.isNone rx.SW
 
 let update dir r rx =
     match dir with

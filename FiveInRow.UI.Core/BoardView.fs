@@ -35,6 +35,11 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         for c in boards.Head.Board.Moves do
             cells.[fst c.Key].[snd c.Key].Value <- Occupied c.Value
 
+    let clearLastMove() =
+        match boards.Head.LastMove with
+        | Some (r, c) -> cells.[r].[c].IsLast <- false
+        | None -> ()
+
     static member Create (settings: GameSettings) = BoardView.CreateFrom (settings, [])
 
     static member CreateFrom (settings: GameSettings, moves) =
@@ -42,7 +47,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 
         let rec exec moves p b =
             match moves with
-            | hd :: tl -> Board.extend (hd, p) b |> exec tl (next p)
+            | hd :: tl -> Board.extend (hd, p) b |> exec tl p//(next p)
             | [] -> b
         
         let finalBoard = exec moves Player1 Board.empty
@@ -57,36 +62,38 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 
     member x.Cells = cells |> Array.collect (fun t -> t)
 
-    member x.Rows with get() = boards.Head.Board.Rows
+    member x.Rows with get() = Board.getRows boards.Head.Board
 
     member x.Moves 
         with get() = 
-            let append (sb: StringBuilder) s = sb.AppendFormat("({0}, {1}); ", (fst (Option.get s.LastMove)), (snd (Option.get s.LastMove)))
+            let append (sb: StringBuilder) s =
+                match s.LastMove with
+                | Some (r, c) -> sb.AppendFormat("({0}, {1}); ", r, c)
+                | _ -> sb.AppendFormat("?")
             boards |> List.rev |> List.fold append (new StringBuilder())
 
     member x.Set (i, j) =
-        if x.IsCompleted = false then
+        if x.IsRunning = false && x.IsCompleted = false && cells.[i].[j].Value = Empty then
+            clearLastMove()
+
+            cells.[i].[j].Value <- Occupied nextTurn
+            cells.[i].[j].Fitness <- 0.0
+            cells.[i].[j].IsLast <- true
+
             let board = Board.extend ((i, j), nextTurn) boards.Head.Board
-
-            match boards.Head.LastMove with
-            | Some (r, c) -> cells.[r].[c].IsLast <- false
-            | None -> ()
-
-            cells.[i - 1].[j - 1].Value <- Occupied nextTurn
-            cells.[i - 1].[j - 1].Fitness <- 0.0
-            cells.[i - 1].[j - 1].IsLast <- true
-
             let ai = ai board
             boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = nextTurn } :: boards
+
             if x.IsCompleted = false then
                 x.IsRunning <- true
                 Async.Start
                     (async {
                         if showFitness then
                             for ((i, j), fitness) in ai.PossibleMoves do
-                                cells.[i - 1].[j - 1].Fitness <- fitness
+                                cells.[i].[j].Fitness <- fitness
                         x.MakeMove nextTurn
                         x.RaisePropertiesChanged()
+                        nextTurn <- next nextTurn
                         x.IsRunning <- false })
             else
                 ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))

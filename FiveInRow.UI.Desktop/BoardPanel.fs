@@ -9,7 +9,7 @@ open System.Windows
 open System.Windows.Input
 open System.Windows.Media
 
-open FiveInRow.Foundation
+open FiveInRow.Core
 
 type BoardPanel() as this =
     inherit Panel()
@@ -39,7 +39,7 @@ type BoardPanel() as this =
             if _isDragging then _isDragging <- false
             else
                 let c = p - _offset
-                let index = (int(c.Y / _cellWidth) + 1, int(c.X / _cellHeigth) + 1)
+                let index = (int(c.Y / _cellWidth), int(c.X / _cellHeigth))
                 vm.Set index
 
         let onMouseMove(p: Point) =
