@@ -41,6 +41,6 @@ type OpponentType = Human | AI of Player
 
 let mutable boardDimension = 51
 
-let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd pos <= boardDimension
+let inline isValid (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardDimension
 
-let next = function | Player1 -> Player2 | _ -> Player1
+let inline next p = match p with | Player1 -> Player2 | _ -> Player1

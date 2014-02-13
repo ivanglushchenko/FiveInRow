@@ -11,12 +11,12 @@ type BoardInfo = { Board: Board
                    LastMove: Position option
                    LastPlayer: Player }
 
-type BoardView(startingBoard: Board, ai: Board -> AI) =
+type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
     inherit ObservableObject()
 
     let mutable nextTurn = Player1
     let mutable opponent = Human
-    let mutable boards = [ { Board = startingBoard; AI = ai startingBoard; LastMove = None; LastPlayer = Player2 } ]
+    let mutable boards = [ { Board = startingBoard; AI = ai Player1 startingBoard; LastMove = None; LastPlayer = Player2 } ]
     let mutable isRunning = false
     let mutable showFitness = true
     let winnerChanged = new Event<Player option>()
@@ -44,18 +44,13 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 
     static member CreateFrom (settings: GameSettings, moves) =
         boardDimension <- settings.BoardSize
-
-        let rec exec moves p b =
-            match moves with
-            | hd :: tl -> Board.extend (hd, p) b |> exec tl p//(next p)
-            | [] -> b
         
-        let finalBoard = exec moves Player1 Board.empty
+        let finalBoard = Board.replay moves
         let view =
             match settings.Difficulty with
-            | Easy -> BoardView(finalBoard, fun b -> AI.empty)
-            | Medium -> BoardView(finalBoard, fun b -> AI.empty)
-            | Hard -> BoardView(finalBoard, fun b -> AI.empty)
+            | Easy -> BoardView(finalBoard, AI.getEasy)
+            | Medium -> BoardView(finalBoard, fun p b -> AI.empty)
+            | Hard -> BoardView(finalBoard, fun p b -> AI.empty)
         view.Opponent <- settings.Opponent
         view.Start()
         view
@@ -80,8 +75,8 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
             cells.[i].[j].Fitness <- 0.0
             cells.[i].[j].IsLast <- true
 
-            let board = Board.extend ((i, j), nextTurn) boards.Head.Board
-            let ai = ai board
+            let board = Board.extend (i, j) nextTurn boards.Head.Board
+            let ai = ai nextTurn board
             boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = nextTurn } :: boards
 
             if x.IsCompleted = false then
@@ -108,7 +103,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         
 
     member x.Clear() =
-        boards <- [ { Board = startingBoard; AI = ai startingBoard; LastMove = None; LastPlayer = Player2 } ]
+        boards <- [ { Board = startingBoard; AI = ai Player1 startingBoard; LastMove = None; LastPlayer = Player2 } ]
         clearBoard()
         x.RaisePropertiesChanged()
 

@@ -5,10 +5,14 @@ open Row
 open RowX
 
 type Board = { Moves: Map<Position, Player>
-               Rows: Map<Position, RowX> }
+               Rows: Map<Position, RowX>
+               LastMove: Position option
+               LastPlayer: Player option }
 
 let empty = { Moves = Map.empty
-              Rows = Map.empty } 
+              Rows = Map.empty
+              LastMove = None
+              LastPlayer = None } 
 
 let getRow pos dir rows =
     if Map.containsKey pos rows then RowX.get dir rows.[pos]
@@ -35,7 +39,7 @@ let nullifyRow pos dir rows =
     if RowX.isEmpty newRj then rows.Remove pos
     else (rows.Remove pos).Add (pos, newRj)
 
-let extend ((row, col), player) board =
+let extend (row, col) player board =
     if board.Moves.ContainsKey (row, col) then failwith "Cell is occupied already"
 
     let newMoves = board.Moves.Add ((row, col), player)
@@ -111,4 +115,31 @@ let getRows board =
             yield getRow t.Value.SE
             yield getRow t.Value.SW }
     |> Seq.choose (fun t -> t)
-    |> Seq.toArray
+
+let getRowsCount board =
+    getRows board |> Seq.length
+
+let getUnoccupiedPositions k board =
+    seq { for move in board.Moves do
+            for i in fst move.Key - k..fst move.Key + k do
+                if i >= 0 && i < boardDimension then
+                    for j in snd move.Key - k..snd move.Key + k do
+                        if j >= 0 && j < boardDimension && (i <> fst move.Key || j <> snd move.Key) && board.Moves.ContainsKey (i, j) = false then
+                            yield i, j }
+                        
+let replay moves =
+    let rec exec moves p b =
+        match moves with
+        | hd :: tl -> extend hd p b |> exec tl (next p)
+        | [] -> b
+    exec moves Player1 empty
+
+let getRowHistogram board =
+    let p1Hist = Array.init 4 (fun i -> Array.create 3 0)
+    let p2Hist = Array.init 4 (fun i -> Array.create 3 0)
+    for row in getRows board do
+        if row.Length <= 5 then
+            match board.Moves.[row.From] with
+            | Player1 -> p1Hist.[row.Length - 2].[row.Rank] <- p1Hist.[row.Length].[row.Rank] + 1
+            | Player2 -> p2Hist.[row.Length - 2].[row.Rank] <- p2Hist.[row.Length].[row.Rank] + 1
+    p1Hist, p2Hist
