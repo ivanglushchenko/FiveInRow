@@ -5,14 +5,10 @@ open Row
 open RowX
 
 type Board = { Moves: Map<Position, Player>
-               Rows: Map<Position, RowX>
-               LastMove: Position option
-               LastPlayer: Player option }
+               Rows: Map<Position, RowX> }
 
 let empty = { Moves = Map.empty
-              Rows = Map.empty
-              LastMove = None
-              LastPlayer = None } 
+              Rows = Map.empty } 
 
 let getRow pos dir rows =
     if Map.containsKey pos rows then RowX.get dir rows.[pos]
@@ -118,14 +114,6 @@ let getRows board =
 
 let getRowsCount board =
     getRows board |> Seq.length
-
-let getUnoccupiedPositions k board =
-    seq { for move in board.Moves do
-            for i in fst move.Key - k..fst move.Key + k do
-                if i >= 0 && i < boardDimension then
-                    for j in snd move.Key - k..snd move.Key + k do
-                        if j >= 0 && j < boardDimension && (i <> fst move.Key || j <> snd move.Key) && board.Moves.ContainsKey (i, j) = false then
-                            yield i, j }
                         
 let replay moves =
     let rec exec moves p b =
@@ -140,6 +128,6 @@ let getRowHistogram board =
     for row in getRows board do
         if row.Length <= 5 then
             match board.Moves.[row.From] with
-            | Player1 -> p1Hist.[row.Length - 2].[row.Rank] <- p1Hist.[row.Length].[row.Rank] + 1
-            | Player2 -> p2Hist.[row.Length - 2].[row.Rank] <- p2Hist.[row.Length].[row.Rank] + 1
+            | Player1 -> p1Hist.[row.Length - 2].[row.Rank] <- p1Hist.[row.Length - 2].[row.Rank] + 1
+            | Player2 -> p2Hist.[row.Length - 2].[row.Rank] <- p2Hist.[row.Length - 2].[row.Rank] + 1
     p1Hist, p2Hist

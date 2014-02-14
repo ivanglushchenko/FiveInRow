@@ -68,7 +68,7 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
             boards |> List.rev |> List.fold append (new StringBuilder())
 
     member x.Set (i, j) =
-        if x.IsRunning = false && x.IsCompleted = false && cells.[i].[j].Value = Empty then
+        if x.IsCompleted = false && cells.[i].[j].Value = Empty then
             clearLastMove()
 
             cells.[i].[j].Value <- Occupied nextTurn
@@ -86,9 +86,9 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
                         if showFitness then
                             for ((i, j), fitness) in ai.PossibleMoves do
                                 cells.[i].[j].Fitness <- fitness
+                        nextTurn <- next nextTurn
                         x.MakeMove nextTurn
                         x.RaisePropertiesChanged()
-                        nextTurn <- next nextTurn
                         x.IsRunning <- false })
             else
                 ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
@@ -147,7 +147,7 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
                 opponent <- v
                 x.OnPropertyChanged(<@ x.Opponent @>)
                 match opponent with
-                | AI(p) when boards.Head.LastPlayer = p -> x.MakeMove p
+                | AI(p) when boards.Head.LastPlayer <> p -> x.MakeMove p
                 | _ -> ()
 
     member x.IsRunning
