@@ -1,5 +1,6 @@
 ﻿module FiveInRow.Core.AI
 
+open PersistentHashMap
 open GameDef
 open Board
 open RowHistogram
@@ -59,12 +60,12 @@ type Forecast =
             | _ -> failwith "Cannot compare Forecast with other types"
 
 let getUnoccupiedPositions k board =
-    seq { if board.Moves.Count > 0 then
-            for move in board.Moves do
-                    for i in fst move.Key - k..fst move.Key + k do
+    seq { if PersistentHashMap.length board.Moves > 0 then
+            for (pos, p) in board.Moves do
+                    for i in fst pos - k..fst pos + k do
                         if i >= 0 && i < boardDimension then
-                            for j in snd move.Key - k..snd move.Key + k do
-                                if j >= 0 && j < boardDimension && (i <> fst move.Key || j <> snd move.Key) && board.Moves.ContainsKey (i, j) = false then
+                            for j in snd pos - k..snd pos + k do
+                                if j >= 0 && j < boardDimension && (i <> fst pos || j <> snd pos) && board.Moves.ContainsKey (i, j) = false then
                                     yield i, j
           else yield boardDimension / 2, boardDimension / 2 } |> Seq.distinct
 

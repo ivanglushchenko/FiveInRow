@@ -1,6 +1,7 @@
 ﻿module FiveInRow.Core.Row
 
 open GameDef
+open PersistentHashMap
 
 type Row = 
     { From: Position
@@ -25,7 +26,7 @@ let create pFrom pTo =
       Rank = -1 }
 
 let checkCell (r, c) existingMoves = 
-    if Map.containsKey (r, c) existingMoves then 0 
+    if PersistentHashMap.containsKey (r, c) existingMoves then 0 
     else if isValid (r, c) then 1
     else 0
 

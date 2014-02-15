@@ -31,8 +31,8 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
     let undo() =
         boards <- boards.Tail
         clearBoard()
-        for c in boards.Head.Board.Moves do
-            cells.[fst c.Key].[snd c.Key].Value <- Occupied c.Value
+        for (pos, p) in boards.Head.Board.Moves do
+            cells.[fst pos].[snd pos].Value <- Occupied p
 
     let clearLastMove() =
         match boards.Head.LastMove with
@@ -120,8 +120,8 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
 
     member x.Start() =
         x.Clear()
-        for c in startingBoard.Moves do
-            cells.[fst c.Key].[snd c.Key].Value <- Occupied c.Value
+        for (pos, p) in startingBoard.Moves do
+            cells.[fst pos].[snd pos].Value <- Occupied p
         x.MakeMove()
         showPredictions()
 

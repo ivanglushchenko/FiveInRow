@@ -4,21 +4,22 @@ open GameDef
 open Row
 open RowHistogram
 open RowX
+open PersistentHashMap
 
-type Board = { Moves: Map<Position, Player>
-               Rows: Map<Position, RowX>
+type Board = { Moves: PersistentHashMap<Position, Player>
+               Rows: PersistentHashMap<Position, RowX>
                Histogram: RowHistogram }
 
-let empty = { Moves = Map.empty
-              Rows = Map.empty
+let empty = { Moves = PersistentHashMap.empty
+              Rows = PersistentHashMap.empty
               Histogram = RowHistogram.create() } 
 
 let getRow pos dir rows =
-    if Map.containsKey pos rows then RowX.get dir rows.[pos]
+    if PersistentHashMap.containsKey pos rows then RowX.get dir rows.[pos]
     else None
 
 let setRow pos dir row rows =
-    if Map.containsKey pos rows then
+    if PersistentHashMap.containsKey pos rows then
         let extRj = rows.[pos]
         let r = rows.Remove pos
         let newRj = RowX.update dir (Some row) extRj
@@ -33,7 +34,7 @@ let getRowRank pos dir board =
     (getRow pos dir board.Rows |> Option.get).Rank
 
 let nullifyRow pos dir rows =
-    let extRj = Map.find pos rows
+    let extRj = PersistentHashMap.find pos rows
     let newRj = RowX.update dir None extRj
     if RowX.isEmpty newRj then rows.Remove pos
     else (rows.Remove pos).Add (pos, newRj)
@@ -110,15 +111,15 @@ let extend (row, col) player board =
       Histogram = newHistogram }
 
 let getRows board = 
-    seq { for t in board.Rows do
+    seq { for (pos, rx) in board.Rows do
             let inline getRow r =
                 match r with
-                | Some row -> if row.From = t.Key then Some row else None
+                | Some row -> if row.From = pos then Some row else None
                 | None -> None
-            yield getRow t.Value.S
-            yield getRow t.Value.E
-            yield getRow t.Value.SE
-            yield getRow t.Value.SW }
+            yield getRow rx.S
+            yield getRow rx.E
+            yield getRow rx.SE
+            yield getRow rx.SW }
     |> Seq.choose (fun t -> t)
 
 let getRowsCount board =

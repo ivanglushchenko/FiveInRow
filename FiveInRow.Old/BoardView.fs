@@ -77,7 +77,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 if showFitness then
                     for ((i, j), fitness) in ai.Moves do
                         cells.[i].[j].Fitness <- fitness
-                board.Player |> x.MakeMove
+                x.MakeMove()
                 x.RaisePropertiesChanged()
 //                if x.IsCompleted = false then
 //                    x.IsRunning <- true
@@ -93,12 +93,12 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
 //                    ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
             | None -> ()
 
-    member x.MakeMove player =
-        if x.IsCompleted = false then
-            match opponent with
-                | AI(p) when p = player ->
-                    if boards.Head.ai.Moves.IsEmpty = false then x.Set (fst boards.Head.ai.Moves.Head)
-                | _ -> ()
+    member x.MakeMove() = ()
+//        if x.IsCompleted = false then
+//            match opponent with
+//                | AI(p) when p = player ->
+//                    if boards.Head.ai.Moves.IsEmpty = false then x.Set (fst boards.Head.ai.Moves.Head)
+//                | _ -> ()
         
 
     member x.Clear() =
@@ -111,7 +111,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         x.Clear()
         for c in startingBoard.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
             cells.[fst c.Pos].[snd c.Pos].Value <- c.Value
-        x.MakeMove Player1
+        x.MakeMove()
 
     member x.Winner with get() = boards.Head.ai.Winner
 
@@ -148,7 +148,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
                 opponent <- v
                 x.OnPropertyChanged(<@ x.Opponent @>)
                 match opponent with
-                | AI(p) when boards.Head.board.Player = p -> x.MakeMove p
+                | AI(p) when boards.Head.board.Player = p -> x.MakeMove()
                 | _ -> ()
 
     member x.IsRunning

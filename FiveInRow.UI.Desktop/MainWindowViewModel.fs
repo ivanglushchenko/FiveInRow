@@ -7,11 +7,10 @@ open System.ComponentModel
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 
-//open FiveInRow.GameMechanics.GameDef
-//open FiveInRow.GameMechanics
 open FiveInRow.Core.GameDef
 open FiveInRow.Core.UI
-//open FiveInRow.Foundation.GameDef
+//open FiveInRow.Core.UI
+
 //open FiveInRow.Foundation
 
 type MainWindowViewModel() = 
