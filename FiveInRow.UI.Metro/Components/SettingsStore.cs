@@ -1,4 +1,5 @@
-﻿using FiveInRow.Foundation;
+﻿using FiveInRow.Core.UI;
+using FiveInRow.Foundation;
 using System;
 using System.Collections.Generic;
 using System.IO;

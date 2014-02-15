@@ -1,7 +1,8 @@
-﻿module FiveInRow.GameMechanics.AI
+﻿module FiveInRow.Core.AI
 
-open FiveInRow.GameMechanics.GameDef
-open FiveInRow.GameMechanics.Board
+open GameDef
+open Board
+open RowHistogram
 
 type AI = { PossibleMoves: (Position * float) list
             Winner: Player option }
@@ -9,7 +10,7 @@ type AI = { PossibleMoves: (Position * float) list
 let empty = { PossibleMoves = []
               Winner = None }
 
-[<StructuralEquality; CustomComparison>]
+[<CustomEquality; CustomComparison>]
 type Forecast =
     | Mate of int
     | Check of int
@@ -26,6 +27,22 @@ type Forecast =
         | Mate t -> (100 - t) * 10000000 |> float
         | Check t -> (100 - t) * 10000 |> float
         | Rating r -> r |> float
+
+    override x.Equals yobj =
+        match yobj with
+        | :? Forecast as y ->
+            match x, y with
+            | Mate p1, Mate p2   -> p1 = p2
+            | Check p1, Check p2 -> p1 = p2
+            | Rating p1, Rating p2 -> p2 = p1
+            | _, _ -> false
+        | _ -> false
+
+    override x.GetHashCode() =
+        match x with
+        | Mate t -> (100 - t) * 10000000
+        | Check t -> (100 - t) * 10000
+        | Rating r -> r |> int
 
     interface System.IComparable with
         member x.CompareTo yobj =
@@ -51,27 +68,25 @@ let getUnoccupiedPositions k board =
                                     yield i, j
           else yield boardDimension / 2, boardDimension / 2 } |> Seq.distinct
 
-let getForecast histogram =
-    let rowCount length rank = Array.get (Array.get histogram (length - 2)) rank
-    if histogram.[3].[0] > 0 || histogram.[3].[1] > 0 || histogram.[3].[2] > 0 then Mate 0
-    else if rowCount 4 2 >= 1 then Mate 1
-    else if rowCount 4 1 >= 2 then Mate 2
-    else if rowCount 3 2 >= 2 then Mate 2
-    else if rowCount 3 2 >= 1 && rowCount 4 1 >= 1 then Mate 2
+let getForecast player histogram =
+    if RowHistogram.hasLength player 5 histogram then Mate 0
+    else if RowHistogram.getCount player 4 2 histogram >= 1 then Mate 1
+    else if RowHistogram.getCount player 4 1 histogram >= 2 then Mate 2
+    else if RowHistogram.getCount player 3 2 histogram >= 2 then Mate 2
+    else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 2
     else
         let inline score length rank =
             match length + 2, rank with
             | l, _ when l > 5 -> 8.0
             | 5, _ -> float System.Int32.MaxValue
-            | 4, 2 -> 64.0
-            | 4, 1 -> 64.0
+            | 4, 2 -> 1024.0
+            | 4, 1 -> 128.0
             | 4, 0 -> 8.0
-            | 3, 2 -> 64.0
-            | 3, 1 -> 64.0
+            | 3, 2 -> 128.0
+            | 3, 1 -> 32.0
             | 3, 0 -> 8.0
             | _ -> rank * rank |> float
-        let sumRanks length ranks = ranks |> Array.mapi (fun rank count -> (float count) * score length rank) |> Array.sum
-        Rating(histogram |> Array.mapi sumRanks |> Array.sum)
+        Rating(RowHistogram.score player score histogram)
 
 let (+) f1 f2 =
     match f1, f2 with
@@ -84,15 +99,16 @@ let (+) f1 f2 =
     | Rating p1, Rating p2 -> Rating (p1 + p2)
 
 let getBoardForecast p board =
-    let (h1, h2) = Board.getRowHistogram board
-    let (f1, f2) = getForecast h1, getForecast h2
+    //let (h1, h2) = Board.getRowHistogram board
+    let (f1, f2) = getForecast Player1 board.Histogram, getForecast Player2 board.Histogram
     if p = Player1 then f1 + (f2.Inc 1) else f2 + (f1.Inc 1)
 
 let getEasy p board =
     let possibleMoves = getUnoccupiedPositions 1 board
     let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board))
+    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast p b2)
     let forecasts = 
-        possibleBoards 
-        |> Seq.map (fun (pos, b1, b2) -> pos, (getBoardForecast p b1) + (getBoardForecast p b2))
+        possibleOutcomes 
+        |> Seq.map (fun (pos, f1, f2) -> pos, f1 + f2)
         |> Seq.sortBy snd
     { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f.ToNum()) |> Seq.toList }

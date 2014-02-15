@@ -7,18 +7,21 @@ open System.ComponentModel
 open Microsoft.FSharp.Quotations
 open Microsoft.FSharp.Quotations.Patterns
 
-open FiveInRow.GameMechanics.GameDef
-//open FiveInRow.Foundation.Simulation
-open FiveInRow.GameMechanics
-open FiveInRow.Core
+//open FiveInRow.GameMechanics.GameDef
+//open FiveInRow.GameMechanics
+open FiveInRow.Core.GameDef
+open FiveInRow.Core.UI
+//open FiveInRow.Foundation.GameDef
+//open FiveInRow.Foundation
 
 type MainWindowViewModel() = 
     inherit ObservableObject()
 
     let mutable offset = Vector(0.0, 0.0)
     let mutable showResults = false
-    let boardView = BoardView.Create(GameSettings(19, Easy, Human))
-    //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(3, 10);  (3, 11);  (4, 11); (2, 8);])// (3, 9); ])
+    //let boardView = BoardView.Create(GameSettings(19, Easy, AI Player2))
+    //let boardView = BoardView.CreateFrom(GameSettings(19, Easy, Human), [(6, 7); (5, 6); (6, 6); (6, 5) ])
+    let boardView = BoardView.CreateFrom(GameSettings(19, Easy, Human), [ (5, 7); (6, 8); (5, 8); (5, 9); (6, 9); (6, 10); (5, 10); (5, 11); (6, 11); (6, 12); (5, 12); (5, 13); (6, 13); (6, 14); (5, 14); (6, 15); (5, 16); (5, 15); (6, 16); (7, 16); (7, 15); (8, 15); (8, 16); (9, 16); (9, 15); (10, 15); (10, 16); (11, 16); (11, 15); (12, 15); (12, 16); (4, 7); (7, 14); (3, 8); (8, 14); (2, 9); (9, 14); (1, 8); (10, 14); (11, 14); (12, 14); (0, 7); (12, 13); (0, 6); (11, 13); (7, 17); (10, 13); (12, 12); (9, 13); (5, 17); (8, 13); (0, 5); (8, 12); (0, 4); (9, 12); (0, 3); (10, 12); (0, 2); (11, 12); (0, 1); (11, 11); (0, 0); (10, 11); (1, 0); (9, 11); (1, 1); (8, 11); (1, 2); (7, 11); (1, 3); (7, 12); (1, 4); (7, 13); (1, 5); (7, 10); (1, 6); (8, 10); (1, 7); (9, 10); (0, 8); (10, 10); (0, 9); (11, 10); (1, 9); (12, 10); (0, 10); (13, 10); (1, 10); (12, 11); (0, 11); (13, 12); (1, 11); (13, 14); (0, 12); (13, 16); (1, 12); (13, 17); (0, 13); (13, 13); (1, 13); (13, 11); (0, 14); (14, 10); (1, 14); (14, 11); (0, 15); (14, 12); (1, 15); (13, 8); (0, 16); (13, 9); (1, 16); (12, 9); (0, 17); (11, 9); (1, 17) ])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (6, 7); (6, 8); (5, 8); (5, 7); (7, 9); (5, 9); (7, 7); (4, 8); (6, 6); (3, 9); (4, 9);])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(7, 8); (8, 8); (7, 9)])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(5, 5); (5, 6); (6, 5); (6, 6);(5, 4); (6, 7); ])
@@ -76,9 +79,14 @@ type MainWindowViewModel() =
 
     member x.Start() = boardView.Start()
 
-    member x.MakeMove() = boardView.MakeMove boardView.NextTurn
+    member x.MakeMove() = boardView.MakeMove()
 
     member x.Simulate() =
+        let sw = System.Diagnostics.Stopwatch()
+        sw.Start() 
+        boardView.FastForward 100
+        sw.Stop()
+        System.Diagnostics.Debug.WriteLine(sw.Elapsed.ToString())
 //        let diffs = [ Medium; Easy; Hard ]
 //        let pairs =
 //            seq { for d1 in diffs do
@@ -96,4 +104,4 @@ type MainWindowViewModel() =
 //
 //        for (d1, d2, res) in results do
 //            printfn "%O x %O -> %O" d1 d2 res
-        ()
+        

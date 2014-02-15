@@ -6,8 +6,8 @@ open System.Linq
 open System.Text
 open System.Windows.Data
 
-open FiveInRow.GameMechanics.GameDef
-open FiveInRow.Core
+open FiveInRow.Core.GameDef
+open FiveInRow.Core.UI
 
 type CellValueToStrConverter() =
     interface IValueConverter with

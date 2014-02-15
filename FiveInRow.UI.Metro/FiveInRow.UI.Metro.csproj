@@ -103,7 +103,15 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <ProjectReference Include="..\FiveInRow.Foundation\FiveInRow.Old.fsproj">
+    <ProjectReference Include="..\FiveInRow.Core.UI\FiveInRow.Core.UI.fsproj">
+      <Project>{1411bee5-85a6-4491-8805-2254c01cd22f}</Project>
+      <Name>FiveInRow.Core.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FiveInRow.Core\FiveInRow.Core.fsproj">
+      <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
+      <Name>FiveInRow.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\FiveInRow.Old\FiveInRow.Old.fsproj">
       <Project>{9173f52e-8eb4-4117-9746-4602dd7ac91d}</Project>
       <Name>FiveInRow.Old</Name>
     </ProjectReference>

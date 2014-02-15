@@ -1,4 +1,5 @@
-﻿using FiveInRow.Foundation;
+﻿using FiveInRow.Core.UI;
+using FiveInRow.Foundation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +18,11 @@ namespace FiveInRow.UI.Metro.Converters
             {
                 return value == null ? Visibility.Visible : Visibility.Collapsed;
             }
-            if (value is FiveInRow.Foundation.GameDef.CellValue.Occupied)
+            if (value is CellValue.Occupied)
             {
-                var occupied = value as FiveInRow.Foundation.GameDef.CellValue.Occupied;
+                var occupied = value as CellValue.Occupied;
                 return
-                    ((occupied.Item == GameDef.Player.Player1 && (string)parameter == "X") || (occupied.Item == GameDef.Player.Player2 && (string)parameter == "O"))
+                    ((occupied.Item == FiveInRow.Core.GameDef.Player.Player1 && (string)parameter == "X") || (occupied.Item == FiveInRow.Core.GameDef.Player.Player2 && (string)parameter == "O"))
                     ? Visibility.Visible
                     : Visibility.Collapsed;
             }

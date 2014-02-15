@@ -87,14 +87,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FiveInRow.GameMechanics\FiveInRow.GameMechanics.fsproj">
-      <Name>FiveInRow.GameMechanics</Name>
-      <Project>{b41311a6-a4cb-4752-bdf2-03935a343e7b}</Project>
+    <ProjectReference Include="..\FiveInRow.Core.UI\FiveInRow.Core.UI.fsproj">
+      <Name>FiveInRow.Core.UI</Name>
+      <Project>{1411bee5-85a6-4491-8805-2254c01cd22f}</Project>
       <Private>True</Private>
     </ProjectReference>
-    <ProjectReference Include="..\FiveInRow.UI.Core\FiveInRow.UI.Core.fsproj">
-      <Name>FiveInRow.UI.Core</Name>
-      <Project>{ca663ff0-515a-4b4f-ae8c-5d787374ff1e}</Project>
+    <ProjectReference Include="..\FiveInRow.Core\FiveInRow.Core.fsproj">
+      <Name>FiveInRow.Core</Name>
+      <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

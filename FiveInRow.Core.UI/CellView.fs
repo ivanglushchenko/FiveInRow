@@ -1,6 +1,8 @@
-﻿namespace FiveInRow.Foundation
+﻿namespace FiveInRow.Core.UI
 
-open GameDef
+open FiveInRow.Core.GameDef
+
+type CellValue = Empty | Occupied of Player
 
 type CellView(row: int, col: int) =
     inherit ObservableObject()

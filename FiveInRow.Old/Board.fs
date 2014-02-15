@@ -3,8 +3,10 @@
 open GameDef
 open System
 open System.ComponentModel
+open FiveInRow.Core.GameDef
+open FiveInRow.Core.UI
 
-type Board(lastPos: CellPos, currentPlayer: Player, cMap: Map<int, Map<int, Cell>>, rMap: Map<Player, Map<RowKey, Row list>>, hash: Set<int * int>) =
+type Board(lastPos: Position, currentPlayer: Player, cMap: Map<int, Map<int, Cell>>, rMap: Map<Player, Map<RowKey, Row list>>, hash: Set<int * int>) =
     let listOfCells = lazy (
         seq { for row in cMap do
                 for cell in row.Value do
@@ -93,7 +95,7 @@ type Board(lastPos: CellPos, currentPlayer: Player, cMap: Map<int, Map<int, Cell
 
     static member Create dim =
         boardDimension <- dim
-        let cells = Map.ofList [ for i in 1..dim -> (i, Map.ofList [ for j in 1..dim -> (j, Cell((i, j), Empty)) ]) ]
+        let cells = Map.ofList [ for i in 1..dim -> (i - 1, Map.ofList [ for j in 1..dim -> (j - 1, Cell((i - 1, j - 1), Empty)) ]) ]
         let rows = [ Player1; Player2] |> List.map (fun p -> (p, Map.empty<RowKey, Row list>)) |> Map.ofList
         Board((-1, -1), Player1, cells, rows, Set.empty)
 
@@ -102,7 +104,10 @@ type Board(lastPos: CellPos, currentPlayer: Player, cMap: Map<int, Map<int, Cell
     member x.SetAs (i, j) player =
         match cMap.[i].[j].Value with
         | Occupied(_) -> None
-        | Empty       -> Some(extendWith player cMap.[i].[j])
+        | Empty       -> 
+            let t = Some(extendWith player cMap.[i].[j])
+            //System.Diagnostics.Debug.WriteLine(t.Value.Print())
+            t
 
     member x.Player with get() = currentPlayer
 

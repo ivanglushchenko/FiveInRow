@@ -2,8 +2,9 @@
 
 open GameDef
 open System
+open FiveInRow.Core.GameDef
 
-type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
+type Row(cells: Map<int, Map<int, Cell>>, posFrom: Position, posTo: Position) =
     let length = 
         if fst posFrom = fst posTo then 1 + (snd posFrom - snd posTo |> abs)
         else 1 + (fst posTo - fst posFrom)
@@ -33,7 +34,7 @@ type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
         | _ -> fst posTo
                 
     let getRank (cells: Map<int, Map<int, Cell>>) = 
-        let inline add (pos: CellPos) dr dc = (fst pos + dr, snd pos + dc)
+        let inline add (pos: Position) dr dc = (fst pos + dr, snd pos + dc)
         let inline check pos = if isValid pos && cells.[fst pos].[snd pos].IsEmpty then 1 else 0
         let candidates = 
             match direction with
@@ -46,7 +47,7 @@ type Row(cells: Map<int, Map<int, Cell>>, posFrom: CellPos, posTo: CellPos) =
     let rank = getRank cells
 
     let actionPoints = lazy (
-        let inline get (pos: CellPos) dr dc = 
+        let inline get (pos: Position) dr dc = 
             let newPos = (fst pos + dr, snd pos + dc)
             if isValid newPos && cells.[fst newPos].[snd newPos].IsEmpty then [ newPos ] else []
         match direction with

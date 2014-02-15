@@ -1,4 +1,4 @@
-﻿using FiveInRow.Foundation;
+﻿using FiveInRow.Core.UI;
 using FiveInRow.UI.Metro.Components;
 using System;
 using System.Collections.Generic;
@@ -159,13 +159,13 @@ namespace FiveInRow.UI.Metro
             }
         }
 
-        async void Board_WinnerChanged(object sender, Microsoft.FSharp.Core.FSharpOption<GameDef.Player> args)
+        async void Board_WinnerChanged(object sender, Microsoft.FSharp.Core.FSharpOption<FiveInRow.Core.GameDef.Player> args)
         {
             if (Board.Winner != null)
             {
                 RefreshWinningRow();
 
-                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == GameDef.Player.Player1 ? "1" : "2"));
+                var dialog = new Windows.UI.Popups.MessageDialog(string.Format("Player {0} won the game, golf clap for you!", Board.Winner.Value == FiveInRow.Core.GameDef.Player.Player1 ? "1" : "2"));
                 dialog.Commands.Add(new UICommand("Start new game", new UICommandInvokedHandler((cmd) => Restart())));
                 dialog.Commands.Add(new UICommand("Return to main menu", new UICommandInvokedHandler((cmd) => GoToMainMenu())));
                 dialog.Commands.Add(new UICommand("Give me a break", new UICommandInvokedHandler((cmd) => { })));

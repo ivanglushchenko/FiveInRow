@@ -2,9 +2,9 @@
 
 open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
-open FiveInRow.GameMechanics
-open FiveInRow.GameMechanics.GameDef
-open FiveInRow.GameMechanics.Board
+open FiveInRow.Core
+open FiveInRow.Core.GameDef
+open FiveInRow.Core.Board
 
 [<TestClass>]
 type BoardTest() = 
@@ -233,3 +233,10 @@ type BoardTest() =
         Assert.AreEqual(5, b.Rows.Count)
         Assert.AreEqual(4, getRowsCount b)
         Assert.AreEqual(2, Board.getRowRank (3, 9) E b)
+
+    [<TestMethod>]
+    member x.TestHistogram () =
+        let b = extend (0, 0) Player1 Board.empty
+        RowHistogram.inc Player1 5 0 b.Histogram
+        Assert.AreEqual(1, RowHistogram.getCount Player1 5 0 b.Histogram)
+        Assert.AreEqual(0, RowHistogram.getCount Player1 5 0 Board.empty.Histogram)

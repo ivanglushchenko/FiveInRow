@@ -2,6 +2,8 @@
 
 open GameDef
 open GameAI
+open FiveInRow.Core.GameDef
+open FiveInRow.Core.UI
 open System.Text
 
 type BoardInfo = { board: Board; ai: AI }
@@ -34,7 +36,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     static member Create (settings: GameSettings) = BoardView.CreateFrom (settings, [])
 
     static member CreateFrom (settings: GameSettings, moves) =
-        let exec (moves: (int * int) list) b = moves |> List.fold (fun (acc: Board) m -> acc.Set m |> Option.get) b
+        let exec (moves: (int * int) list) b = moves |> List.fold (fun (acc: Board) p -> acc.Set p |> Option.get) b
         let board = Board.Create settings.BoardSize
         boardDimension <- settings.BoardSize
         let finalBoard = board |> exec moves
@@ -59,32 +61,36 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     member x.FiveInRows with get() = boards.Head.board.Rows |> Seq.filter (fun r -> r.Length >= 5)
 
     member x.Set (i, j) =
-        if x.IsCompleted = false then
+        //if x.IsCompleted = false then
             match boards.Head.board.Set (i, j) with
             | Some(board) -> 
                 if moves.IsEmpty = false then
-                    cells.[fst moves.Head - 1].[snd moves.Head - 1].IsLast <- false
+                    cells.[fst moves.Head].[snd moves.Head].IsLast <- false
                 moves <- (i, j) :: moves
-                cells.[i - 1].[j - 1].Value <- Occupied(boards.Head.board.Player)
-                cells.[i - 1].[j - 1].Fitness <- 0.0
-                cells.[i - 1].[j - 1].IsLast <- true
-                //if showFitness then
-                //    for ((i, j), fitness) in boards.Head.ai.Moves do
-                //        cells.[i - 1].[j - 1].Fitness <- 0.0
+                cells.[i].[j].Value <- Occupied(boards.Head.board.Player)
+                cells.[i].[j].Fitness <- 0.0
+                cells.[i].[j].IsLast <- true
+
                 let ai = ai board
                 boards <- { board = board; ai = ai } :: boards
-                if x.IsCompleted = false then
-                    x.IsRunning <- true
-                    Async.Start
-                        (async {
-                            if showFitness then
-                                for ((i, j), fitness) in ai.Moves do
-                                    cells.[i - 1].[j - 1].Fitness <- fitness
-                            board.Player |> x.MakeMove
-                            x.RaisePropertiesChanged()
-                            x.IsRunning <- false })
-                else
-                    ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
+
+                if showFitness then
+                    for ((i, j), fitness) in ai.Moves do
+                        cells.[i].[j].Fitness <- fitness
+                board.Player |> x.MakeMove
+                x.RaisePropertiesChanged()
+//                if x.IsCompleted = false then
+//                    x.IsRunning <- true
+//                    Async.Start
+//                        (async {
+//                            if showFitness then
+//                                for ((i, j), fitness) in ai.Moves do
+//                                    cells.[i - 1].[j - 1].Fitness <- fitness
+//                            board.Player |> x.MakeMove
+//                            x.RaisePropertiesChanged()
+//                            x.IsRunning <- false })
+//                else
+//                    ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
             | None -> ()
 
     member x.MakeMove player =
@@ -104,7 +110,7 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
     member x.Start() =
         x.Clear()
         for c in startingBoard.Cells |> Seq.filter (fun c -> c.IsEmpty = false) do
-            cells.[fst c.Pos - 1].[snd c.Pos - 1].Value <- c.Value
+            cells.[fst c.Pos].[snd c.Pos].Value <- c.Value
         x.MakeMove Player1
 
     member x.Winner with get() = boards.Head.ai.Winner
@@ -151,6 +157,11 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
             if v <> isRunning then
                 isRunning <- v
                 x.OnPropertyChanged(<@ x.IsRunning @>)
+
+    member x.FastForward turns =
+        for _ in 0..turns do
+            //if boards.Head.ai.Moves.IsEmpty = false then
+            x.Set (fst boards.Head.ai.Moves.Head)
 
     [<CLIEvent>]
     member x.WinnerChanged = winnerChanged.Publish

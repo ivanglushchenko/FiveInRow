@@ -60,13 +60,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BoardTest.fs" />
+    <Compile Include="AITests.fs" />
     <None Include="App.config" />
     <None Include="MSTest.runsettings" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\FiveInRow.GameMechanics\FiveInRow.GameMechanics.fsproj">
-      <Name>FiveInRow.GameMechanics</Name>
-      <Project>{b41311a6-a4cb-4752-bdf2-03935a343e7b}</Project>
+    <ProjectReference Include="..\FiveInRow.Core\FiveInRow.Core.fsproj">
+      <Name>FiveInRow.Core</Name>
+      <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

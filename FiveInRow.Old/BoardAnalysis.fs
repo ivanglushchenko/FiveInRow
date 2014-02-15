@@ -3,6 +3,7 @@
 open System
 open System.Collections.Generic
 open GameDef
+open FiveInRow.Core.GameDef
 
 type RowDistribution = 
     {

@@ -1,6 +1,6 @@
-﻿namespace FiveInRow.Foundation
+﻿namespace FiveInRow.Core.UI
 
-open GameDef
+open FiveInRow.Core.GameDef
 
 type GameSettings(boardSize_, difficulty_, opponent_) =
     inherit ObservableObject()

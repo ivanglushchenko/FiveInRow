@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using Windows.UI;
+using FiveInRow.Core.UI;
 
 namespace FiveInRow.UI.Metro
 {

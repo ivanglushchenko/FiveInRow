@@ -1,14 +1,17 @@
-﻿module FiveInRow.GameMechanics.Board
+﻿module FiveInRow.Core.Board
 
 open GameDef
 open Row
+open RowHistogram
 open RowX
 
 type Board = { Moves: Map<Position, Player>
-               Rows: Map<Position, RowX> }
+               Rows: Map<Position, RowX>
+               Histogram: RowHistogram }
 
 let empty = { Moves = Map.empty
-              Rows = Map.empty } 
+              Rows = Map.empty
+              Histogram = RowHistogram.create() } 
 
 let getRow pos dir rows =
     if Map.containsKey pos rows then RowX.get dir rows.[pos]
@@ -38,6 +41,7 @@ let nullifyRow pos dir rows =
 let extend (row, col) player board =
     if board.Moves.ContainsKey (row, col) then failwith "Cell is occupied already"
 
+    let newHistogram = RowHistogram.clone board.Histogram
     let newMoves = board.Moves.Add ((row, col), player)
 
     let possibleRows =
@@ -62,17 +66,20 @@ let extend (row, col) player board =
                 match getRow pFrom dir rows with
                 | Some row ->
                     rows <- nullifyRow row.To dir rows
+                    RowHistogram.dec player row.Length row.Rank newHistogram
                     row.From
                 | None -> pFrom
             let extendedTo = 
                 match getRow pTo dir rows with
                 | Some row ->
                     rows <- nullifyRow row.From dir rows
+                    RowHistogram.dec player row.Length row.Rank newHistogram
                     row.To
                 | None -> pTo
             let newRow = Row.createRanked extendedFrom extendedTo dir newMoves
             rows <- setRow extendedFrom dir newRow rows
             rows <- setRow extendedTo dir newRow rows
+            RowHistogram.inc player newRow.Length newRow.Rank newHistogram
         rows
 
     let possibleAffectedRows =
@@ -90,15 +97,17 @@ let extend (row, col) player board =
         for pos, dir in possibleAffectedRows do
             match getRow pos dir rows with
             | Some row ->
+                RowHistogram.dec player row.Length row.Rank newHistogram
                 let updatedRow = Row.updateRank dir newMoves row
                 rows <- setRow row.From dir updatedRow rows
                 rows <- setRow row.To dir updatedRow rows
+                RowHistogram.inc player updatedRow.Length updatedRow.Rank newHistogram
             | None -> ()
         rows
 
-    { board with 
-        Moves = newMoves
-        Rows = rankedRows }
+    { Moves = newMoves
+      Rows = rankedRows
+      Histogram = newHistogram }
 
 let getRows board = 
     seq { for t in board.Rows do
@@ -122,12 +131,12 @@ let replay moves =
         | [] -> b
     exec moves Player1 empty
 
-let getRowHistogram board =
-    let p1Hist = Array.init 4 (fun i -> Array.create 3 0)
-    let p2Hist = Array.init 4 (fun i -> Array.create 3 0)
-    for row in getRows board do
-        if row.Length <= 5 then
-            match board.Moves.[row.From] with
-            | Player1 -> p1Hist.[row.Length - 2].[row.Rank] <- p1Hist.[row.Length - 2].[row.Rank] + 1
-            | Player2 -> p2Hist.[row.Length - 2].[row.Rank] <- p2Hist.[row.Length - 2].[row.Rank] + 1
-    p1Hist, p2Hist
+//let getRowHistogram board =
+//    let p1Hist = RowHistogram.create()
+//    let p2Hist = RowHistogram.create()
+//    for row in getRows board do
+//        if row.Length <= 5 then
+//            match board.Moves.[row.From] with
+//            | Player1 -> RowHistogram.inc row.Length row.Rank p1Hist
+//            | Player2 -> RowHistogram.inc row.Length row.Rank p2Hist
+//    p1Hist, p2Hist

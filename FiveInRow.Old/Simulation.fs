@@ -2,6 +2,7 @@
 
 open GameDef
 open GameAI
+open FiveInRow.Core.GameDef
 
 type Battle(d1: Difficulty, d2: Difficulty) =
     do

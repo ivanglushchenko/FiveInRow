@@ -9,7 +9,8 @@ open System.Windows
 open System.Windows.Input
 open System.Windows.Media
 
-open FiveInRow.Core
+open FiveInRow.Core.UI
+//open FiveInRow.Foundation
 
 type BoardPanel() as this =
     inherit Panel()

@@ -1,4 +1,4 @@
-﻿module FiveInRow.GameMechanics.Row
+﻿module FiveInRow.Core.Row
 
 open GameDef
 

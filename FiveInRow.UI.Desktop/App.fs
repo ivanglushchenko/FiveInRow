@@ -5,8 +5,9 @@ open System.Windows
 open System.Windows.Media
 open System.Windows.Controls
 open FSharpx
+
 open FiveInRow.UI.Desktop
-open FiveInRow.Core
+//open FiveInRow.Core
 
 type MainWindow = XAML<"MainWindow.xaml">
 

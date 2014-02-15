@@ -1,4 +1,4 @@
-﻿module FiveInRow.GameMechanics.GameDef
+﻿module FiveInRow.Core.GameDef
 
 type Player = 
     | Player1 

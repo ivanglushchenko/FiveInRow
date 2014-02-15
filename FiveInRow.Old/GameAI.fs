@@ -3,10 +3,11 @@
 open GameDef
 open BoardAnalysis
 open System
+open FiveInRow.Core.GameDef
 
 
 type AI =
-    abstract member Moves: (CellPos * float) list with get
+    abstract member Moves: (Position * float) list with get
     abstract member Winner: Player option with get
 
 
@@ -190,7 +191,7 @@ type MediumAI(board) =
     override x.CombineProbabilities p1 p2 = p1 + p2 / 2.0
 
 
-type Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
+type Node(pos: Position, p1: (Board * BoardStatus), p2: (Board * BoardStatus), children: Node list, stats: StatusStatistics) =
     let cmp = compareStatus (snd p1) (snd p2)
 
     member x.Pos with get() = pos
@@ -224,7 +225,7 @@ type Node(pos: CellPos, p1: (Board * BoardStatus), p2: (Board * BoardStatus), ch
         let stats = children |> List.fold (fun acc (node: Node) -> node.AdjustStats acc) EmptyStats
         Node(pos, p1, p2, children, stats)
 
-    static member New (startingBoard: Board) (pos: CellPos) =
+    static member New (startingBoard: Board) (pos: Position) =
         let adjustFor (player: Player) (boardStatus: BoardStatus) = 
             if player = startingBoard.Player then boardStatus else boardStatus.Inc 1
         let statusFor player = 

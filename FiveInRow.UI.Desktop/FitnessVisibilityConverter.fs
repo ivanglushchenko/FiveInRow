@@ -7,8 +7,6 @@ open System.Text
 open System.Windows.Data
 open System.Windows
 
-open FiveInRow.GameMechanics.GameDef
-
 type FitnessVisibilityConverter() =
     interface IValueConverter with
         member x.Convert(value, targetType, parameter, culture) =

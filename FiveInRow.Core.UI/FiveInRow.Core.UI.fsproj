@@ -5,13 +5,13 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>9173f52e-8eb4-4117-9746-4602dd7ac91d</ProjectGuid>
+    <ProjectGuid>1411bee5-85a6-4491-8805-2254c01cd22f</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>FiveInRow.Foundation</RootNamespace>
-    <AssemblyName>FiveInRow.Foundation</AssemblyName>
+    <RootNamespace>FiveInRow.Core.UI</RootNamespace>
+    <AssemblyName>FiveInRow.Core.UI</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Profile47</TargetFrameworkProfile>
-    <Name>FiveInRow.Old</Name>
+    <Name>FiveInRow.Core.UI</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +21,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Debug\FiveInRow.Foundation.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\FiveInRow.Core.UI.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,27 +30,28 @@
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <DocumentationFile>bin\Release\FiveInRow.Foundation.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\FiveInRow.Core.UI.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="FSharp.Core">
+      <Name>FSharp.Core</Name>
+      <AssemblyName>FSharp.Core.dll</AssemblyName>
+      <HintPath>$(MSBuildExtensionsPath32)\..\Reference Assemblies\Microsoft\FSharp\3.0\Runtime\.NETPortable\FSharp.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="ObservableObject.fs" />
-    <Compile Include="GameDef.fs" />
     <Compile Include="GameSettings.fs" />
-    <Compile Include="Immutable.fs" />
-    <Compile Include="Cell.fs" />
-    <Compile Include="Row.fs" />
-    <Compile Include="Board.fs" />
-    <Compile Include="BoardAnalysis.fs" />
-    <Compile Include="GameAI.fs" />
     <Compile Include="CellView.fs" />
     <Compile Include="BoardView.fs" />
     <Compile Include="EventProc.fs" />
-    <Compile Include="Simulation.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\FSharp\3.0\Runtime\.NETPortable\FSharp.Core.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\FiveInRow.Core\FiveInRow.Core.fsproj">
+      <Name>FiveInRow.Core</Name>
+      <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

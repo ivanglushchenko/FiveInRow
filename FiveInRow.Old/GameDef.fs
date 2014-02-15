@@ -1,33 +1,7 @@
 ﻿module FiveInRow.Foundation.GameDef
 
-// Types
-type Player = 
-    | Player1 
-    | Player2
-
-    override x.ToString() =
-        match x with
-        | Player1 -> "x"
-        | Player2 -> "o" 
-
-type CellValue = Empty | Occupied of Player
-
-type CellPos = int * int
-
-type Move = CellPos * Player
-
-type Direction = 
-    | S 
-    | E 
-    | SE 
-    | SW
-
-    override x.ToString() =
-        match x with
-        | S -> "S"
-        | E -> "E"
-        | SE -> "SE"
-        | SW -> "SW"
+open FiveInRow.Core.GameDef
+open FiveInRow.Core.UI
 
 type RowKey = Direction * int
 
@@ -60,27 +34,13 @@ type BoardStatus =
         | Check(p, t) -> Check(p, t + turns)
         | InProgress(p, t) -> InProgress(p, t)
 
-type Difficulty = 
-    | Easy 
-    | Medium 
-    | Hard
 
-    override x.ToString() =
-        match x with
-        | Easy -> "Easy"
-        | Medium -> "Medium"
-        | Hard -> "Hard"
-
-type OpponentType = Human | AI of Player
-
-// Util functions and state
-let mutable boardDimension = 51
 
 let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd pos <= boardDimension
 
 let next = function | Player1 -> Player2 | _ -> Player1
 
-let neighbours (c1: CellPos) (c2: CellPos) = abs(fst c1 - fst c2) <= 1 && abs(snd c1 - snd c2) <= 1
+let neighbours (c1: Position) (c2: Position) = abs(fst c1 - fst c2) <= 1 && abs(snd c1 - snd c2) <= 1
 
 let compareStatus (bs1: BoardStatus) (bs2: BoardStatus) =
     match (bs1, bs2) with

@@ -1,4 +1,4 @@
-﻿namespace FiveInRow.Foundation
+﻿namespace FiveInRow.Core.UI
 
 open System
 open System.Collections.ObjectModel

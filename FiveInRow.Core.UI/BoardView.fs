@@ -1,17 +1,16 @@
-﻿namespace FiveInRow.Core
+﻿namespace FiveInRow.Core.UI
 
-open FiveInRow.GameMechanics
-open FiveInRow.GameMechanics.GameDef
-open FiveInRow.GameMechanics.Board
-open FiveInRow.GameMechanics.AI
 open System.Text
+open FiveInRow.Core.GameDef
+open FiveInRow.Core
+open FiveInRow.Core.AI
 
-type BoardInfo = { Board: Board
+type BoardInfo = { Board: Board.Board
                    AI: AI
                    LastMove: Position option
                    LastPlayer: Player }
 
-type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
+type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
     inherit ObservableObject()
 
     let mutable nextTurn = Player1
@@ -39,6 +38,11 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
         match boards.Head.LastMove with
         | Some (r, c) -> cells.[r].[c].IsLast <- false
         | None -> ()
+
+    let showPredictions() =
+        if showFitness then
+            for ((i, j), fitness) in boards.Head.AI.PossibleMoves do
+                cells.[i].[j].Fitness <- fitness
 
     static member Create (settings: GameSettings) = BoardView.CreateFrom (settings, [])
 
@@ -80,30 +84,37 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
             boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = nextTurn } :: boards
 
             if x.IsCompleted = false then
-                x.IsRunning <- true
-                Async.Start
-                    (async {
-                        if showFitness then
-                            for ((i, j), fitness) in ai.PossibleMoves do
-                                cells.[i].[j].Fitness <- fitness
-                        nextTurn <- next nextTurn
-                        x.MakeMove nextTurn
-                        x.RaisePropertiesChanged()
-                        x.IsRunning <- false })
+                showPredictions()
+                nextTurn <- next nextTurn
+                x.MakeMove()
+                x.RaisePropertiesChanged()
+//                x.IsRunning <- true
+//                Async.Start
+//                    (async {
+//                        showPredictions()
+//                        nextTurn <- next nextTurn
+//                        x.MakeMove()
+//                        x.RaisePropertiesChanged()
+//                        x.IsRunning <- false })
             else
                 ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
 
-
-    member x.MakeMove player =
+    member x.MakeMove() =
         if x.IsCompleted = false then
             match opponent with
-                | AI(p) when p = player ->
+                | AI(p) when p = nextTurn ->
                     if boards.Head.AI.PossibleMoves.IsEmpty = false then x.Set (fst boards.Head.AI.PossibleMoves.Head)
                 | _ -> ()
         
+    member x.FastForward turns =
+        for _ in 0..turns do
+            if x.IsCompleted = false && boards.Head.AI.PossibleMoves.IsEmpty = false then
+                x.Set (fst boards.Head.AI.PossibleMoves.Head)
 
     member x.Clear() =
-        boards <- [ { Board = startingBoard; AI = ai Player1 startingBoard; LastMove = None; LastPlayer = Player2 } ]
+        nextTurn <- Player1
+        if boards.Length > 1 then
+            boards <- [ { Board = startingBoard; AI = ai Player1 startingBoard; LastMove = None; LastPlayer = Player2 } ]
         clearBoard()
         x.RaisePropertiesChanged()
 
@@ -111,11 +122,14 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
         x.Clear()
         for c in startingBoard.Moves do
             cells.[fst c.Key].[snd c.Key].Value <- Occupied c.Value
-        x.MakeMove Player1
+        x.MakeMove()
+        showPredictions()
 
     member x.Winner with get() = boards.Head.AI.Winner
 
     member x.IsCompleted with get() = x.Winner |> Option.isSome
+
+    member x.FiveInRows with get() = (Board.getRows boards.Head.Board) |> Seq.filter (fun t -> t.Length = 5)
 
     member x.Undo() =
         if boards.Head.Board <> startingBoard then
@@ -146,9 +160,7 @@ type BoardView(startingBoard: Board, ai: Player -> Board -> AI) =
             if v <> opponent then
                 opponent <- v
                 x.OnPropertyChanged(<@ x.Opponent @>)
-                match opponent with
-                | AI(p) when boards.Head.LastPlayer <> p -> x.MakeMove p
-                | _ -> ()
+                x.MakeMove()
 
     member x.IsRunning
         with get() = isRunning
