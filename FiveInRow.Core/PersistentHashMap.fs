@@ -1,7 +1,8 @@
 ﻿module PersistentHashMap
 
 // This data type is part of https://github.com/fsprojects/FSharpx.Collections
-// The package FSharpx.Collections is not a portable library though, so I had to include it as is
+// The package FSharpx.Collections is not a portable library though, so I had to include it as is'
+// The only change is PersistentHashSet module at the end of the file
 
 open System.Threading
 open System.Collections.Generic
@@ -718,3 +719,37 @@ module PersistentHashMap =
         for (key,value) in map do
             ret <- ret.Add(key,f value)
         ret.persistent() 
+
+type PersistentHashSet<'T when 'T : equality> = PersistentHashMap<'T, int>
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+/// Defines functions which allow to access and manipulate PersistentHashMaps.
+module PersistentHashSet = 
+    ///O(1), returns an empty PersistentHashMap
+    let empty<'T when 'T : equality> = PersistentHashMap.Empty() :> PersistentHashSet<'T>
+
+    ///O(1), returns the count of the elements in the PersistentHashMap
+    let inline length (map:PersistentHashMap<'T, int>) = map.Length
+
+    ///O(log32n), returns if the key exists in the map
+    let inline contains key (map:PersistentHashMap<'T, int>) = map.ContainsKey key
+
+    ///O(log32n), returns the value if the exists in the map
+    let inline find key (map:PersistentHashMap<'T, int>) = map.[key]
+
+    ///O(log32n), adds an element to the map
+    let inline add key (map:PersistentHashMap<'T, int>) = map.Add(key, 0)
+
+    ///O(log32n), removes the element with the given key from the map
+    let inline remove key (map:PersistentHashMap<'T, int>) = map.Remove(key)
+
+    ///O(n). Views the given HashMap as a sequence.
+    let inline toSeq (map:PersistentHashMap<'T, int>) = map :> seq<'T*int>
+
+    ///O(n). Returns a HashMap of the seq.
+    let inline ofSeq (items : 'T seq): PersistentHashSet<'T> = items |> Seq.map (fun t -> (t, 0)) |> PersistentHashSet<'T>.ofSeq
+
+    ///O(n). Returns a HashMap whose elements are the results of applying the supplied function to each of the elements of a supplied HashMap.
+    let map (f : 'T -> 'T1) (map: PersistentHashSet<'T>) : seq<'T1> = 
+        seq { for key, _ in map do
+                yield f key }

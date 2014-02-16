@@ -59,7 +59,7 @@ type Forecast =
                 | Rating p1, Rating p2 -> compare p2 p1
             | _ -> failwith "Cannot compare Forecast with other types"
 
-let getUnoccupiedPositions k board =
+let getUnoccupiedNeighbours k board =
     seq { if PersistentHashMap.length board.Moves > 0 then
             for (pos, p) in board.Moves do
                     for i in fst pos - k..fst pos + k do
@@ -67,7 +67,7 @@ let getUnoccupiedPositions k board =
                             for j in snd pos - k..snd pos + k do
                                 if j >= 0 && j < boardDimension && (i <> fst pos || j <> snd pos) && board.Moves.ContainsKey (i, j) = false then
                                     yield i, j
-          else yield boardDimension / 2, boardDimension / 2 } |> Seq.distinct
+          else yield boardDimension / 2, boardDimension / 2 } |> Set.ofSeq
 
 let getForecast player histogram =
     if RowHistogram.hasLength player 5 histogram then Mate 0
@@ -100,16 +100,15 @@ let (+) f1 f2 =
     | Rating p1, Rating p2 -> Rating (p1 + p2)
 
 let getBoardForecast p board =
-    //let (h1, h2) = Board.getRowHistogram board
     let (f1, f2) = getForecast Player1 board.Histogram, getForecast Player2 board.Histogram
     if p = Player1 then f1 + (f2.Inc 1) else f2 + (f1.Inc 1)
 
 let getEasy p board =
-    let possibleMoves = getUnoccupiedPositions 1 board
-    let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board))
-    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast p b2)
+    let possibleMoves = if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates
+    let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board)) |> Seq.toArray
+    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast p b2) |> Seq.toArray
     let forecasts = 
         possibleOutcomes 
         |> Seq.map (fun (pos, f1, f2) -> pos, f1 + f2)
-        |> Seq.sortBy snd
+        |> Seq.sortBy snd |> Seq.toArray
     { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f.ToNum()) |> Seq.toList }

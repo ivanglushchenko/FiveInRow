@@ -8,11 +8,13 @@ open PersistentHashMap
 
 type Board = { Moves: PersistentHashMap<Position, Player>
                Rows: PersistentHashMap<Position, RowX>
-               Histogram: RowHistogram }
+               Histogram: RowHistogram
+               Candidates: Set<int * int> }
 
 let empty =  { Moves = PersistentHashMap.empty
                Rows = PersistentHashMap.empty
-               Histogram = RowHistogram.create() } 
+               Histogram = RowHistogram.create()
+               Candidates = Set.empty } 
 
 let getRow pos dir rows =
     if PersistentHashMap.containsKey pos rows then RowX.get dir rows.[pos]
@@ -93,9 +95,19 @@ let extend (r, c) player board =
                 RowHistogram.inc player newRow.Length newRow.Rank newHistogram
         rows
 
+    let newCandidates =
+        let mutable candidates = if board.Candidates.Contains (r, c) then board.Candidates.Remove (r, c) else board.Candidates
+        for (pFrom, pTo, dir) in possibleRows do
+            if isValid pFrom && newMoves.ContainsKey pFrom = false then
+                candidates <- candidates.Add pFrom
+            if isValid pTo && newMoves.ContainsKey pTo = false then
+                candidates <- candidates.Add pTo
+        candidates
+
     { Moves = newMoves
       Rows = newRows
-      Histogram = newHistogram }
+      Histogram = newHistogram
+      Candidates = newCandidates }
 
 let getRows board = 
     seq { for (pos, rx) in board.Rows do
