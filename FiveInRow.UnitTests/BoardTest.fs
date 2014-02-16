@@ -10,15 +10,15 @@ open FiveInRow.Core.Board
 type BoardTest() = 
     [<TestMethod>]
     member x.TestEmpty () = 
-        Assert.AreEqual(0, Board.empty.Moves.Count)
+        Assert.AreEqual(0, Board.empty.Moves.Length)
 
     [<TestMethod>]
     member x.TestExtendEmpty () =
         let b = extend (0, 0) Player1 Board.empty
-        Assert.AreEqual(1, b.Moves.Count)
-        Assert.AreEqual(0, b.Rows.Count)
-        Assert.AreEqual(0, Board.empty.Moves.Count)
-        Assert.AreEqual(0, Board.empty.Rows.Count)
+        Assert.AreEqual(1, b.Moves.Length)
+        Assert.AreEqual(0, b.Rows.Length)
+        Assert.AreEqual(0, Board.empty.Moves.Length)
+        Assert.AreEqual(0, Board.empty.Rows.Length)
 
     [<TestMethod>]
     member x.TestEnumerateCells () =
@@ -44,8 +44,8 @@ type BoardTest() =
             Board.empty
             |> extend (0, 0) Player1
             |> extend (0, 1) Player1
-        Assert.AreEqual(2, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(2, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(1, getRowsCount b)
         Assert.AreEqual(1, ((getRows b) |> Seq.head).Rank)
 
@@ -53,13 +53,13 @@ type BoardTest() =
             Board.empty
             |> extend (0, 2) Player1
             |> extend (0, 1) Player1
-        Assert.AreEqual(2, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(2, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(1, getRowsCount b)
         Assert.AreEqual(2, ((getRows b) |> Seq.head).Rank)
 
-        Assert.AreEqual(0, Board.empty.Moves.Count)
-        Assert.AreEqual(0, Board.empty.Rows.Count)
+        Assert.AreEqual(0, Board.empty.Moves.Length)
+        Assert.AreEqual(0, Board.empty.Rows.Length)
 
     [<TestMethod>]
     member x.TestAddTwoRows () =
@@ -68,14 +68,14 @@ type BoardTest() =
             |> extend (0, 0) Player1
             |> extend (1, 1) Player1
             |> extend (0, 2) Player1
-        Assert.AreEqual(3, b.Moves.Count)
-        Assert.AreEqual(3, b.Rows.Count)
+        Assert.AreEqual(3, b.Moves.Length)
+        Assert.AreEqual(3, b.Rows.Length)
         Assert.AreEqual(2, getRowsCount b)
         Assert.AreEqual(1, Board.getRowRank (1, 1) SE b)
         Assert.AreEqual(1, Board.getRowRank (1, 1) SW b)
 
-        Assert.AreEqual(0, Board.empty.Moves.Count)
-        Assert.AreEqual(0, Board.empty.Rows.Count)
+        Assert.AreEqual(0, Board.empty.Moves.Length)
+        Assert.AreEqual(0, Board.empty.Rows.Length)
 
     [<TestMethod>]
     member x.TestAddThreeRowsInTriangle () =
@@ -84,8 +84,8 @@ type BoardTest() =
             |> extend (0, 0) Player1
             |> extend (1, 1) Player1
             |> extend (0, 1) Player1
-        Assert.AreEqual(3, b.Moves.Count)
-        Assert.AreEqual(3, b.Rows.Count)
+        Assert.AreEqual(3, b.Moves.Length)
+        Assert.AreEqual(3, b.Rows.Length)
         Assert.AreEqual(3, getRowsCount b)
         Assert.AreEqual(1, Board.getRowRank (1, 1) S b)
         Assert.AreEqual(1, Board.getRowRank (1, 1) SE b)
@@ -93,8 +93,8 @@ type BoardTest() =
         Assert.AreEqual(1, Board.getRowRank (0, 0) E b)
         Assert.AreEqual(1, Board.getRowRank (0, 1) E b)
         Assert.AreEqual(1, Board.getRowRank (0, 1) E b)
-        Assert.AreEqual(0, Board.empty.Moves.Count)
-        Assert.AreEqual(0, Board.empty.Rows.Count)
+        Assert.AreEqual(0, Board.empty.Moves.Length)
+        Assert.AreEqual(0, Board.empty.Rows.Length)
 
     [<TestMethod>]
     member x.TestAddOneRowLength3 () =
@@ -103,8 +103,8 @@ type BoardTest() =
             |> extend (3, 3) Player1
             |> extend (2, 2) Player1
             |> extend (1, 1) Player1
-        Assert.AreEqual(3, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(3, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(1, getRowsCount b)
         Assert.AreEqual(2, Board.getRowRank (1, 1) SE b)
         Assert.AreEqual(2, Board.getRowRank (3, 3) SE b)
@@ -116,8 +116,8 @@ type BoardTest() =
             |> extend (0, 0) Player1
             |> extend (2, 2) Player1
             |> extend (1, 1) Player1
-        Assert.AreEqual(3, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(3, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(1, getRowsCount b)
         Assert.AreEqual(1, Board.getRowRank (0, 0) SE b)
         Assert.AreEqual(1, Board.getRowRank (2, 2) SE b)
@@ -130,8 +130,8 @@ type BoardTest() =
             |> extend (1, 2) Player1
             |> extend (2, 1) Player1
             |> extend (1, 1) Player1
-        Assert.AreEqual(4, b.Moves.Count)
-        Assert.AreEqual(4, b.Rows.Count)
+        Assert.AreEqual(4, b.Moves.Length)
+        Assert.AreEqual(4, b.Rows.Length)
         Assert.AreEqual(4, getRowsCount b)
         Assert.AreEqual(1, Board.getRowRank (2, 1) SE b)
         Assert.AreEqual(2, Board.getRowRank (2, 1) S b)
@@ -151,8 +151,8 @@ type BoardTest() =
             |> extend (3, 3) Player1
             |> extend (4, 4) Player1
             |> extend (2, 2) Player1
-        Assert.AreEqual(5, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(5, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(5, Board.getRowLength (0, 0) SE b)
         Assert.AreEqual(1, Board.getRowRank (0, 0) SE b)
         Assert.AreEqual(1, getRowsCount b)
@@ -166,8 +166,8 @@ type BoardTest() =
             |> extend (3, 3) Player2
             |> extend (4, 4) Player1
             |> extend (2, 2) Player1
-        Assert.AreEqual(5, b.Moves.Count)
-        Assert.AreEqual(0, b.Rows.Count)
+        Assert.AreEqual(5, b.Moves.Length)
+        Assert.AreEqual(0, b.Rows.Length)
         Assert.AreEqual(0, getRowsCount b)
 
     [<TestMethod>]
@@ -179,8 +179,8 @@ type BoardTest() =
             |> extend (6, 6) Player1
             |> extend (6, 7) Player2
             |> extend (4, 7) Player1
-        Assert.AreEqual(5, b.Moves.Count)
-        Assert.AreEqual(5, b.Rows.Count)
+        Assert.AreEqual(5, b.Moves.Length)
+        Assert.AreEqual(5, b.Rows.Length)
         Assert.AreEqual(3, getRowsCount b)
 
     [<TestMethod>]
@@ -191,8 +191,8 @@ type BoardTest() =
             |> extend (5, 7) Player2
             |> extend (6, 6) Player1
             |> extend (6, 7) Player2
-        Assert.AreEqual(4, b.Moves.Count)
-        Assert.AreEqual(4, b.Rows.Count)
+        Assert.AreEqual(4, b.Moves.Length)
+        Assert.AreEqual(4, b.Rows.Length)
         Assert.AreEqual(2, getRowsCount b)
 
     [<TestMethod>]
@@ -202,8 +202,8 @@ type BoardTest() =
             |> extend (5, 6) Player1
             |> extend (5, 7) Player2
             |> extend (5, 8) Player2
-        Assert.AreEqual(3, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(3, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(1, getRowsCount b)
         Assert.AreEqual(1, Board.getRowRank (5, 7) E b)
 
@@ -215,8 +215,8 @@ type BoardTest() =
             |> extend (5, 7) Player2
             |> extend (5, 8) Player2
             |> extend (5, 9) Player1
-        Assert.AreEqual(4, b.Moves.Count)
-        Assert.AreEqual(2, b.Rows.Count)
+        Assert.AreEqual(4, b.Moves.Length)
+        Assert.AreEqual(2, b.Rows.Length)
         Assert.AreEqual(1, getRowsCount b)
         Assert.AreEqual(0, Board.getRowRank (5, 7) E b)
 
@@ -229,8 +229,8 @@ type BoardTest() =
             |> extend (4, 11) Player1
             |> extend (2, 8) Player1
             |> extend (3, 9) Player1
-        Assert.AreEqual(5, b.Moves.Count)
-        Assert.AreEqual(5, b.Rows.Count)
+        Assert.AreEqual(5, b.Moves.Length)
+        Assert.AreEqual(5, b.Rows.Length)
         Assert.AreEqual(4, getRowsCount b)
         Assert.AreEqual(2, Board.getRowRank (3, 9) E b)
 

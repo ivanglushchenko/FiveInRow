@@ -19,7 +19,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="350" />
         </Grid.ColumnDefinitions>
             
         <ItemsControl ItemsSource="{Binding Board.Cells}" Tag="{Binding Board}">
@@ -127,10 +127,23 @@
                         <TextBlock Text="Next: "/>
                         <TextBlock Text="{Binding Board.NextTurn, Converter={StaticResource PlayerToStrConverter}}"/>
                     </StackPanel>
-                    <StackPanel Margin="10,20,0,0">
-                        <TextBlock Text="Rows"/>
-                        <ItemsControl ItemsSource="{Binding Board.Rows}" />
-                    </StackPanel>
+
+                    <Grid Margin="10,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="Rows"/>
+                            <ItemsControl ItemsSource="{Binding Board.Rows}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Histogram"/>
+                            <ItemsControl ItemsSource="{Binding Board.Histograms}" />
+                        </StackPanel>
+                    </Grid>
 
                     <StackPanel Margin="10,20,0,0">
                         <TextBlock Text="Moves"/>

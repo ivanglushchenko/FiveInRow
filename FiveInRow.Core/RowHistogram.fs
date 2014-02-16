@@ -1,17 +1,18 @@
 ﻿module FiveInRow.Core.RowHistogram
 
+open System.Text
 open GameDef
 
 type RowHistogram = RowHistogram of int array
 
 let inline create() = Array.create 24 0 |> RowHistogram
 
-let inline inc player length rank (RowHistogram histogram) =
+let inc player length rank (RowHistogram histogram) =
     if length < 6 then
         let i = ((length - 2) + 4 * rank) * (if player = Player1 then 1 else 2)
         histogram.[i] <- histogram.[i] + 1
 
-let inline dec player length rank (RowHistogram histogram) =
+let dec player length rank (RowHistogram histogram) =
     if length < 6 then
         let i = ((length - 2) + 4 * rank) * (if player = Player1 then 1 else 2)
         histogram.[i] <- histogram.[i] - 1
@@ -41,3 +42,12 @@ let inline score player scorer (RowHistogram histogram) =
 
 let inline clone (RowHistogram histogram) =
     Array.copy histogram |> RowHistogram
+
+let print player (RowHistogram histogram) =
+    let sb = StringBuilder()
+    let columnHeaders = System.String.Join(" ", [| for r in 2..5 -> "L" + r.ToString() |])
+    sb.AppendFormat("    {0}\r\n", columnHeaders) |> ignore
+    for r in 0..2 do
+        let line = System.String.Join("  ", [| for l in 2..5 -> (getCount player r l (RowHistogram histogram)).ToString() |])
+        sb.AppendFormat("r{0}|  {1}\r\n", r, line) |> ignore
+    sb.ToString()

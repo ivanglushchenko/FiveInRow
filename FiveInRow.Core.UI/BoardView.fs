@@ -169,5 +169,8 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
                 isRunning <- v
                 x.OnPropertyChanged(<@ x.IsRunning @>)
 
+    member x.Histograms
+        with get() = [| RowHistogram.print Player1 boards.Head.Board.Histogram; RowHistogram.print Player1 boards.Head.Board.Histogram |]
+
     [<CLIEvent>]
     member x.WinnerChanged = winnerChanged.Publish

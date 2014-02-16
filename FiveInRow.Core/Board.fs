@@ -10,9 +10,9 @@ type Board = { Moves: PersistentHashMap<Position, Player>
                Rows: PersistentHashMap<Position, RowX>
                Histogram: RowHistogram }
 
-let empty = { Moves = PersistentHashMap.empty
-              Rows = PersistentHashMap.empty
-              Histogram = RowHistogram.create() } 
+let empty =  { Moves = PersistentHashMap.empty
+               Rows = PersistentHashMap.empty
+               Histogram = RowHistogram.create() } 
 
 let getRow pos dir rows =
     if PersistentHashMap.containsKey pos rows then RowX.get dir rows.[pos]
@@ -39,75 +39,62 @@ let nullifyRow pos dir rows =
     if RowX.isEmpty newRj then rows.Remove pos
     else (rows.Remove pos).Add (pos, newRj)
 
-let extend (row, col) player board =
-    if board.Moves.ContainsKey (row, col) then failwith "Cell is occupied already"
+let extend (r, c) player board =
+    if board.Moves.ContainsKey (r, c) then failwith "Cell is occupied already"
 
     let newHistogram = RowHistogram.clone board.Histogram
-    let newMoves = board.Moves.Add ((row, col), player)
+    let newMoves = board.Moves.Add ((r, c), player)
 
     let possibleRows =
-        seq { yield (row - 1, col - 1), (row + 1, col + 1), SE
-              yield (row - 1, col), (row + 1, col), S
-              yield (row - 1, col + 1), (row + 1, col - 1), SW
-              yield (row, col - 1), (row, col + 1), E }
+        seq { yield (r, c - 1), (r, c + 1), E
+              yield (r - 1, c - 1), (r + 1, c + 1), SE
+              yield (r - 1, c), (r + 1, c), S
+              yield (r - 1, c + 1), (r + 1, c - 1), SW }
 
-    let generateNewRows (p1, p2, dir) =
-        match (board.Moves.ContainsKey p1 && board.Moves.[p1] = player, board.Moves.ContainsKey p2 && board.Moves.[p2] = player) with
-        | (true, true) -> Some(p1, p2, dir)
-        | (true, false) -> Some(p1, (row, col), dir)
-        | (false, true) -> Some((row, col), p2, dir)
-        | (false, false) -> None
+    let prolongate rows currentPoint desiredPoint dir getNearPoint getFarPoint =
+        if board.Moves.ContainsKey desiredPoint then
+            let dpPlayer = board.Moves.[desiredPoint]
+            let dpRow = getRow desiredPoint dir rows
+            if dpPlayer = player then
+                match dpRow with
+                | Some existingRow ->
+                    // Extend the existing row 
+                    let newRows = nullifyRow (getNearPoint existingRow) dir rows
+                    RowHistogram.dec player existingRow.Length existingRow.Rank newHistogram
+                    newRows, getFarPoint existingRow
+                | None ->
+                    // Create a new row by linking the existing move to the new one
+                    rows, desiredPoint
+            else
+                match dpRow with
+                | Some existingRow ->
+                    // Reassign rank tp oponent's row
+                    RowHistogram.dec dpPlayer existingRow.Length existingRow.Rank newHistogram
+                    let updatedRow = Row.updateRank dir newMoves existingRow
+                    let newRows = setRow existingRow.From dir updatedRow rows
+                    let newRows = setRow existingRow.To dir updatedRow newRows
+                    RowHistogram.inc dpPlayer updatedRow.Length updatedRow.Rank newHistogram
+                    newRows, currentPoint
+                | None ->
+                    rows, currentPoint
+        else
+            rows, currentPoint
 
-    let newRows = Seq.choose generateNewRows possibleRows
-
-    let mergedRows =
+    let newRows = 
         let mutable rows = board.Rows
-        for (pFrom, pTo, dir) in newRows do
-            let extendedFrom = 
-                match getRow pFrom dir rows with
-                | Some row ->
-                    rows <- nullifyRow row.To dir rows
-                    RowHistogram.dec player row.Length row.Rank newHistogram
-                    row.From
-                | None -> pFrom
-            let extendedTo = 
-                match getRow pTo dir rows with
-                | Some row ->
-                    rows <- nullifyRow row.From dir rows
-                    RowHistogram.dec player row.Length row.Rank newHistogram
-                    row.To
-                | None -> pTo
-            let newRow = Row.createRanked extendedFrom extendedTo dir newMoves
-            rows <- setRow extendedFrom dir newRow rows
-            rows <- setRow extendedTo dir newRow rows
-            RowHistogram.inc player newRow.Length newRow.Rank newHistogram
-        rows
-
-    let possibleAffectedRows =
-        seq { yield (row - 1, col - 1), SE
-              yield (row + 1, col + 1), SE
-              yield (row - 1, col), S
-              yield (row + 1, col), S
-              yield (row - 1, col + 1), SW
-              yield (row + 1, col - 1), SW
-              yield (row, col - 1), E
-              yield (row, col + 1), E }
-
-    let rankedRows =
-        let mutable rows = mergedRows
-        for pos, dir in possibleAffectedRows do
-            match getRow pos dir rows with
-            | Some row ->
-                RowHistogram.dec player row.Length row.Rank newHistogram
-                let updatedRow = Row.updateRank dir newMoves row
-                rows <- setRow row.From dir updatedRow rows
-                rows <- setRow row.To dir updatedRow rows
-                RowHistogram.inc player updatedRow.Length updatedRow.Rank newHistogram
-            | None -> ()
+        for (pFrom, pTo, dir) in possibleRows do
+            let newRows, extendedFrom =  prolongate rows (r, c) pFrom dir (fun r -> r.To) (fun r -> r.From)
+            let newRows, extendedTo = prolongate newRows (r, c) pTo dir (fun r -> r.From) (fun r -> r.To)
+            rows <- newRows
+            if extendedFrom <> extendedTo then
+                let newRow = Row.createRanked extendedFrom extendedTo dir newMoves
+                rows <- setRow extendedFrom dir newRow rows
+                rows <- setRow extendedTo dir newRow rows
+                RowHistogram.inc player newRow.Length newRow.Rank newHistogram
         rows
 
     { Moves = newMoves
-      Rows = rankedRows
+      Rows = newRows
       Histogram = newHistogram }
 
 let getRows board = 
@@ -131,13 +118,3 @@ let replay moves =
         | hd :: tl -> extend hd p b |> exec tl (next p)
         | [] -> b
     exec moves Player1 empty
-
-//let getRowHistogram board =
-//    let p1Hist = RowHistogram.create()
-//    let p2Hist = RowHistogram.create()
-//    for row in getRows board do
-//        if row.Length <= 5 then
-//            match board.Moves.[row.From] with
-//            | Player1 -> RowHistogram.inc row.Length row.Rank p1Hist
-//            | Player2 -> RowHistogram.inc row.Length row.Rank p2Hist
-//    p1Hist, p2Hist
