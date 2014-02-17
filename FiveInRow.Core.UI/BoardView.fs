@@ -58,7 +58,7 @@ type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
             match settings.Difficulty with
             | Easy -> BoardView(finalBoard, AI.getEasy)
             | Medium -> BoardView(finalBoard, fun p b -> AI.empty)
-            | Hard -> BoardView(finalBoard, fun p b -> AI.empty)
+            | Hard -> BoardView(finalBoard, AI.getHard)
         view.Opponent <- settings.Opponent
         view.Start()
         view
@@ -79,15 +79,15 @@ type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
         if x.IsCompleted = false && cells.[i].[j].Value = Empty then
             clearLastMove()
 
-            let nextTurn = next boards.Head.LastPlayer
+            let thisTurn = next boards.Head.LastPlayer
 
-            cells.[i].[j].Value <- Occupied nextTurn
+            cells.[i].[j].Value <- Occupied thisTurn
             cells.[i].[j].Fitness <- 0.0
             cells.[i].[j].IsLast <- true
 
-            let board = Board.extend (i, j) nextTurn boards.Head.Board
-            let ai = ai nextTurn board
-            boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = nextTurn } :: boards
+            let board = Board.extend (i, j) thisTurn boards.Head.Board
+            let ai = ai (next thisTurn) board
+            boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = thisTurn } :: boards
 
             if x.IsCompleted = false then
                 showPredictions()

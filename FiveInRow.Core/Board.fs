@@ -145,3 +145,17 @@ let replay moves =
         | hd :: tl -> extend hd p b |> exec tl (next p)
         | [] -> b, p
     exec moves Player1 empty
+
+let print board =
+    let sb = System.Text.StringBuilder()
+    sb.AppendLine(sprintf "Board: moves: %i" board.Moves.Length) |> ignore
+    for r in 0..boardDimension - 1 do
+        for c in 0..boardDimension - 1 do
+            if board.Moves.ContainsKey (r, c) then
+                match board.Moves.[r, c] with
+                | Player1 -> sb.Append "x" |> ignore
+                | Player2 -> sb.Append "o" |> ignore
+            else
+                sb.Append "." |> ignore
+        sb.AppendLine() |> ignore
+    sb.ToString()
