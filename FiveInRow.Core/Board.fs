@@ -66,36 +66,48 @@ let extend (r, c) player board =
                     // Extend the existing row 
                     let newRows = nullifyRow (getNearPoint existingRow) dir rows
                     RowHistogram.dec player existingRow.Length existingRow.Rank newHistogram
-                    newRows, getFarPoint existingRow
+                    newRows, getFarPoint existingRow, true
                 | None ->
                     // Create a new row by linking the existing move to the new one
-                    rows, desiredPoint
+                    rows, desiredPoint, false
             else
                 match dpRow with
                 | Some existingRow ->
                     // Reassign rank tp oponent's row
                     RowHistogram.dec dpPlayer existingRow.Length existingRow.Rank newHistogram
                     let updatedRow = Row.updateRank dir newMoves existingRow
-                    let newRows = setRow existingRow.From dir updatedRow rows
-                    let newRows = setRow existingRow.To dir updatedRow newRows
-                    RowHistogram.inc dpPlayer updatedRow.Length updatedRow.Rank newHistogram
-                    newRows, currentPoint
+                    if keepDeadRows || updatedRow.Rank > 0 then
+                        let newRows = setRow existingRow.From dir updatedRow rows
+                        let newRows = setRow existingRow.To dir updatedRow newRows
+                        RowHistogram.inc dpPlayer updatedRow.Length updatedRow.Rank newHistogram
+                        newRows, currentPoint, false
+                    else
+                        // Do not keep rank-0 rows
+                        let newRows = nullifyRow existingRow.From dir rows
+                        let newRows = nullifyRow existingRow.To dir newRows
+                        newRows, currentPoint, false
                 | None ->
-                    rows, currentPoint
+                    rows, currentPoint, false
         else
-            rows, currentPoint
+            rows, currentPoint, false
 
     let newRows = 
         let mutable rows = board.Rows
         for (pFrom, pTo, dir) in possibleRows do
-            let newRows, extendedFrom =  prolongate rows (r, c) pFrom dir (fun r -> r.To) (fun r -> r.From)
-            let newRows, extendedTo = prolongate newRows (r, c) pTo dir (fun r -> r.From) (fun r -> r.To)
+            let newRows, extendedFrom, hitFrom =  prolongate rows (r, c) pFrom dir (fun r -> r.To) (fun r -> r.From)
+            let newRows, extendedTo, hitTo = prolongate newRows (r, c) pTo dir (fun r -> r.From) (fun r -> r.To)
             rows <- newRows
             if extendedFrom <> extendedTo then
                 let newRow = Row.createRanked extendedFrom extendedTo dir newMoves
-                rows <- setRow extendedFrom dir newRow rows
-                rows <- setRow extendedTo dir newRow rows
-                RowHistogram.inc player newRow.Length newRow.Rank newHistogram
+                if keepDeadRows || newRow.Rank > 0 then
+                    rows <- setRow extendedFrom dir newRow rows
+                    rows <- setRow extendedTo dir newRow rows
+                    RowHistogram.inc player newRow.Length newRow.Rank newHistogram
+                else
+                    if extendedFrom <> pFrom && hitFrom then
+                        rows <- nullifyRow extendedFrom dir rows
+                    if extendedTo <> pTo && hitTo then
+                        rows <- nullifyRow extendedTo dir rows
         rows
 
     let newCandidates =
