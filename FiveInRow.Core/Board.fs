@@ -159,3 +159,8 @@ let print board =
                 sb.Append "." |> ignore
         sb.AppendLine() |> ignore
     sb.ToString()
+
+let inline getWinner board =
+    if RowHistogram.hasLength Player1 5 board.Histogram then Some Player1
+    else if RowHistogram.hasLength Player2 5 board.Histogram then Some Player2
+    else None

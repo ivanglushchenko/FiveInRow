@@ -8,13 +8,18 @@ open FiveInRow.Core.AI
 type BoardInfo = { Board: Board.Board
                    AI: AI
                    LastMove: Position option
-                   LastPlayer: Player }
+                   LastPlayer: Player
+                   Winner: Player option }
 
-type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
+type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.Board -> AI) =
     inherit ObservableObject()
 
-    let mutable opponent = Human
-    let mutable boards = [ { Board = fst startingConfiguration; AI = ai (snd startingConfiguration) (fst startingConfiguration); LastMove = None; LastPlayer = (snd >> next) startingConfiguration } ]
+    let mutable opponent: OpponentType = startingOpponentType
+    let mutable boards = [ { Board = fst startingConfiguration
+                             AI = ai (snd startingConfiguration) (fst startingConfiguration)
+                             LastMove = None
+                             LastPlayer = (snd >> next) startingConfiguration
+                             Winner = None } ]
     let mutable isRunning = false
     let mutable showFitness = true
     let winnerChanged = new Event<Player option>()
@@ -31,6 +36,8 @@ type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
         match boards.Head.LastMove with
         | Some (r, c) -> cells.[r].[c].IsLast <- false
         | None -> ()
+        for (r, c), _ in boards.Head.AI.PossibleMoves do
+            cells.[r].[c].Fitness <- 0.0
 
     let showMoves() =
         for (pos, p) in boards.Head.Board.Moves do
@@ -56,9 +63,9 @@ type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
         let finalBoard = Board.replay moves
         let view =
             match settings.Difficulty with
-            | Easy -> BoardView(finalBoard, AI.getEasy)
-            | Medium -> BoardView(finalBoard, fun p b -> AI.empty)
-            | Hard -> BoardView(finalBoard, AI.getHard)
+            | Easy -> BoardView(finalBoard, settings.Opponent, AI.getEasy)
+            | Medium -> BoardView(finalBoard, settings.Opponent, fun p b -> AI.empty)
+            | Hard -> BoardView(finalBoard, settings.Opponent, AI.getHard)
         view.Opponent <- settings.Opponent
         view.Start()
         view
@@ -87,20 +94,12 @@ type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
 
             let board = Board.extend (i, j) thisTurn boards.Head.Board
             let ai = ai (next thisTurn) board
-            boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = thisTurn } :: boards
+            boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = thisTurn; Winner = if x.IsCompleted then x.Winner else Board.getWinner board } :: boards
 
             if x.IsCompleted = false then
                 showPredictions()
                 x.MakeMove()
                 x.RaisePropertiesChanged()
-//                x.IsRunning <- true
-//                Async.Start
-//                    (async {
-//                        showPredictions()
-//                        nextTurn <- next nextTurn
-//                        x.MakeMove()
-//                        x.RaisePropertiesChanged()
-//                        x.IsRunning <- false })
             else
                 ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
 
@@ -127,7 +126,7 @@ type BoardView(startingConfiguration, ai: Player -> Board.Board -> AI) =
         x.MakeMove()
         showPredictions()
 
-    member x.Winner with get() = boards.Head.AI.Winner
+    member x.Winner with get() = boards.Head.Winner
 
     member x.IsCompleted with get() = x.Winner |> Option.isSome
 

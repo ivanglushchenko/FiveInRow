@@ -5,11 +5,9 @@ open GameDef
 open Board
 open RowHistogram
 
-type AI = { PossibleMoves: (Position * float) list
-            Winner: Player option }
+type AI = { PossibleMoves: (Position * float) list }
 
-let empty = { PossibleMoves = []
-              Winner = None }
+let empty = { PossibleMoves = [] }
 
 [<CustomEquality; CustomComparison>]
 type Forecast =
@@ -66,13 +64,13 @@ type Forecast =
         | Check t -> sprintf "Chck %i" t
         | Rating t -> sprintf "R %O" t
 
-let isCheckOrMate f =
+let inline isCheckOrMate f =
     match f with
     | Mate _ -> true
     | Check _ -> true
     | _ -> false
 
-let isMate f =
+let inline isMate f =
     match f with
     | Mate _ -> true
     | _ -> false
@@ -92,7 +90,7 @@ let getForecast player histogram =
     else if RowHistogram.getCount player 4 2 histogram >= 1 then Mate 1
     else if RowHistogram.getCount player 4 1 histogram >= 2 then Mate 2
     else if RowHistogram.getCount player 3 2 histogram >= 2 then Mate 2
-    else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 2
+    else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 1
     else if RowHistogram.getCount player 4 1 histogram >= 1 then Check 1
     else if RowHistogram.getCount player 3 2 histogram >= 1 then Check 2
     else
@@ -124,13 +122,21 @@ let getBoardForecast p board =
     if p = Player1 then f1 + (f2.Inc 1) else f2 + (f1.Inc 1)
 
 let getEasy p board =
+    let getTopChoices s =
+        let sortedOutcomes = s |> Seq.sortBy snd
+        if Seq.isEmpty sortedOutcomes then sortedOutcomes
+        else
+            let referenceItem = Seq.head sortedOutcomes
+            seq { yield referenceItem
+                  for pos, f in Seq.skip 1 sortedOutcomes do
+                     if snd referenceItem = f then yield pos, f }
     let possibleMoves = if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates
-    let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board)) |> Seq.toArray
-    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast p b2) |> Seq.toArray
+    let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board))
+    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast p b2)
     let forecasts = 
         possibleOutcomes 
         |> Seq.map (fun (pos, f1, f2) -> pos, f1 + f2)
-        |> Seq.sortBy snd |> Seq.toArray
+        |> getTopChoices
     { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f.ToNum()) |> Seq.toList }
 
 type StrategyNode =
@@ -176,10 +182,12 @@ let rec buildStrategyTree p level upperBound board =
             |> Seq.toList 
             |> List.partition (fun (_, _, f) -> isMate f)
         if mates.IsEmpty then
-            checks 
-            |> Seq.map (fun (pos, b , f) -> pos, b |> playCounterMoves p |> buildStrategyTree p (level - 1) upperBound) 
-            |> Seq.toArray 
-            |> Fork
+            if checks.IsEmpty then Inconclusive
+            else
+                checks 
+                |> Seq.map (fun (pos, b , f) -> pos, b |> playCounterMoves p |> buildStrategyTree p (level - 1) upperBound) 
+                |> Seq.toArray 
+                |> Fork
         else
             mates
             |> List.sortBy (fun (_, _, f) -> f)
@@ -190,14 +198,12 @@ let getHard p board =
     let upperBound = getForecast (next p) board.Histogram
     match buildStrategyTree p 2 (if isCheckOrMate upperBound then Some upperBound else None) board with
     | Outcome (p, _) ->
-        { PossibleMoves = [ p, 1.0 ]
-          Winner = None }
+        { PossibleMoves = [ p, 1.0 ] }
     | Fork t ->
         let consolidatedOptions = 
             t 
             |> Seq.choose (fun (pos, s) -> s.Consolidate() |> Option.bind (fun v -> Some (pos, v))) 
             |> Seq.sortBy snd
         if Seq.isEmpty consolidatedOptions then getEasy p board
-        else { PossibleMoves = [ Seq.head consolidatedOptions |> fst, 1.0 ]
-               Winner = None }
+        else { PossibleMoves = [ Seq.head consolidatedOptions |> fst, 1.0 ] }
     | _ -> getEasy p board

@@ -48,6 +48,7 @@
                             <TextBlock Text=":" FontSize="6"/>
                             <TextBlock Text="{Binding Col}" FontSize="9" Foreground="Gray"/>
                         </StackPanel>
+                        <Ellipse Fill="Red" Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" x:Name="isLast"></Ellipse>
                     </Grid>
                     <DataTemplate.Triggers>
                         <MultiDataTrigger>
@@ -64,6 +65,9 @@
                         <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player2">
                             <Setter TargetName="pO" Property="Visibility" Value="Visible" />
                             <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsLast}" Value="True">
+                            <Setter TargetName="isLast" Property="Visibility" Value="Visible"/>
                         </DataTrigger>
                     </DataTemplate.Triggers>
                 </DataTemplate>
