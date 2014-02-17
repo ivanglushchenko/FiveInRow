@@ -67,7 +67,7 @@ type EventProc() =
         if isDragging then
             isDragging <- false
         else
-            let convert t offset size = ((t - offset) / size |> int) + 1
+            let convert t offset size = (t - offset) / size |> int
             let index = (convert (snd position)  (snd offset) cellHeight, convert (fst position)  (fst offset) cellWidth)
             x.Set index
 

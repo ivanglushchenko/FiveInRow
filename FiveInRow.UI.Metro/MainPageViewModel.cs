@@ -151,10 +151,10 @@ namespace FiveInRow.UI.Metro
                 var row = Board.FiveInRows.First();
                 WinningRow = new
                 {
-                    X1 = (row.From.Item2 - 0.5) * 60.0 + _offset.X,
-                    Y1 = (row.From.Item1 - 0.5) * 60.0 + _offset.Y,
-                    X2 = (row.To.Item2 - 0.5) * 60.0 + _offset.X,
-                    Y2 = (row.To.Item1 - 0.5) * 60.0 + _offset.Y
+                    X1 = (row.From.Item2 + 0.5) * 60.0 + _offset.X,
+                    Y1 = (row.From.Item1 + 0.5) * 60.0 + _offset.Y,
+                    X2 = (row.To.Item2 + 0.5) * 60.0 + _offset.X,
+                    Y2 = (row.To.Item1 + 0.5) * 60.0 + _offset.Y
                 };
             }
         }

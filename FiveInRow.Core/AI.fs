@@ -90,7 +90,7 @@ let getForecast player histogram =
     else if RowHistogram.getCount player 4 2 histogram >= 1 then Mate 1
     else if RowHistogram.getCount player 4 1 histogram >= 2 then Mate 2
     else if RowHistogram.getCount player 3 2 histogram >= 2 then Mate 2
-    else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 1
+    else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 2
     else if RowHistogram.getCount player 4 1 histogram >= 1 then Check 1
     else if RowHistogram.getCount player 3 2 histogram >= 1 then Check 2
     else
@@ -121,22 +121,23 @@ let getBoardForecast p board =
     let (f1, f2) = getForecast Player1 board.Histogram, getForecast Player2 board.Histogram
     if p = Player1 then f1 + (f2.Inc 1) else f2 + (f1.Inc 1)
 
+let getTopChoices getForecast s =
+    let sortedOutcomes = s |> Seq.sortBy getForecast
+    if Seq.isEmpty sortedOutcomes then sortedOutcomes
+    else
+        let referenceItem = Seq.head sortedOutcomes
+        seq { yield referenceItem
+              for item in Seq.skip 1 sortedOutcomes do
+                 if getForecast referenceItem = getForecast item then yield item }
+
 let getEasy p board =
-    let getTopChoices s =
-        let sortedOutcomes = s |> Seq.sortBy snd
-        if Seq.isEmpty sortedOutcomes then sortedOutcomes
-        else
-            let referenceItem = Seq.head sortedOutcomes
-            seq { yield referenceItem
-                  for pos, f in Seq.skip 1 sortedOutcomes do
-                     if snd referenceItem = f then yield pos, f }
-    let possibleMoves = if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates
-    let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board))
-    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast p b2)
+    let possibleMoves = (if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates)// |> Seq.filter (fun pos -> pos = (8, 9)) |> Seq.toArray
+    let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board)) |> Seq.toArray
+    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast (next p) b2) |> Seq.toArray
     let forecasts = 
         possibleOutcomes 
         |> Seq.map (fun (pos, f1, f2) -> pos, f1 + f2)
-        |> getTopChoices
+        |> getTopChoices snd
     { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f.ToNum()) |> Seq.toList }
 
 type StrategyNode =
@@ -150,14 +151,14 @@ type StrategyNode =
         | Fork c ->  sprintf "Fork %i" c.Length
         | Inconclusive -> "?"
 
-    member x.Consolidate() =
-        match x with
-        | Outcome (p, f) -> Some f
-        | Fork t ->
-            let options = t |> Seq.choose (fun (pos, s) -> s.Consolidate()) |> Seq.sort
-            if Seq.isEmpty options then None
-            else Seq.head options |> Some
-        | Inconclusive -> None
+let rec consolidate n =
+    match n with
+    | Outcome (p, f) -> Some f
+    | Fork t ->
+        let options = t |> Seq.choose (fun (pos, s) -> consolidate s) |> Seq.sort
+        if Seq.isEmpty options then None
+        else Seq.head options |> Some
+    | Inconclusive -> None
 
 let getCheckMates p board =
     let possibleMoves = (if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates)
@@ -170,29 +171,48 @@ let playCounterMoves p board =
     counterMoves |> Seq.fold (fun s (pos, _, _) -> Board.extend pos (next p) s) board
 
 let rec buildStrategyTree p level upperBound board =
-    let filterByUpperBound t = 
+    let inline filterByUpperBound t = 
         match upperBound with
         | Some f -> t < f
         | _ -> true
     if level = 0 then Inconclusive
     else
+        let checkMates = getCheckMates p board 
         let (mates, checks) = 
-            getCheckMates p board 
+            checkMates
             |> Seq.filter (fun (_, _, f) -> filterByUpperBound f) 
             |> Seq.toList 
             |> List.partition (fun (_, _, f) -> isMate f)
-        if mates.IsEmpty then
-            if checks.IsEmpty then Inconclusive
-            else
-                checks 
-                |> Seq.map (fun (pos, b , f) -> pos, b |> playCounterMoves p |> buildStrategyTree p (level - 1) upperBound) 
-                |> Seq.toArray 
-                |> Fork
-        else
+        if mates.IsEmpty = false then
+            // There are mates that we can pursue, so let's ignore opponent's threat
             mates
             |> List.sortBy (fun (_, _, f) -> f)
             |> List.head
             |> fun (pos, _, f) -> Outcome (pos, f)
+        else if checks.IsEmpty = false then
+            // We have checks that are better than opponent's, so let's be aggressive
+            checks 
+            |> Seq.map (fun (pos, b , f) -> pos, b |> playCounterMoves p |> buildStrategyTree p (level - 1) upperBound) 
+            |> Seq.toArray 
+            |> Fork
+        else
+            // Let's react at one of the top opponent's threats
+            let topThreats = 
+                getCheckMates (next p) board 
+                |> getTopChoices (fun (pos, _, f) -> f)
+            if Seq.isEmpty topThreats then Inconclusive
+            else
+                let evaluateFor pos =
+                    Board.extend pos p board 
+                    |> buildStrategyTree p (level - 1) None 
+                    |> consolidate 
+                    |> Option.bind (fun v -> Some (pos, v))
+                let consolidatedOptions = 
+                    topThreats 
+                    |> Seq.choose (fun (pos, _, _) -> evaluateFor pos)
+                    |> Seq.sortBy snd
+                if Seq.isEmpty consolidatedOptions then Inconclusive
+                else consolidatedOptions |> Seq.head |> Outcome
 
 let getHard p board =
     let upperBound = getForecast (next p) board.Histogram
@@ -202,7 +222,7 @@ let getHard p board =
     | Fork t ->
         let consolidatedOptions = 
             t 
-            |> Seq.choose (fun (pos, s) -> s.Consolidate() |> Option.bind (fun v -> Some (pos, v))) 
+            |> Seq.choose (fun (pos, s) -> consolidate s |> Option.bind (fun v -> Some (pos, v))) 
             |> Seq.sortBy snd
         if Seq.isEmpty consolidatedOptions then getEasy p board
         else { PossibleMoves = [ Seq.head consolidatedOptions |> fst, 1.0 ] }
