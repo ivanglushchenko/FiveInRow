@@ -131,5 +131,5 @@ let replay moves =
     let rec exec moves p b =
         match moves with
         | hd :: tl -> extend hd p b |> exec tl (next p)
-        | [] -> b
+        | [] -> b, p
     exec moves Player1 empty

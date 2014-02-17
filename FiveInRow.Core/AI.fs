@@ -21,7 +21,8 @@ type Forecast =
         match x with
         | Mate t -> Mate(t + turns)
         | Check t -> Check(t + turns)
-        | _ -> x
+        // For mates and checks every turn decreases numerical value (returned by ToNum()) by 1%, so here we simulate the similiar effect 
+        | Rating r -> Rating (r * (1.0 - 0.01 * (float turns)))
     
     member x.ToNum() =
         match x with
