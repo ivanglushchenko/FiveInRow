@@ -48,3 +48,20 @@ let keepDeadRows = true
 let inline isValid (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardDimension
 
 let inline next p = match p with | Player1 -> Player2 | _ -> Player1
+
+let inline trd (_, _, x) = x
+
+let inline diag x = System.Diagnostics.Debug.WriteLine x
+
+let rand = System.Random()
+
+let shuffle data = 
+    let result = System.Collections.Generic.List<_>()
+    for n in data do
+        let index = rand.Next(0, result.Count)
+        if index = result.Count then
+            result.Add(n)
+        else
+            result.Add(result.[index])
+            result.[index] <- n
+    result :> seq<_>
