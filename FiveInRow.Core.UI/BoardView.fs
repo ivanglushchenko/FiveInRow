@@ -28,12 +28,6 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
                 cells.[i - 1].[j - 1].Fitness <- 0.0
                 cells.[i - 1].[j - 1].IsLast <- false
 
-    let undo() =
-        boards <- boards.Tail
-        clearBoard()
-        for (pos, p) in boards.Head.Board.Moves do
-            cells.[fst pos].[snd pos].Value <- Occupied p
-
     let clearLastMove() =
         match boards.Head.LastMove with
         | Some (r, c) -> cells.[r].[c].IsLast <- false
@@ -43,6 +37,13 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
         if showFitness then
             for ((i, j), fitness) in boards.Head.AI.PossibleMoves do
                 cells.[i].[j].Fitness <- fitness
+
+    let undo() =
+        boards <- boards.Tail
+        clearBoard()
+        for (pos, p) in boards.Head.Board.Moves do
+            cells.[fst pos].[snd pos].Value <- Occupied p
+        showPredictions()
 
     static member Create (settings: GameSettings) = BoardView.CreateFrom (settings, [])
 
@@ -140,7 +141,8 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
             | AI(Player2) -> 
                 undo()
                 undo()
-            | Human -> undo()
+            | Human -> 
+                undo()
             | _ -> ()
 
         x.RaisePropertiesChanged()
@@ -153,6 +155,7 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
         x.OnPropertyChanged(<@ x.Moves @>)
         x.OnPropertyChanged(<@ x.Rows @>)
         x.OnPropertyChanged(<@ x.NextTurn @>)
+        x.OnPropertyChanged(<@ x.Histograms @>)
 
     member x.Opponent
         with get() = opponent
@@ -170,7 +173,7 @@ type BoardView(startingBoard: Board.Board, ai: Player -> Board.Board -> AI) =
                 x.OnPropertyChanged(<@ x.IsRunning @>)
 
     member x.Histograms
-        with get() = [| RowHistogram.print Player1 boards.Head.Board.Histogram; RowHistogram.print Player1 boards.Head.Board.Histogram |]
+        with get() = [| RowHistogram.print Player1 boards.Head.Board.Histogram; RowHistogram.print Player2 boards.Head.Board.Histogram |]
 
     [<CLIEvent>]
     member x.WinnerChanged = winnerChanged.Publish

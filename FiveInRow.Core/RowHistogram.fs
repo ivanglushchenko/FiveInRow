@@ -7,23 +7,28 @@ type RowHistogram = RowHistogram of int array
 
 let inline create() = Array.create 24 0 |> RowHistogram
 
-let inc player length rank (RowHistogram histogram) =
+let inline inc player length rank (RowHistogram histogram) =
+    if isTracingEnabled then
+        System.Diagnostics.Debug.WriteLine(sprintf "inc %O %O %O" player length rank)
+
     if length < 6 then
-        let i = ((length - 2) + 4 * rank) * (if player = Player1 then 1 else 2)
+        let i = ((length - 2) + 4 * rank) + (if player = Player1 then 0 else 12)
         histogram.[i] <- histogram.[i] + 1
 
-let dec player length rank (RowHistogram histogram) =
+let inline dec player length rank (RowHistogram histogram) =
+    if isTracingEnabled then
+        System.Diagnostics.Debug.WriteLine(sprintf "dec %O %O %O" player length rank)
+
     if length < 6 then
-        let i = ((length - 2) + 4 * rank) * (if player = Player1 then 1 else 2)
+        let i = ((length - 2) + 4 * rank) + (if player = Player1 then 0 else 12)
         histogram.[i] <- histogram.[i] - 1
 
 let inline hasLength player length (RowHistogram histogram) =
-    let i = length - 2
-    let offset = if player = Player1 then 0 else 12
-    histogram.[offset + i] > 0 || histogram.[offset + i + 4] > 0 || histogram.[offset + i + 8] > 0
+    let i = length - 2 + (if player = Player1 then 0 else 12)
+    histogram.[i] > 0 || histogram.[i + 4] > 0 || histogram.[i + 8] > 0
 
 let inline getCount player length rank (RowHistogram histogram) =
-    histogram.[((length - 2) + 4 * rank) * (if player = Player1 then 1 else 2)]
+    histogram.[((length - 2) + 4 * rank) + (if player = Player1 then 0 else 12)]
 
 let inline score player scorer (RowHistogram histogram) =
     let offset = if player = Player1 then 0 else 12
@@ -46,8 +51,8 @@ let inline clone (RowHistogram histogram) =
 let print player (RowHistogram histogram) =
     let sb = StringBuilder()
     let columnHeaders = System.String.Join(" ", [| for r in 2..5 -> "L" + r.ToString() |])
-    sb.AppendFormat("    {0}\r\n", columnHeaders) |> ignore
+    sb.AppendFormat("{0}   {1}\r\n", player, columnHeaders) |> ignore
     for r in 0..2 do
-        let line = System.String.Join("  ", [| for l in 2..5 -> (getCount player r l (RowHistogram histogram)).ToString() |])
+        let line = System.String.Join("  ", [| for l in 2..5 -> (getCount player l r (RowHistogram histogram)).ToString() |])
         sb.AppendFormat("r{0}|  {1}\r\n", r, line) |> ignore
     sb.ToString()

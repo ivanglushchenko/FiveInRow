@@ -26,6 +26,7 @@ let createWindow =
     window.BtnRestart.Click.Add (fun _ -> viewModel.Start())
     window.BtnMakeMove.Click.Add (fun _ -> viewModel.MakeMove())
     window.BtnSimulate.Click.Add (fun _ -> viewModel.Simulate())
+    window.BtnUndo.Click.Add (fun _ -> viewModel.Board.Undo())
     window.Root.DataContext <- viewModel
     window.Root.RenderTransformOrigin <- Point(0.5, 0.5)
     window.Root

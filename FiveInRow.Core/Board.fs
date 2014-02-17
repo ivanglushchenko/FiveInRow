@@ -44,6 +44,9 @@ let nullifyRow pos dir rows =
 let extend (r, c) player board =
     if board.Moves.ContainsKey (r, c) then failwith "Cell is occupied already"
 
+    if isTracingEnabled then
+        System.Diagnostics.Debug.WriteLine(sprintf "Board.extend %O %O %O" player r c)
+
     let newHistogram = RowHistogram.clone board.Histogram
     let newMoves = board.Moves.Add ((r, c), player)
 

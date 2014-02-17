@@ -77,7 +77,7 @@ let getForecast player histogram =
     else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 2
     else
         let inline score length rank =
-            match length + 2, rank with
+            match length, rank with
             | l, _ when l > 5 -> 8.0
             | 5, _ -> float System.Int32.MaxValue
             | 4, 2 -> 1024.0

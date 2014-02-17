@@ -41,6 +41,8 @@ type OpponentType = Human | AI of Player
 
 let mutable boardDimension = 51
 
+let isTracingEnabled = false
+
 let inline isValid (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardDimension
 
 let inline next p = match p with | Player1 -> Player2 | _ -> Player1

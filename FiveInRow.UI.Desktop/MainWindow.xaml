@@ -121,6 +121,7 @@
                         <Button Content="Restart" Margin="10,0,0,0" x:Name="btnRestart" />
                         <Button Content="Make move" Margin="10,0,0,0" x:Name="btnMakeMove" />
                         <Button Content="Simulate" Margin="10,0,0,0" x:Name="btnSimulate" />
+                        <Button Content="Undo" Margin="10,0,0,0" x:Name="btnUndo" />
                     </StackPanel>
                     
                     <StackPanel Margin="10,20,0,0" Orientation="Horizontal">
