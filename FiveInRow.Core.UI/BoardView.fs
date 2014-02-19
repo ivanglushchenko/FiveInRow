@@ -64,7 +64,7 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
         let view =
             match settings.Difficulty with
             | Easy -> BoardView(finalBoard, settings.Opponent, AI.getEasy)
-            | Medium -> BoardView(finalBoard, settings.Opponent, fun p b -> AI.empty)
+            | Medium -> BoardView(finalBoard, settings.Opponent, AI.getMedium)
             | Hard -> BoardView(finalBoard, settings.Opponent, AI.getHard)
         view.Opponent <- settings.Opponent
         view.Start()

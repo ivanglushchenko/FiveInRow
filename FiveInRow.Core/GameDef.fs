@@ -49,6 +49,12 @@ let inline isValid (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardD
 
 let inline next p = match p with | Player1 -> Player2 | _ -> Player1
 
+let inline i1st (x, _, _) = x
+
+let inline i2nd (_, x, _) = x
+
+let inline i3rd (_, _, x) = x
+
 let inline trd (_, _, x) = x
 
 let inline diag x = System.Diagnostics.Debug.WriteLine x

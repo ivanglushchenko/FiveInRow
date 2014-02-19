@@ -57,13 +57,6 @@ type Forecast =
         | Check t -> sprintf "Chck %i" t
         | Rating t -> sprintf "R %O" t
 
-let inc turns f =
-    match f with
-    | Mate t -> Mate(t + turns)
-    | Check t -> Check(t + turns)
-    // For mates and checks every turn decreases numerical value (returned by ToNum()) by 1%, so here we simulate the similiar effect 
-    | Rating r -> Rating (r * (1.0 - 0.01 * (float turns)))
-
 let inline isCheckOrMate f =
     match f with
     | Mate _ -> true
@@ -75,6 +68,42 @@ let inline isMate f =
     | Mate _ -> true
     | _ -> false
 
+let inline scoreEasy length rank =
+    match length, rank with
+    | l, _ when l > 5 -> 8.0
+    | 5, _ -> float System.Int32.MaxValue
+    | 4, 2 -> 64.0
+    | 4, 1 -> 32.0
+    | 4, 0 -> 8.0
+    | 3, 2 -> 64.0
+    | 3, 1 -> 32.0
+    | 3, 0 -> 8.0
+    | _ -> rank * rank |> float
+
+let inline scoreMedium length rank =
+    match length, rank with
+    | l, _ when l > 5 -> 8.0
+    | 5, _ -> float System.Int32.MaxValue
+    | 4, 2 -> 1024.0
+    | 4, 1 -> 128.0
+    | 4, 0 -> 8.0
+    | 3, 2 -> 128.0
+    | 3, 1 -> 32.0
+    | 3, 0 -> 8.0
+    | _ -> rank * rank |> float
+
+let inline scoreHard length rank =
+    match length, rank with
+    | l, _ when l > 5 -> 8.0
+    | 5, _ -> float System.Int32.MaxValue
+    | 4, 2 -> 1024.0
+    | 4, 1 -> 128.0
+    | 4, 0 -> 8.0
+    | 3, 2 -> 128.0
+    | 3, 1 -> 32.0
+    | 3, 0 -> 8.0
+    | _ -> rank * rank |> float
+
 let getUnoccupiedNeighbours k board =
     seq { if PersistentHashMap.length board.Moves > 0 then
             for (pos, p) in board.Moves do
@@ -85,7 +114,7 @@ let getUnoccupiedNeighbours k board =
                                     yield i, j
           else yield boardDimension / 2, boardDimension / 2 } |> Set.ofSeq
 
-let getForecast player histogram =
+let getForecast scorer player histogram =
     if RowHistogram.hasLength player 5 histogram then Mate 0
     else if RowHistogram.getCount player 4 2 histogram >= 1 then Mate 1
     else if RowHistogram.getCount player 4 1 histogram >= 2 then Mate 2
@@ -93,33 +122,7 @@ let getForecast player histogram =
     else if RowHistogram.getCount player 3 2 histogram >= 1 && RowHistogram.getCount player 4 1 histogram >= 1 then Mate 2
     else if RowHistogram.getCount player 4 1 histogram >= 1 then Check 1
     else if RowHistogram.getCount player 3 2 histogram >= 1 then Check 2
-    else
-        let inline score length rank =
-            match length, rank with
-            | l, _ when l > 5 -> 8.0
-            | 5, _ -> float System.Int32.MaxValue
-            | 4, 2 -> 1024.0
-            | 4, 1 -> 128.0
-            | 4, 0 -> 8.0
-            | 3, 2 -> 128.0
-            | 3, 1 -> 32.0
-            | 3, 0 -> 8.0
-            | _ -> rank * rank |> float
-        Rating(RowHistogram.score player score histogram)
-
-let (+) f1 f2 =
-    match f1, f2 with
-    | Mate p1, Mate p2   -> Mate (min p1 p2)
-    | Mate p1, _         -> Mate p1
-    | _, Mate p2         -> Mate p2
-    | Check p1, Check p2 -> Check (min p1 p2)
-    | Check p1, _        -> Check p1
-    | _, Check p2        -> Check p2
-    | Rating p1, Rating p2 -> Rating (p1 + p2)
-
-let getBoardForecast p board =
-    let (f1, f2) = getForecast Player1 board.Histogram, getForecast Player2 board.Histogram
-    if p = Player1 then f1 + (inc 1 f2) else f2 + (inc 1 f1)
+    else Rating(RowHistogram.score player scorer histogram)
 
 let getTopChoices getForecast s =
     let sortedOutcomes = s |> Seq.sortBy getForecast
@@ -130,15 +133,21 @@ let getTopChoices getForecast s =
               for item in Seq.skip 1 sortedOutcomes do
                  if getForecast referenceItem = getForecast item then yield item } |> shuffle
 
-let getEasy p board =
+let getBestMovesByScore scorer discountRate p board =
     let possibleMoves = (if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates)
     let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, (Board.extend pos p board), (Board.extend pos (next p) board))
-    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, getBoardForecast p b1, getBoardForecast (next p) b2)
+    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b1, b2) -> pos, RowHistogram.score p scorer b1.Histogram, RowHistogram.score (next p) scorer b2.Histogram)
     let forecasts = 
         possibleOutcomes 
-        |> Seq.map (fun (pos, f1, f2) -> pos, f1 + (inc 1 f2))
-        |> getTopChoices snd
-    { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f.ToNum()) |> Seq.toList }
+        |> Seq.map (fun (pos, f1, f2) -> pos, f1 + f2 * discountRate)
+        |> getTopChoices (fun (p, f) -> -f)
+    { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f) |> Seq.toList }
+
+let inline getEasy p board =
+    getBestMovesByScore scoreEasy 0.75 p board
+
+let inline getMedium p board =
+    getBestMovesByScore scoreMedium 0.5 p board
 
 type StrategyNode =
     | Outcome of Position * Forecast
@@ -163,12 +172,13 @@ let rec consolidate n =
 let getCheckMates p board =
     let possibleMoves = (if board.Candidates.Count = 0 then getUnoccupiedNeighbours 1 board else board.Candidates)
     let possibleBoards = possibleMoves |> Seq.map (fun pos -> pos, Board.extend pos p board)
-    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b) -> pos, b, getForecast p b.Histogram)
+    let possibleOutcomes = possibleBoards |> Seq.map (fun (pos, b) -> pos, b, getForecast scoreHard p b.Histogram)
     possibleOutcomes |> Seq.filter (trd >> isCheckOrMate)
 
 let playCounterMoves p board =
-    let counterMoves = getCheckMates p board |> Seq.filter (fun (_, _, f) -> match f with | Mate p -> p <= 1 | _ -> false)
-    counterMoves |> Seq.fold (fun s (pos, _, _) -> Board.extend pos (next p) s) board
+    getCheckMates p board 
+    |> Seq.filter (fun (_, _, f) -> match f with | Mate p -> p <= 1 | _ -> false)
+    |> Seq.fold (fun s (pos, _, _) -> Board.extend pos (next p) s) board
 
 let rec buildStrategyTree p level upperBound board =
     let inline filterByUpperBound t = 
@@ -196,7 +206,7 @@ let rec buildStrategyTree p level upperBound board =
             |> Seq.toArray 
             |> Fork
         else
-            // Let's react at one of the top opponent's threats
+            // Let's react to one of the top opponent's threats
             let topThreats = 
                 getCheckMates (next p) board 
                 |> getTopChoices (fun (pos, _, f) -> f)
@@ -215,15 +225,25 @@ let rec buildStrategyTree p level upperBound board =
                 else consolidatedOptions |> Seq.head |> Outcome
 
 let getHard p board =
-    let upperBound = getForecast (next p) board.Histogram
-    match buildStrategyTree p 2 (if isCheckOrMate upperBound then Some upperBound else None) board with
-    | Outcome (p, f) ->
-        { PossibleMoves = [ p, 1.0 ] }
-    | Fork t ->
-        let consolidatedOptions = 
-            t 
-            |> Seq.choose (fun (pos, s) -> consolidate s |> Option.bind (fun v -> Some (pos, v))) 
-            |> Seq.sortBy snd
-        if Seq.isEmpty consolidatedOptions then getEasy p board
-        else { PossibleMoves = [ Seq.head consolidatedOptions |> fst, 1.0 ] }
-    | _ -> getEasy p board
+    let inline toBound f = if isCheckOrMate f then Some f else None
+    let getBestMove p level upperBound = 
+        match buildStrategyTree p level upperBound board with
+        | Outcome (p, f) -> Some (p, f)
+        | Fork t ->
+            let consolidatedOptions = 
+                t 
+                |> Seq.choose (fun (pos, s) -> consolidate s |> Option.bind (fun v -> Some (pos, v))) 
+                |> Seq.sortBy snd
+            if Seq.isEmpty consolidatedOptions then None else Seq.head consolidatedOptions |>Some
+        | _ -> None
+    let myForecast, opForecast = getForecast scoreHard p board.Histogram, getForecast scoreHard (next p) board.Histogram
+    let myBestMove, opBestMove = getBestMove p 2 (toBound opForecast), getBestMove (next p) 1 (toBound myForecast)
+    let bestMove = 
+        match myBestMove, opBestMove with
+        | Some (p1, f1), Some (p2, f2) -> if f1 > f2 then Some p2 else Some p1
+        | Some (p1, _), _ -> Some p1
+        | _, Some (p2, _) -> Some p2
+        | _ -> None
+    match bestMove with
+    | Some p -> { PossibleMoves = [ p, 1.0 ] }
+    | None -> getBestMovesByScore scoreHard 0.5 p board
