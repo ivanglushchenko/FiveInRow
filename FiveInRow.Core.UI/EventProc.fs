@@ -85,3 +85,5 @@ type EventProc() =
     member x.Centrify (w, h) =
         let (dx, dy) = ((w - (float boardDimension) * x.CellWidth) / 2.0, (h - (float boardDimension) * x.CellHeight) / 2.0)
         x.AddOffset (dx - (fst offset)) (dy - (snd offset))
+
+    member x.CreatePos (y, z) = (y, z)

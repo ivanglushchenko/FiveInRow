@@ -1,6 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{291158B8-54DC-4A94-A17A-7E10254B4AB9}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FiveInRow.UI.Desktop", "FiveInRow.UI.Desktop\FiveInRow.UI.Desktop.fsproj", "{30597BE9-08F8-4832-8AB7-009C00A6A2F2}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FiveInRow.Old", "FiveInRow.Old\FiveInRow.Old.fsproj", "{9173F52E-8EB4-4117-9746-4602DD7AC91D}"
@@ -8,11 +15,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FiveInRow.UI.Metro", "FiveInRow.UI.Metro\FiveInRow.UI.Metro.csproj", "{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FiveInRow.UnitTests", "FiveInRow.UnitTests\FiveInRow.UnitTests.fsproj", "{70DD1B95-C4B9-4FED-A0EA-4EDDF8555718}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{291158B8-54DC-4A94-A17A-7E10254B4AB9}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\packages.config = .nuget\packages.config
-	EndProjectSection
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FiveInRow.Core", "FiveInRow.Core\FiveInRow.Core.fsproj", "{76DD930F-ADAA-4C84-8E45-30E401FA8530}"
 EndProject

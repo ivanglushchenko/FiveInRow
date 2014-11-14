@@ -45,8 +45,6 @@ namespace FiveInRow.UI.Metro.Components
             _eventProc.Centrify();
         }
 
-        private Tuple<double, double> ToTuple(Point p) { return new Tuple<double, double>(p.X, p.Y); }
-
         void BoardPanel_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             Loaded -= BoardPanel_Loaded;
@@ -56,9 +54,21 @@ namespace FiveInRow.UI.Metro.Components
             _vm.SetPanel(this);
             _vm.SetOffset(new Point(_tTransform.X, _tTransform.Y));
 
-            _owner.PointerPressed += (s, arg) => _eventProc.OnPointerPressed(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
-            _owner.PointerReleased += (s, arg) => _eventProc.OnPointerReleased(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
-            _owner.PointerMoved += (s, arg) => _eventProc.OnPointerMoved(arg.Pointer, ToTuple(arg.GetCurrentPoint(_owner).Position));
+            _owner.PointerPressed += (s, arg) =>
+            {
+                var pos = arg.GetCurrentPoint(_owner).Position;
+                _eventProc.OnPointerPressed(arg.Pointer, _eventProc.CreatePos(pos.X, pos.Y));
+            };
+            _owner.PointerReleased += (s, arg) =>
+            {
+                var pos = arg.GetCurrentPoint(_owner).Position;
+                _eventProc.OnPointerReleased(arg.Pointer, _eventProc.CreatePos(pos.X, pos.Y));
+            };
+            _owner.PointerMoved += (s, arg) =>
+            {
+                var pos = arg.GetCurrentPoint(_owner).Position;
+                _eventProc.OnPointerMoved(arg.Pointer, _eventProc.CreatePos(pos.X, pos.Y));
+            };
         }
 
         protected override Size MeasureOverride(Size availableSize)
