@@ -4,8 +4,8 @@ open GameDef
 open PersistentHashMap
 
 type Row = 
-    { From: Position
-      To: Position
+    { From: Point
+      To: Point
       Length: int
       Rank: int }
 

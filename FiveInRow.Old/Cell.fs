@@ -5,7 +5,7 @@ open System.ComponentModel
 open FiveInRow.Core.UI
 open FiveInRow.Core.GameDef
 
-type Cell(pos: Position, value: CellValue) =
+type Cell(pos: Point, value: SquareStatus) =
     member x.Value with get() = value
 
     member x.Pos with get() = pos
@@ -23,10 +23,10 @@ type Cell(pos: Position, value: CellValue) =
         | Occupied(Player1) -> sprintf "[%i:%i-> x ]" (fst pos) (snd pos)
         | Occupied(Player2) -> sprintf "[%i:%i-> o ]" (fst pos) (snd pos)
 
-    static member K_Neighbours (pos: Position) (cells: Map<int, Map<int, Cell>>) k =
+    static member K_Neighbours (pos: Point) (cells: Map<int, Map<int, Cell>>) k =
         seq { for i in fst pos - k..fst pos + k do
                 for j in snd pos - k..snd pos + k do
                     if isValid (i, j) && (i <> fst pos || j <> snd pos) then
                         yield cells.[i].[j] }
 
-    static member Neighbours (pos: Position) (cells: Map<int, Map<int, Cell>>) = Cell.K_Neighbours pos cells 1
+    static member Neighbours (pos: Point) (cells: Map<int, Map<int, Cell>>) = Cell.K_Neighbours pos cells 1

@@ -6,7 +6,7 @@ open System.ComponentModel
 open FiveInRow.Core.GameDef
 open FiveInRow.Core.UI
 
-type Board(lastPos: Position, currentPlayer: Player, cMap: Map<int, Map<int, Cell>>, rMap: Map<Player, Map<RowKey, Row list>>, hash: Set<int * int>) =
+type Board(lastPos: Point, currentPlayer: Player, cMap: Map<int, Map<int, Cell>>, rMap: Map<Player, Map<RowKey, Row list>>, hash: Set<int * int>) =
     let listOfCells = lazy (
         seq { for row in cMap do
                 for cell in row.Value do

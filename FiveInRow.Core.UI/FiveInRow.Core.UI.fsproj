@@ -44,6 +44,7 @@
     <Compile Include="GameSettings.fs" />
     <Compile Include="CellView.fs" />
     <Compile Include="BoardView.fs" />
+    <Compile Include="PositionView.fs" />
     <Compile Include="EventProc.fs" />
   </ItemGroup>
   <ItemGroup>

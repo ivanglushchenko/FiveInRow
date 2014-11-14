@@ -9,9 +9,18 @@ type Player =
         | Player1 -> "x"
         | Player2 -> "o"
 
-type Position = int * int
+type Point = int * int
 
-type Move = Position * Player
+type Move = Point * Player
+
+type SquareStatus = 
+    | Empty
+    | Occupied of Player
+
+    override x.ToString() =
+        match x with
+        | Empty -> "."
+        | Occupied p -> p.ToString()
 
 type Direction = 
     | S 
@@ -71,3 +80,13 @@ let shuffle data =
             result.Add(result.[index])
             result.[index] <- n
     result :> seq<_>
+
+let inline isEmpty v = 
+    match v with
+    | Empty -> true
+    | _ -> false
+
+let inline isOccupied v =
+    match v with
+    | Occupied _ -> true
+    | _ -> false

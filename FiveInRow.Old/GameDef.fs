@@ -40,7 +40,7 @@ let isValid pos = fst pos > 0 && snd pos > 0 && fst pos <= boardDimension && snd
 
 let next = function | Player1 -> Player2 | _ -> Player1
 
-let neighbours (c1: Position) (c2: Position) = abs(fst c1 - fst c2) <= 1 && abs(snd c1 - snd c2) <= 1
+let neighbours (c1: Point) (c2: Point) = abs(fst c1 - fst c2) <= 1 && abs(snd c1 - snd c2) <= 1
 
 let compareStatus (bs1: BoardStatus) (bs2: BoardStatus) =
     match (bs1, bs2) with

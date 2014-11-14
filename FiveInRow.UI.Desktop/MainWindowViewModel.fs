@@ -9,7 +9,6 @@ open Microsoft.FSharp.Quotations.Patterns
 
 open FiveInRow.Core.GameDef
 open FiveInRow.Core.UI
-//open FiveInRow.Core.UI
 
 //open FiveInRow.Foundation
 
@@ -36,11 +35,16 @@ type MainWindowViewModel() =
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(9, 9); (8, 8); (8, 9); (10, 9); (7, 8); (6, 7); (9, 8); (7, 10); (10, 7); (11, 6); (11, 8); (9, 7); (9, 10); (10, 6); (7, 9); (8, 7); (10, 8); (8, 10); (7, 7); (9, 6); (8, 6); (11, 5); (12, 4); (12, 6); (13, 6); (11, 4); (11, 3); (10, 5); (12, 3); (9, 4); (8, 3); (9, 5); (9, 3)])
     //
 
+    let position = PositionView.Create()
+
     member x.Board with get() = boardView
+
+    member x.Position with get() = position
 
     member x.Set index = 
         if boardView.IsCompleted = false then
             boardView.Set index
+        position.Set index
 
     member x.Offset
         with get() = offset
@@ -78,7 +82,9 @@ type MainWindowViewModel() =
                     //let winningRow = boardView.Rows |> Seq.filter (fun r -> r.Length >= 5)
                     ()
 
-    member x.Start() = boardView.Start()
+    member x.Start() = 
+        boardView.Start()
+        position.Start()
 
     member x.MakeMove() = boardView.MakeMove()
 

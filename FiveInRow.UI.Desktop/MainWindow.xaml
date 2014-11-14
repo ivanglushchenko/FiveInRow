@@ -16,149 +16,263 @@
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
      </Window.Resources>
 
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="350" />
-        </Grid.ColumnDefinitions>
-            
-        <ItemsControl ItemsSource="{Binding Board.Cells}" Tag="{Binding Board}">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <local:BoardPanel />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Grid Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}">
-                        <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
-                        <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                        <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="{Binding Fitness, Converter={StaticResource FitnessVisibilityConverter}}" Text="{Binding Fitness}" />
-                        <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
-                            <Grid>
-                                <Line Stroke="Gray" StrokeThickness="8" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
-                                <Line Stroke="Gray" StrokeThickness="8" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
+    <TabControl SelectedIndex="1">
+        <TabItem Header="Immutable">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="350" />
+                </Grid.ColumnDefinitions>
+
+                <ItemsControl ItemsSource="{Binding Board.Cells}" Tag="{Binding Board}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <local:BoardPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}">
+                                <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
+                                <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="{Binding Fitness, Converter={StaticResource FitnessVisibilityConverter}}" Text="{Binding Fitness}" />
+                                <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
+                                    <Grid>
+                                        <Line Stroke="Gray" StrokeThickness="8" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
+                                        <Line Stroke="Gray" StrokeThickness="8" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
+                                    </Grid>
+                                </Viewbox>
+                                <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="Collapsed">
+                                    <Ellipse Stroke="Blue" StrokeThickness="8" Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}" />
+                                </Viewbox>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                    <TextBlock Text="{Binding Row}" FontSize="9" Foreground="Gray"/>
+                                    <TextBlock Text=":" FontSize="6"/>
+                                    <TextBlock Text="{Binding Col}" FontSize="9" Foreground="Gray"/>
+                                </StackPanel>
+                                <Ellipse Fill="Red" Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" x:Name="isLast"></Ellipse>
                             </Grid>
-                        </Viewbox>
-                        <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="Collapsed">
-                            <Ellipse Stroke="Blue" StrokeThickness="8" Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}" />
-                        </Viewbox>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-                            <TextBlock Text="{Binding Row}" FontSize="9" Foreground="Gray"/>
-                            <TextBlock Text=":" FontSize="6"/>
-                            <TextBlock Text="{Binding Col}" FontSize="9" Foreground="Gray"/>
-                        </StackPanel>
-                        <Ellipse Fill="Red" Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" x:Name="isLast"></Ellipse>
-                    </Grid>
-                    <DataTemplate.Triggers>
-                        <MultiDataTrigger>
-                            <MultiDataTrigger.Conditions>
-                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
-                                <Condition Binding="{Binding Path=Value, Converter={StaticResource CellValueToStrConverter}}" Value="Empty"/>
-                            </MultiDataTrigger.Conditions>
-                            <Setter TargetName="el" Property="Opacity" Value="0.7" />
-                        </MultiDataTrigger>
-                        <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player1">
-                            <Setter TargetName="pX" Property="Visibility" Value="Visible" />
-                            <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player2">
-                            <Setter TargetName="pO" Property="Visibility" Value="Visible" />
-                            <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding IsLast}" Value="True">
-                            <Setter TargetName="isLast" Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                    </DataTemplate.Triggers>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                            <DataTemplate.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
+                                        <Condition Binding="{Binding Path=Value, Converter={StaticResource CellValueToStrConverter}}" Value="Empty"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter TargetName="el" Property="Opacity" Value="0.7" />
+                                </MultiDataTrigger>
+                                <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player1">
+                                    <Setter TargetName="pX" Property="Visibility" Value="Visible" />
+                                    <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player2">
+                                    <Setter TargetName="pO" Property="Visibility" Value="Visible" />
+                                    <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsLast}" Value="True">
+                                    <Setter TargetName="isLast" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-        <ItemsControl ItemsSource="{Binding Board.Rows}" IsHitTestVisible="False">
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <Canvas />
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Line Stroke="{Binding Rank, Converter={StaticResource RowColorConverter}}" StrokeThickness="4">
-                        <Line.X1>
-                            <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
-                                <Binding Path="From.Item2" />
-                                <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                            </MultiBinding>
-                        </Line.X1>
-                        <Line.Y1>
-                            <MultiBinding Converter="{StaticResource RowLocationConverter}">
-                                <Binding Path="From.Item1" />
-                                <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                            </MultiBinding>
-                        </Line.Y1>
-                        <Line.X2>
-                            <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
-                                <Binding Path="To.Item2" />
-                                <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                            </MultiBinding>
-                        </Line.X2>
-                        <Line.Y2>
-                            <MultiBinding Converter="{StaticResource RowLocationConverter}">
-                                <Binding Path="To.Item1" />
-                                <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
-                            </MultiBinding>
-                        </Line.Y2>
-                    </Line>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        
-        <Border Grid.Column="1" Background="#afd0d0d0" VerticalAlignment="Stretch">
-            <ScrollViewer>
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
-                        <RadioButton Content="Human" IsChecked="{Binding OpponentHuman}" />
-                        <RadioButton Content="AI Player1" IsChecked="{Binding OpponentPlayer1}" />
-                        <RadioButton Content="AI Player2" IsChecked="{Binding OpponentPlayer2}" />
-                    </StackPanel>
-                    
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
-                        <Button Content="Restart" Margin="10,0,0,0" x:Name="btnRestart" />
-                        <Button Content="Make move" Margin="10,0,0,0" x:Name="btnMakeMove" />
-                        <Button Content="Simulate" Margin="10,0,0,0" x:Name="btnSimulate" />
-                        <Button Content="Undo" Margin="10,0,0,0" x:Name="btnUndo" />
-                    </StackPanel>
-                    
-                    <StackPanel Margin="10,20,0,0" Orientation="Horizontal">
-                        <TextBlock Text="Next: "/>
-                        <TextBlock Text="{Binding Board.NextTurn, Converter={StaticResource PlayerToStrConverter}}"/>
-                    </StackPanel>
+                <ItemsControl ItemsSource="{Binding Board.Rows}" IsHitTestVisible="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Line Stroke="{Binding Rank, Converter={StaticResource RowColorConverter}}" StrokeThickness="4">
+                                <Line.X1>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
+                                        <Binding Path="From.Item2" />
+                                        <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Line.X1>
+                                <Line.Y1>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}">
+                                        <Binding Path="From.Item1" />
+                                        <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Line.Y1>
+                                <Line.X2>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" Mode="OneWay">
+                                        <Binding Path="To.Item2" />
+                                        <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Line.X2>
+                                <Line.Y2>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}">
+                                        <Binding Path="To.Item1" />
+                                        <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Line.Y2>
+                            </Line>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-                    <Grid Margin="10,20,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-
+                <Border Grid.Column="1" Background="#afd0d0d0" VerticalAlignment="Stretch">
+                    <ScrollViewer>
                         <StackPanel>
-                            <TextBlock Text="Rows"/>
-                            <ItemsControl ItemsSource="{Binding Board.Rows}" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
+                                <RadioButton Content="Human" IsChecked="{Binding OpponentHuman}" />
+                                <RadioButton Content="AI Player1" IsChecked="{Binding OpponentPlayer1}" />
+                                <RadioButton Content="AI Player2" IsChecked="{Binding OpponentPlayer2}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
+                                <Button Content="Restart" Margin="10,0,0,0" x:Name="btnRestart" />
+                                <Button Content="Make move" Margin="10,0,0,0" x:Name="btnMakeMove" />
+                                <Button Content="Simulate" Margin="10,0,0,0" x:Name="btnSimulate" />
+                                <Button Content="Undo" Margin="10,0,0,0" x:Name="btnUndo" />
+                            </StackPanel>
+
+                            <StackPanel Margin="10,20,0,0" Orientation="Horizontal">
+                                <TextBlock Text="Next: "/>
+                                <TextBlock Text="{Binding Board.NextTurn, Converter={StaticResource PlayerToStrConverter}}"/>
+                            </StackPanel>
+
+                            <Grid Margin="10,20,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="Rows"/>
+                                    <ItemsControl ItemsSource="{Binding Board.Rows}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Histogram"/>
+                                    <ItemsControl ItemsSource="{Binding Board.Histograms}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="10,20,0,0">
+                                <TextBlock Text="Moves"/>
+                                <TextBox IsReadOnly="True" Text="{Binding Board.Moves, Mode=OneWay}" AcceptsReturn="True" Height="300" TextWrapping="Wrap" />
+                                <!--<ItemsControl ItemsSource="{Binding Board.Moves}" />-->
+                            </StackPanel>
                         </StackPanel>
+                    </ScrollViewer>
+                </Border>
 
-                        <StackPanel Grid.Column="1">
-                            <TextBlock Text="Histogram"/>
-                            <ItemsControl ItemsSource="{Binding Board.Histograms}" />
+                <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="#40ffffff" Visibility="{Binding Board.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </Grid>
+        </TabItem>
+        
+        <TabItem Header="Threats">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="350" />
+                </Grid.ColumnDefinitions>
+
+                <ItemsControl ItemsSource="{Binding Position.Cells}" Tag="{Binding Position}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <local:BoardPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}">
+                                <Border Name="el" BorderBrush="Gray" BorderThickness="0" Margin="1" />
+                                <Rectangle Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2" Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                                <TextBlock Name="txt" HorizontalAlignment="Center" FontSize="9" VerticalAlignment="Center" Visibility="{Binding Fitness, Converter={StaticResource FitnessVisibilityConverter}}" Text="{Binding Fitness}" />
+                                <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pX" Visibility="Collapsed">
+                                    <Grid>
+                                        <Line Stroke="Gray" StrokeThickness="8" X1="0" Y1="0" X2="{StaticResource CellWidth}" Y2="{StaticResource CellWidth}" />
+                                        <Line Stroke="Gray" StrokeThickness="8" X1="{StaticResource CellWidth}" Y1="0" X2="0" Y2="{StaticResource CellWidth}" />
+                                    </Grid>
+                                </Viewbox>
+                                <Viewbox StretchDirection="DownOnly" Margin="5" x:Name="pO" Visibility="Collapsed">
+                                    <Ellipse Stroke="Blue" StrokeThickness="8" Width="{StaticResource CellWidth}" Height="{StaticResource CellWidth}" />
+                                </Viewbox>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                    <TextBlock Text="{Binding Row}" FontSize="9" Foreground="Gray"/>
+                                    <TextBlock Text=":" FontSize="6"/>
+                                    <TextBlock Text="{Binding Col}" FontSize="9" Foreground="Gray"/>
+                                </StackPanel>
+                                <Ellipse Fill="Red" Width="5" Height="5" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" x:Name="isLast"></Ellipse>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True"/>
+                                        <Condition Binding="{Binding Path=Value, Converter={StaticResource CellValueToStrConverter}}" Value="Empty"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter TargetName="el" Property="Opacity" Value="0.7" />
+                                </MultiDataTrigger>
+                                <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player1">
+                                    <Setter TargetName="pX" Property="Visibility" Value="Visible" />
+                                    <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Value, Converter={StaticResource CellValueToStrConverter}}" Value="Player2">
+                                    <Setter TargetName="pO" Property="Visibility" Value="Visible" />
+                                    <Setter TargetName="el" Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsLast}" Value="True">
+                                    <Setter TargetName="isLast" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border Grid.Column="1" Background="#afd0d0d0" VerticalAlignment="Stretch">
+                    <ScrollViewer>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
+                                <RadioButton Content="Human" IsChecked="{Binding OpponentHuman}" />
+                                <RadioButton Content="AI Player1" IsChecked="{Binding OpponentPlayer1}" />
+                                <RadioButton Content="AI Player2" IsChecked="{Binding OpponentPlayer2}" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
+                                <Button Content="Restart" Margin="10,0,0,0" x:Name="btnPositionRestart" />
+                                <!--<Button Content="Make move" Margin="10,0,0,0" x:Name="btnMakeMove" />
+                                <Button Content="Simulate" Margin="10,0,0,0" x:Name="btnSimulate" />
+                                <Button Content="Undo" Margin="10,0,0,0" x:Name="btnUndo" />-->
+                            </StackPanel>
+
+                            <StackPanel Margin="10,20,0,0" Orientation="Horizontal">
+                                <TextBlock Text="Next: "/>
+                                <TextBlock Text="{Binding Board.NextTurn, Converter={StaticResource PlayerToStrConverter}}"/>
+                            </StackPanel>
+
+                            <Grid Margin="10,20,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel>
+                                    <TextBlock Text="Rows"/>
+                                    <ItemsControl ItemsSource="{Binding Board.Rows}" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Histogram"/>
+                                    <ItemsControl ItemsSource="{Binding Board.Histograms}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="10,20,0,0">
+                                <TextBlock Text="Moves"/>
+                                <TextBox IsReadOnly="True" Text="{Binding Board.Moves, Mode=OneWay}" AcceptsReturn="True" Height="300" TextWrapping="Wrap" />
+                                <!--<ItemsControl ItemsSource="{Binding Board.Moves}" />-->
+                            </StackPanel>
                         </StackPanel>
-                    </Grid>
+                    </ScrollViewer>
+                </Border>
 
-                    <StackPanel Margin="10,20,0,0">
-                        <TextBlock Text="Moves"/>
-                        <TextBox IsReadOnly="True" Text="{Binding Board.Moves, Mode=OneWay}" AcceptsReturn="True" Height="300" TextWrapping="Wrap" />
-                        <!--<ItemsControl ItemsSource="{Binding Board.Moves}" />-->
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
-
-        <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="#40ffffff" Visibility="{Binding Board.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
-    </Grid>
+                <Border VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Background="#40ffffff" Visibility="{Binding Board.IsRunning, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </Grid>
+        </TabItem>
+    </TabControl>
 </Window>

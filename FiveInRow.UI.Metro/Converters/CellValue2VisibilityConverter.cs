@@ -18,9 +18,9 @@ namespace FiveInRow.UI.Metro.Converters
             {
                 return value == null ? Visibility.Visible : Visibility.Collapsed;
             }
-            if (value is CellValue.Occupied)
+            if (value is FiveInRow.Core.GameDef.SquareStatus.Occupied)
             {
-                var occupied = value as CellValue.Occupied;
+                var occupied = value as FiveInRow.Core.GameDef.SquareStatus.Occupied;
                 return
                     ((occupied.Item == FiveInRow.Core.GameDef.Player.Player1 && (string)parameter == "X") || (occupied.Item == FiveInRow.Core.GameDef.Player.Player2 && (string)parameter == "O"))
                     ? Visibility.Visible

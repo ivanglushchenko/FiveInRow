@@ -12,7 +12,7 @@ open FiveInRow.Core.UI
 type CellValueToStrConverter() =
     interface IValueConverter with
         member x.Convert(value, targetType, parameter, culture) =
-            match value :?> CellValue with
+            match value :?> SquareStatus with
             | Empty -> "Empty" :> obj
             | Occupied(Player1) -> "Player1" :> obj
             | Occupied(Player2) -> "Player2" :> obj

@@ -6,8 +6,8 @@ open RowHistogram
 open RowX
 open PersistentHashMap
 
-type Board = { Moves: PersistentHashMap<Position, Player>
-               Rows: PersistentHashMap<Position, RowX>
+type Board = { Moves: PersistentHashMap<Point, Player>
+               Rows: PersistentHashMap<Point, RowX>
                Histogram: RowHistogram
                Candidates: Set<int * int> }
 

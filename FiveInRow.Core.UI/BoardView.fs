@@ -7,7 +7,7 @@ open FiveInRow.Core.AI
 
 type BoardInfo = { Board: Board.Board
                    AI: AI
-                   LastMove: Position option
+                   LastMove: Point option
                    LastPlayer: Player
                    Winner: Player option }
 

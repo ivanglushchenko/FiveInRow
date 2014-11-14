@@ -5,7 +5,7 @@ open GameDef
 open Board
 open RowHistogram
 
-type AI = { PossibleMoves: (Position * float) list }
+type AI = { PossibleMoves: (Point * float) list }
 
 let empty = { PossibleMoves = [] }
 
@@ -150,8 +150,8 @@ let inline getMedium p board =
     getBestMovesByScore scoreMedium 0.5 p board
 
 type StrategyNode =
-    | Outcome of Position * Forecast
-    | Fork of (Position * StrategyNode) array
+    | Outcome of Point * Forecast
+    | Fork of (Point * StrategyNode) array
     | Inconclusive
 
     override x.ToString() =

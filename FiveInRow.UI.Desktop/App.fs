@@ -24,6 +24,7 @@ let createWindow =
     let window = MainWindow()
     let viewModel = new MainWindowViewModel()
     window.BtnRestart.Click.Add (fun _ -> viewModel.Start())
+    window.BtnPositionRestart.Click.Add (fun _ -> viewModel.Start())
     window.BtnMakeMove.Click.Add (fun _ -> viewModel.MakeMove())
     window.BtnSimulate.Click.Add (fun _ -> viewModel.Simulate())
     window.BtnUndo.Click.Add (fun _ -> viewModel.Board.Undo())
