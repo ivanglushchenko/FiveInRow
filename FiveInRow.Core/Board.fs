@@ -164,3 +164,7 @@ let inline getWinner board =
     if RowHistogram.hasLength Player1 5 board.Histogram then Some Player1
     else if RowHistogram.hasLength Player2 5 board.Histogram then Some Player2
     else None
+
+let get r c board =
+    if board.Moves.ContainsKey (r, c) then Occupied board.Moves.[r, c]
+    else Empty

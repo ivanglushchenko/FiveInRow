@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{291158B8-54DC-4A94-A17A-7E10254B4AB9}"
 	ProjectSection(SolutionItems) = preProject
@@ -69,8 +69,6 @@ Global
 		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|ARM.Build.0 = Debug|ARM
 		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|ARM.Deploy.0 = Debug|ARM
 		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
-		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|Mixed Platforms.Build.0 = Debug|x86
-		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|Mixed Platforms.Deploy.0 = Debug|x86
 		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|x64.ActiveCfg = Debug|x64
 		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|x64.Build.0 = Debug|x64
 		{0EA9BB76-3DB4-46F1-ADEB-F155556AC942}.Debug|x64.Deploy.0 = Debug|x64
@@ -137,8 +135,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

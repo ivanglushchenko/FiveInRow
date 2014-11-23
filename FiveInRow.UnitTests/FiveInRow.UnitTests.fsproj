@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="BoardTest.fs" />
     <Compile Include="AITests.fs" />
+    <Compile Include="ThreatTests.fs" />
     <None Include="App.config" />
     <None Include="MSTest.runsettings" />
   </ItemGroup>
