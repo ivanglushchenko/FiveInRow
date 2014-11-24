@@ -103,17 +103,20 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
             else
                 ObservableObject.Post (fun () -> winnerChanged.Trigger(x.Winner))
 
+            true
+        else false
+
     member x.MakeMove() =
         if x.IsCompleted = false then
             match opponent with
                 | AI(p) when p <> boards.Head.LastPlayer ->
-                    if boards.Head.AI.PossibleMoves.IsEmpty = false then x.Set (fst boards.Head.AI.PossibleMoves.Head)
+                    if boards.Head.AI.PossibleMoves.IsEmpty = false then x.Set (fst boards.Head.AI.PossibleMoves.Head) |> ignore
                 | _ -> ()
         
     member x.FastForward turns =
         for _ in 0..turns do
             if x.IsCompleted = false && boards.Head.AI.PossibleMoves.IsEmpty = false then
-                x.Set (fst boards.Head.AI.PossibleMoves.Head)
+                x.Set (fst boards.Head.AI.PossibleMoves.Head) |> ignore
 
     member x.Clear() =
         boards <- [ boards |> List.rev |> List.head ]
@@ -156,6 +159,7 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
         x.OnPropertyChanged(<@ x.Rows @>)
         x.OnPropertyChanged(<@ x.NextTurn @>)
         x.OnPropertyChanged(<@ x.Histograms @>)
+        x.OnPropertyChanged(<@ x.Threats @>)
 
     member x.Opponent
         with get() = opponent
@@ -177,3 +181,11 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
 
     [<CLIEvent>]
     member x.WinnerChanged = winnerChanged.Publish
+
+    member x.Threats
+        with get() = 
+            match boards with 
+            | hd :: _ -> 
+                let threats = Threats.identifyThreatsUnconstrained (next hd.LastPlayer) hd.Board |> Seq.toArray
+                threats
+            | _ -> [| |]
