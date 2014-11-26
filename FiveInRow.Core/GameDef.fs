@@ -39,6 +39,7 @@ type Difficulty =
     | Easy 
     | Medium 
     | Hard
+    | Impossible
 
     override x.ToString() =
         match x with

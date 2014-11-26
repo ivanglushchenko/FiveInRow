@@ -4,6 +4,7 @@ open System.Text
 open FiveInRow.Core.GameDef
 open FiveInRow.Core
 open FiveInRow.Core.AI
+open FiveInRow.Core.Threats
 
 type BoardInfo = { Board: Board.Board
                    AI: AI
@@ -61,11 +62,7 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
         boardDimension <- settings.BoardSize
         
         let finalBoard = Board.replay moves
-        let view =
-            match settings.Difficulty with
-            | Easy -> BoardView(finalBoard, settings.Opponent, AI.getEasy)
-            | Medium -> BoardView(finalBoard, settings.Opponent, AI.getMedium)
-            | Hard -> BoardView(finalBoard, settings.Opponent, AI.getHard)
+        let view = BoardView(finalBoard, settings.Opponent, AI.get settings.Difficulty)
         view.Opponent <- settings.Opponent
         view.Start()
         view
@@ -183,9 +180,23 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
     member x.WinnerChanged = winnerChanged.Publish
 
     member x.Threats
-        with get() = 
+        with get() =
+            let threatToString (kind, data) =
+                sprintf "%O - %O" kind data
+            let rec treeToStrings tree indent =
+                seq {
+                    match tree with
+                    | Some nodes ->
+                        let prefix = System.String(' ', indent * 4)
+                        for node in nodes do
+                            yield prefix + (threatToString node.Threat)
+                            yield! treeToStrings node.Dependencies (indent + 1)
+                    | None -> () }
+         
             match boards with 
             | hd :: _ -> 
                 let threats = Threats.identifyThreatsUnconstrained (next hd.LastPlayer) hd.Board |> Seq.toArray
-                threats
+                let threatsTree = Threats.buildThreatsTree (next hd.LastPlayer) hd.Board 5
+                let threatsStrings = treeToStrings threatsTree 0 |> Seq.toArray
+                threatsStrings
             | _ -> [| |]

@@ -10,33 +10,33 @@ open FiveInRow.Core.Threats
 [<TestClass>]
 type ThreatTests() = 
     [<TestMethod>]
-    member x.TestClosedThreeThreatDiscovery1 () = 
+    member x.TestFourThreatDiscovery1 () = 
         let (board, _) = Board.replay [ (0, 0); (6, 1); (1, 1); (6, 3); (2, 2) ]
         let threats = identifyThreatsUnconstrained Player1 board |> Seq.toArray
         Assert.AreEqual(2, threats.Length)
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = ClosedThree && (snd t).Gain = (3, 3)))
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = ClosedThree && (snd t).Gain = (4, 4)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Four && (snd t).Gain = (3, 3)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Four && (snd t).Gain = (4, 4)))
 
     [<TestMethod>]
-    member x.TestClosedThreeThreatDiscovery2 () = 
+    member x.TestFourThreatDiscovery2 () = 
         let (board, _) = Board.replay [ (3, 3); (3, 2); (3, 4); (6, 3); (3, 5) ]
         let threats = identifyThreatsUnconstrained Player1 board |> Seq.toArray
         Assert.AreEqual(2, threats.Length)
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = ClosedThree && (snd t).Gain = (3, 6)))
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = ClosedThree && (snd t).Gain = (3, 7)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Four && (snd t).Gain = (3, 6)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Four && (snd t).Gain = (3, 7)))
 
     [<TestMethod>]
-    member x.TestClosedThreeThreatDiscovery3 () = 
+    member x.TestFourThreatDiscovery3 () = 
         let (board, _) = Board.replay [ (3, boardDimension - 1); (6, 2); (3, boardDimension - 2); (6, 5); (3, boardDimension - 3) ]
         let threats = identifyThreatsUnconstrained Player1 board |> Seq.toArray
         Assert.AreEqual(2, threats.Length)
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = ClosedThree && (snd t).Gain = (3, boardDimension - 4)))
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = ClosedThree && (snd t).Gain = (3, boardDimension - 5)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Four && (snd t).Gain = (3, boardDimension - 4)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Four && (snd t).Gain = (3, boardDimension - 5)))
 
     [<TestMethod>]
     member x.TestTwoThreatDiscovery4 () = 
         let (board, _) = Board.replay [ (3, 4); (6, 2); (3, 5); ]
         let threats = identifyThreatsUnconstrained Player1 board |> Seq.toArray
         Assert.AreEqual(2, threats.Length)
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Two && (snd t).Gain = (3, 6)))
-        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Two && (snd t).Gain = (3, 3)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Three && (snd t).Gain = (3, 6)))
+        Assert.IsTrue(threats |> Array.exists (fun t -> fst t = Three && (snd t).Gain = (3, 3)))

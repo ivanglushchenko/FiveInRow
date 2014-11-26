@@ -40,11 +40,12 @@ type BoardView(startingBoard: Board, ai: Board -> AI) =
         let board = Board.Create settings.BoardSize
         boardDimension <- settings.BoardSize
         let finalBoard = board |> exec moves
-        let view =
+        let view = 
             match settings.Difficulty with
             | Easy -> BoardView(finalBoard, fun b -> EasyAI(b) :> AI)
             | Medium -> BoardView(finalBoard, fun b -> MediumAI(b) :> AI)
             | Hard -> BoardView(finalBoard, fun b -> HardAI(b) :> AI)
+            | Impossible -> failwith "Not implemented"
         view.Opponent <- settings.Opponent
         view.Start()
         view

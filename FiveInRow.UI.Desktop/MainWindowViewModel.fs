@@ -33,7 +33,7 @@ type MainWindowViewModel() =
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(8, 8); (7, 7); (7, 9); (6, 10); (6, 8); (7, 8); (5, 7); (4, 6); (4, 8); (8, 10); (3, 7); (7, 10); (5, 10); (9, 10);])// (10, 10); (8, 9); (6, 7); (6, 6); (5, 8); (5, 9); (4, 7); (2, 7); (3, 6); (2, 5); (3, 8); (1, 4); ])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(9, 9); (8, 8); (8, 9); (10, 9); (7, 8); (6, 7); (9, 8); (7, 10); (10, 7); (11, 6); (11, 8); (9, 7); (9, 10); (10, 6); (7, 9); (8, 7); (10, 8); (8, 10); (7, 7); (9, 6); (8, 6); (11, 5); (12, 4); (12, 6); (13, 6); (11, 4); (11, 3); (10, 5); (12, 3);])// (13, 4); (5, 9); (6, 9); (6, 8); (4, 10); ])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(9, 9); (8, 8); (8, 9); (10, 9); (7, 8); (6, 7); (9, 8); (7, 10); (10, 7); (11, 6); (11, 8); (9, 7); (9, 10); (10, 6); (7, 9); (8, 7); (10, 8); (8, 10); (7, 7); (9, 6); (8, 6); (11, 5); (12, 4); (12, 6); (13, 6); (11, 4); (11, 3); (10, 5); (12, 3); (9, 4); (8, 3); (9, 5); (9, 3)])
-    let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(0, 0); (6, 4); (1, 1); (6, 5); (2, 2);])
+    let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [ (0, 0); (13, 0); (0, 1); (9, 17); (0, 2); (13, 6); (1, 5); (9, 4); (2, 6); (2, 8); (5, 8); (5, 9); (6, 8); (14, 14);])
 
     let position = PositionView.Create(boardView)
 
@@ -94,21 +94,4 @@ type MainWindowViewModel() =
         boardView.FastForward 100
         sw.Stop()
         System.Diagnostics.Debug.WriteLine(sw.Elapsed.ToString())
-//        let diffs = [ Medium; Easy; Hard ]
-//        let pairs =
-//            seq { for d1 in diffs do
-//                    for d2 in diffs do
-//                        if d1 <> d2 then
-//                            yield (d1, d2, function | Player1 -> d1 | _ -> d2)
-//                            yield (d2, d1, function | Player1 -> d2 | _ -> d1) }
-//            |> Seq.toList
-//        let test (d1, d2, f) =
-//            let battle = Battle(d1, d2)
-//            match battle.Play() with
-//            | Some(p) -> (d1, d2, Some(f p))
-//            | None -> (d1, d2, None)
-//        let results = pairs |> List.map test
-//
-//        for (d1, d2, res) in results do
-//            printfn "%O x %O -> %O" d1 d2 res
         

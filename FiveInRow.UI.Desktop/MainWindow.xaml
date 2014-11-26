@@ -159,19 +159,10 @@
 
                             <StackPanel Margin="10,20,0,0">
                                 <TextBlock Text="Threats"/>
-                                <ItemsControl ItemsSource="{Binding Board.Threats, Mode=OneWay}" Height="200">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding Item1}"/>
-                                                <TextBlock Text=": gain "/>
-                                                <TextBlock Text="{Binding Item2.Gain}" />
-                                                <TextBlock Text=" cost "/>
-                                                <TextBlock Text="{Binding Item2.Cost}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding Board.Threats, Mode=OneWay}" Height="300">
+                                    </ItemsControl>
+                                </ScrollViewer>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

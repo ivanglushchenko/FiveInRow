@@ -143,12 +143,6 @@ let getBestMovesByScore scorer discountRate p board =
         |> getTopChoices (fun (p, f) -> -f)
     { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f) |> Seq.toList }
 
-let inline getEasy p board =
-    getBestMovesByScore scoreEasy 0.75 p board
-
-let inline getMedium p board =
-    getBestMovesByScore scoreMedium 0.5 p board
-
 type StrategyNode =
     | Outcome of Point * Forecast
     | Fork of (Point * StrategyNode) array
@@ -224,6 +218,12 @@ let rec buildStrategyTree p level upperBound board =
                 if Seq.isEmpty consolidatedOptions then Inconclusive
                 else consolidatedOptions |> Seq.head |> Outcome
 
+let getEasy p board =
+    getBestMovesByScore scoreEasy 0.75 p board
+
+let getMedium p board =
+    getBestMovesByScore scoreMedium 0.5 p board
+
 let getHard p board =
     let inline toBound f = if isCheckOrMate f then Some f else None
     let getBestMove p level upperBound = 
@@ -247,3 +247,12 @@ let getHard p board =
     match bestMove with
     | Some p -> { PossibleMoves = [ p, 1.0 ] }
     | None -> getBestMovesByScore scoreHard 0.5 p board
+
+let getImpossible p board =
+    getMedium p board
+    
+let get = function
+    | Easy -> getEasy
+    | Medium -> getMedium
+    | Hard -> getHard
+    | Impossible -> getImpossible

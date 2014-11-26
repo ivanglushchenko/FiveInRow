@@ -46,8 +46,8 @@
     <Compile Include="RowHistogram.fs" />
     <Compile Include="RowX.fs" />
     <Compile Include="Board.fs" />
-    <Compile Include="AI.fs" />
     <Compile Include="Threats.fs" />
+    <Compile Include="AI.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

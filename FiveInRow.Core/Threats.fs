@@ -12,10 +12,12 @@ type ThreatData =
         // The rest squares of a threat are the squares containing a threat possibility, the gain square excepted
         Rest: Point list
     }
+    override x.ToString() =
+        let costs = x.Cost |> List.map (fun (x, y) -> sprintf "%i,%i" (x + 1) (y + 1))
+        let costsStr = System.String.Join("; ", costs |> List.toArray)
+        sprintf "{ Gain %i,%i;  Cost %s }" (fst x.Gain + 1) (snd x.Gain + 1) costsStr
 
 type ThreatType =
-    // ...xx...
-    | Two
     // Line of seven squares of which the three center squares are occupied by the attacker, and the remaining four squares are empty
     // ..ooo..
     // Line of six squares, with three consecutive squares of the four center squares occupied by the attacker, and the remaining three squares empty
@@ -24,23 +26,21 @@ type ThreatType =
     // Line of six squares of which the attacker has occupied three non-consecutive squares of the four center squares, while the other three squares are empty
     // .o.oo.
     | BrokenThree
-    // xooo..
-    | ClosedThree
-    //  Line of five squares, of which the attacker has occupied any four, with the fifth square empty
+    // Line of five squares, of which the attacker has occupied any four, with the fifth square empty
     // xoooo.
     | Four
     // Line of six squares, of which the attacker has occupied the four center squares
     // .oooo.
     | StraightFour
+    | Five
 
     override x.ToString() =
         match x with
-        | Two -> "Two"
         | Three -> "Three"
         | BrokenThree -> "BrokenThree"
-        | ClosedThree -> "ClosedThree"
         | Four -> "Four"
         | StraightFour -> "StraightFour"
+        | Five -> "Five"
 
 type Threat = ThreatType * ThreatData
 
@@ -89,24 +89,65 @@ let enumerateSequences board =
         for r in -1..boardDimension - 1 do
             for c in -1..boardDimension - 1 do
                 for inc in [(fun p -> fst p, snd p + 1); (fun p -> fst p + 1, snd p); (fun p -> fst p + 1, snd p + 1)] do
-                    yield! generateSeqOfIndices 6 7 (r, c) inc }
+                    yield! generateSeqOfIndices 5 7 (r, c) inc }
 
 let (>>=) m cont = Option.bind cont m
 
 let threatPatterns =
     [
-        // b: ...xx..
-        // a: .oxxxo.
-        Two, [ Available; Cost; Gain; Rest; Rest; Cost; Available ]
+        // b: ..xx..
+        // a: oxxxo.
+        Three, [ Cost; Gain; Rest; Rest; Cost; Available ]
+        // ..x.x.
+        // .oxxxo
+        Three, [ Available; Cost; Rest; Gain; Rest; Cost ]
+        // ..x.x.
+        // oxxoxo
+        BrokenThree, [ Cost; Gain; Rest; Cost; Rest; Cost ]
         // b: oxxx..
         // a: oxxxxo
-        ClosedThree, [Obstacle; Rest; Rest; Rest; Gain; Cost ]
+        Four, [Obstacle; Rest; Rest; Rest; Gain; Cost ]
         // b: oxxx..
         // a: oxxxox
-        ClosedThree, [Obstacle; Rest; Rest; Rest; Cost; Gain ]
-        // b: ..xxx..
-        // a: .xxxxo.
-        Three, [ Available; Gain; Rest; Rest; Rest; Cost; Available ] ] 
+        Four, [Obstacle; Rest; Rest; Rest; Cost; Gain ]
+        // b: oxx.x.
+        // a: oxxxxo
+        Four, [Obstacle; Rest; Rest; Gain; Rest; Cost ]
+        // b: oxx.x.
+        // a: oxxoxx
+        Four, [Obstacle; Rest; Rest; Cost; Rest; Gain ]
+        // b: oxx..x
+        // a: oxxxox
+        Four, [Obstacle; Rest; Rest; Gain; Cost; Rest ]
+        // b: oxx..x
+        // a: oxxoxx
+        Four, [Obstacle; Rest; Rest; Cost; Gain; Rest ]
+        // b: ox.x.x
+        // a: oxxxox
+        Four, [Obstacle; Rest; Gain; Rest; Cost; Rest ]
+        // b: ox.x.x
+        // a: oxoxxx
+        Four, [Obstacle; Rest; Cost; Rest; Gain; Rest ]
+        // b: ox..xx
+        // a: oxxoxx
+        Four, [Obstacle; Rest; Gain; Cost; Rest; Rest ]
+        // b: ox..xx
+        // a: oxoxxx
+        Four, [Obstacle; Rest; Cost; Gain; Rest; Rest ]
+        // b: ox.xx.
+        // a: oxoxxx
+        Four, [Obstacle; Rest; Cost; Rest; Rest; Gain]
+        // b: ox.xx.
+        // a: oxxxxo
+        Four, [Obstacle; Rest; Gain; Rest; Rest; Cost]
+
+        // no cost squares because this is supposed to be the last move 
+        StraightFour, [ Available; Gain; Rest; Rest; Rest; Available ]
+        StraightFour, [ Available; Rest; Gain; Rest; Rest; Available ]
+        Five, [ Rest; Rest; Rest; Rest; Gain ]
+        Five, [ Rest; Rest; Rest; Gain; Rest ]
+        Five, [ Rest; Rest; Gain; Rest; Rest ]
+    ] 
 
 let matchThreatPattern sequence (kind, pattern) =
     let rec matchNext sequence pattern gain cost rest =
@@ -149,3 +190,33 @@ let identifyThreatsUnconstrained player board =
         |> enumerateSequences 
         |> Seq.where (hasEnoughOccupiedCells 2) 
         |> identifyThreats player
+
+let isWinningThreat = function | Five | StraightFour -> true | _ -> false
+
+let buildThreatsTree player board maxDepth =
+    let isDependent parent child =
+        match parent with
+        | Some (_, data) -> child.Rest |> List.exists (fun p -> p = data.Gain)
+        | None -> true
+    let rec buildNextLevel board depth threat =
+        let extend board threatData =
+            let folder acc el = Board.extend el (next player) acc
+            threatData.Cost |> List.fold folder (Board.extend threatData.Gain player board)
+        if depth = maxDepth then None
+        elif (match threat with | Some (kind, _) when isWinningThreat kind -> true | _ -> false) then None
+        else
+            let threats = identifyThreatsUnconstrained player board
+            threats
+                |> Seq.where (snd >> isDependent threat)
+                |> Seq.map (
+                    fun t ->
+                        { Threat = t; 
+                          Dependencies = buildNextLevel (extend board (snd t)) (depth + 1) (Some t) })
+                |> Seq.toList
+                |> Some
+    buildNextLevel board 0 None
+
+let analyzeTree tree =
+    if List.isEmpty tree then None
+    else
+        None
