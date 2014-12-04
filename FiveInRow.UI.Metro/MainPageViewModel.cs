@@ -87,7 +87,7 @@ namespace FiveInRow.UI.Metro
             _panel = panel;
         }
 
-        public async void Set(int row, int col)
+        public void Set(int row, int col)
         {
             if (Board.Winner != null) return;
             Board.Set(row, col);

@@ -159,8 +159,8 @@
 
                             <StackPanel Margin="10,20,0,0">
                                 <TextBlock Text="Threats"/>
-                                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl ItemsSource="{Binding Board.Threats, Mode=OneWay}" Height="300">
+                                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Height="300">
+                                    <ItemsControl ItemsSource="{Binding Board.Threats, Mode=OneWay}">
                                     </ItemsControl>
                                 </ScrollViewer>
                             </StackPanel>

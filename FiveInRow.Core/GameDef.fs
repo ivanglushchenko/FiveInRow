@@ -91,3 +91,9 @@ let inline isOccupied v =
     match v with
     | Occupied _ -> true
     | _ -> false
+
+let getLinearDictance (x1, y1) (x2, y2) =
+    if x1 = x2 then abs (y1 - y2) |> Some
+    elif y1 = y2 then abs (x1 - x2) |> Some
+    elif abs (x1 - x2) = abs (y1 - y2) then abs (x1 - x2) |> Some
+    else None

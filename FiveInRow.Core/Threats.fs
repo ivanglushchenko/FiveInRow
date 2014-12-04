@@ -1,5 +1,7 @@
 ﻿module FiveInRow.Core.Threats
 
+open System.Collections.Generic
+open PersistentHashMap
 open GameDef
 open Board
 
@@ -65,30 +67,43 @@ type ThreatPatternSquareKind =
     | Rest
     | Available
     | Obstacle
+    override x.ToString() =
+        match x with
+        | Gain -> "Gain"
+        | Cost -> "Cost"
+        | Rest -> "Rest"
+        | Available -> "Available"
+        | Obstacle -> "Obstacle"
 
 let isInBounds (r, c) = r >=0 && c >= 0 && r < boardDimension && c < boardDimension
 
 let enumerateSequences board =
     let getInBoardSquare (r, c) =
         InBoardSquare (Board.get r c board, (r, c))
-
+    let isOccupied (r, c) = 
+        Board.get r c board |> isOccupied
     let generateSeqOfIndices lengthFrom lengthTo p inc_p =
-        let rec getNext p l acc breakIfOffboard =
+        let rec getNext p l acc breakIfOffboard numOfActiveSquares =
             seq {
-                if l = lengthTo then yield acc
+                if l = lengthTo then 
+                    if numOfActiveSquares > 1 then yield acc
                 else
-                    if l >= lengthFrom then yield acc
+                    if l >= lengthFrom && numOfActiveSquares > 1 then yield acc
+                    let incActiveCount = if isOccupied p then 1 else 0
                     if isInBounds p then
-                        yield! getNext (inc_p p) (l + 1) (getInBoardSquare p :: acc) breakIfOffboard
+                        yield! getNext (inc_p p) (l + 1) (getInBoardSquare p :: acc) breakIfOffboard (numOfActiveSquares + incActiveCount) 
                     else
                         if breakIfOffboard = false then
-                            yield! getNext (inc_p p) (l + 1) (Border :: acc) true }
-        getNext p 0 [] false
+                            yield! getNext (inc_p p) (l + 1) (Border :: acc) true (numOfActiveSquares + incActiveCount) }
+        getNext p 0 [] false 0
 
     seq {
         for r in -1..boardDimension - 1 do
             for c in -1..boardDimension - 1 do
-                for inc in [(fun p -> fst p, snd p + 1); (fun p -> fst p + 1, snd p); (fun p -> fst p + 1, snd p + 1)] do
+                for inc in [ (fun p -> fst p, snd p + 1)
+                             (fun p -> fst p + 1, snd p)
+                             (fun p -> fst p + 1, snd p + 1)
+                             (fun p -> fst p + 1, snd p - 1) ] do
                     yield! generateSeqOfIndices 5 7 (r, c) inc }
 
 let (>>=) m cont = Option.bind cont m
@@ -149,6 +164,39 @@ let threatPatterns =
         Five, [ Rest; Rest; Gain; Rest; Rest ]
     ] 
 
+type ThreatPatternTreeNode =
+    {
+        Value: ThreatType option
+        Children: System.Collections.Generic.Dictionary<ThreatPatternSquareKind, ThreatPatternTreeNode>
+    }
+    
+let log s = System.Diagnostics.Debug.WriteLine s
+
+let threatPatternTree =
+    let rec build patterns =
+        let discoveredThreats, continuations = patterns |> List.partition (snd >> List.isEmpty)
+        let split = function | (k, hd :: tl) -> Some (k, hd, tl) | _ -> None
+        let splittedPatterns = continuations |> List.choose split
+        let node = Dictionary<ThreatPatternSquareKind, ThreatPatternTreeNode>()
+        for next, group in splittedPatterns |> Seq.groupBy (fun (kind, next, tail) -> next) do
+            let nextNodes = group |> Seq.map (fun (k, _, tl) -> k, tl) |> Seq.toList |> build
+            node.Add(next, nextNodes)
+        let threat = 
+            match discoveredThreats with
+            | hd :: [] -> hd |> fst |> Some
+            | [] -> None
+            | _ -> failwith "More than one threat detected"
+        { Value = threat; Children = node }
+    let reverseNonSymmetrical list =
+        let rev = List.rev list
+        if rev = list then None else Some rev
+    let reversedPatterns = 
+        threatPatterns 
+        |> List.map (fun (kind, squares) -> kind, reverseNonSymmetrical squares)
+        |> List.filter (snd >> Option.isSome)
+        |> List.map (fun (k, v) -> k, Option.get v)
+    build (threatPatterns @ reversedPatterns)
+
 let matchThreatPattern sequence (kind, pattern) =
     let rec matchNext sequence pattern gain cost rest =
         match sequence, pattern with
@@ -163,8 +211,38 @@ let matchThreatPattern sequence (kind, pattern) =
     | Some data -> (kind, data) |> Some
     | _ -> None
 
-let matchThreat s =
-    threatPatterns |> List.choose (matchThreatPattern s)
+let matchThreatOld s =
+    seq {
+        yield! threatPatterns |> List.choose (matchThreatPattern s)
+        yield! threatPatterns |> List.map (fun (k, s) -> k, List.rev s) |> List.choose (matchThreatPattern s)
+        } |> Seq.toList
+
+let matchThreatNew s =
+    let rec traverseTree s node gain cost rest =
+        seq {
+            let has key = node.Children.ContainsKey key
+            let get key = node.Children.[key]
+            match s with
+            | (Rest, p) :: tl when has Rest -> 
+                yield! traverseTree tl (get Rest) gain cost (p :: rest)
+            | (Available, p) :: tl ->
+                if has Gain then 
+                    yield! traverseTree tl (get Gain) (p :: gain) cost rest
+                if has Cost then
+                    yield! traverseTree tl (get Cost) gain (p :: cost) rest
+                if has Available then
+                    yield! traverseTree tl (get Available) gain cost rest
+            | (Obstacle, _) :: tl when has Obstacle ->
+                yield! traverseTree tl (get Obstacle) gain cost rest
+            | [] ->
+                match node.Value with
+                | Some threatType -> yield threatType, { Gain = gain.Head; Cost = cost; Rest = rest }
+                | _ -> ()
+            | _ -> () }
+    //log (sprintf "start matching l=%i" (Seq.length s))
+    traverseTree s threatPatternTree [] [] [] |> Seq.toList
+
+let matchThreat = matchThreatNew
 
 let identifyThreats player sequences =
     let toThreatPatternSquare = function
@@ -179,8 +257,7 @@ let identifyThreats player sequences =
         | _ -> cont()
     seq {
         for s in sequences do
-            yield! convertAndMatch s
-            yield! s |> List.rev |> convertAndMatch }
+            yield! convertAndMatch s }
 
 let identifyThreatsUnconstrained player board =
     let hasEnoughOccupiedCells l s =
@@ -193,11 +270,18 @@ let identifyThreatsUnconstrained player board =
 
 let isWinningThreat = function | Five | StraightFour -> true | _ -> false
 
+let significantSquareDistance = 2
+
 let buildThreatsTree player board maxDepth =
-    let isDependent parent child =
+    let isDependentOrClose parent child =
         match parent with
-        | Some (_, data) -> child.Rest |> List.exists (fun p -> p = data.Gain)
-        | None -> true
+        | Some (_, data) ->
+            if child.Rest |> List.exists (fun p -> p = data.Gain) then true
+            else
+                match getLinearDictance child.Gain data.Gain with
+                | Some d -> d < significantSquareDistance
+                | _ -> false
+        | _ -> true
     let rec buildNextLevel board depth threat =
         let extend board threatData =
             let folder acc el = Board.extend el (next player) acc
@@ -205,9 +289,13 @@ let buildThreatsTree player board maxDepth =
         if depth = maxDepth then None
         elif (match threat with | Some (kind, _) when isWinningThreat kind -> true | _ -> false) then None
         else
-            let threats = identifyThreatsUnconstrained player board
+            let threats = identifyThreatsUnconstrained player board |> Seq.toList
+            let connectedThreats = 
+                threats
+                |> Seq.where (snd >> isDependentOrClose threat)
+                |> Seq.toList
             threats
-                |> Seq.where (snd >> isDependent threat)
+                |> Seq.where (snd >> isDependentOrClose threat)
                 |> Seq.map (
                     fun t ->
                         { Threat = t; 
@@ -217,6 +305,23 @@ let buildThreatsTree player board maxDepth =
     buildNextLevel board 0 None
 
 let analyzeTree tree =
-    if List.isEmpty tree then None
-    else
-        None
+    let rec countMoves node =
+        match node.Threat with
+        | Five, _ -> Some 0
+        | StraightFour, _ -> Some 1
+        | _ ->
+            match node.Dependencies with
+            | Some dep -> 
+                let sortedWinningPaths = dep |> List.choose countMoves |> List.sortBy (fun t -> -t)
+                if List.isEmpty sortedWinningPaths then None
+                else Some sortedWinningPaths.Head
+            | None -> None
+    
+    let goodNodes = 
+        tree    
+            |> List.map (fun n -> n, countMoves n) 
+            |> List.filter (snd >> Option.isSome)
+            |> List.sortBy (fun (t, c) -> -(Option.get c))
+    match goodNodes with
+    | (node, _) :: _ -> let (_, data) = node.Threat in Some data.Gain
+    | _ -> None

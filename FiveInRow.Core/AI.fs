@@ -4,6 +4,7 @@ open PersistentHashMap
 open GameDef
 open Board
 open RowHistogram
+open Threats
 
 type AI = { PossibleMoves: (Point * float) list }
 
@@ -249,7 +250,14 @@ let getHard p board =
     | None -> getBestMovesByScore scoreHard 0.5 p board
 
 let getImpossible p board =
-    getMedium p board
+    let tree = buildThreatsTree p board 10
+    match tree with
+    | Some t -> 
+        let nextMove = analyzeTree t
+        match nextMove with
+        | Some m -> { empty with PossibleMoves = [ m, 1.0 ] }
+        | None   -> getMedium p board
+    | None -> getMedium p board
     
 let get = function
     | Easy -> getEasy

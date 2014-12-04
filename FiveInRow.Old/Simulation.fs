@@ -12,6 +12,7 @@ type Battle(d1: Difficulty, d2: Difficulty) =
         | Easy -> fun b -> EasyAI(b) :> AI
         | Medium -> fun b -> MediumAI(b) :> AI
         | Hard -> fun b -> HardAI(b) :> AI
+        | Impossible -> failwith "Not implemented"
 
     let aiMap = [ (Player1, getter d1); (Player2, getter d2) ] |> Map.ofList
 
