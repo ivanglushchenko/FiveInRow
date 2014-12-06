@@ -1,17 +1,24 @@
-﻿module FiveInRow.Core.RowX
+﻿module FiveInRow.Core.SquareX
 
 open GameDef
 open Row
+open Threat
 
-type RowX = { S: Row option
-              E: Row option
-              SE: Row option
-              SW: Row option }
+type SquareX<'a> =
+    {
+        S: 'a option
+        E: 'a option
+        SE: 'a option
+        SW: 'a option
+    }
 
-let empty = { S = None
-              E = None
-              SE = None
-              SW = None }
+let empty =
+    {
+        S = None
+        E = None
+        SE = None
+        SW = None
+    }
 
 let isEmpty rx =
     Option.isNone rx.S && Option.isNone rx.E && Option.isNone rx.SE && Option.isNone rx.SW
@@ -29,3 +36,6 @@ let get dir rx =
     | E -> rx.E
     | SE -> rx.SE
     | SW -> rx.SW
+
+type RowX = SquareX<Row>
+type ThreatX = SquareX<Threat>

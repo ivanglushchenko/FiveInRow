@@ -46,6 +46,7 @@ type Difficulty =
         | Easy -> "Easy"
         | Medium -> "Medium"
         | Hard -> "Hard"
+        | Impossible -> "Impossible"
 
 type OpponentType = Human | AI of Player
 

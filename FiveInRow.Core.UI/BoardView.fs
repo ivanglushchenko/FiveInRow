@@ -3,6 +3,7 @@
 open System.Text
 open FiveInRow.Core.GameDef
 open FiveInRow.Core
+open FiveInRow.Core.Threat
 open FiveInRow.Core.AI
 open FiveInRow.Core.Threats
 

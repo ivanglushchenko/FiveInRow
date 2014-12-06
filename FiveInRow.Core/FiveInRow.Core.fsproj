@@ -44,8 +44,10 @@
     <Compile Include="GameDef.fs" />
     <Compile Include="Row.fs" />
     <Compile Include="RowHistogram.fs" />
-    <Compile Include="RowX.fs" />
+    <Compile Include="Threat.fs" />
+    <Compile Include="SquareX.fs" />
     <Compile Include="Board.fs" />
+    <Compile Include="Position.fs" />
     <Compile Include="Threats.fs" />
     <Compile Include="AI.fs" />
   </ItemGroup>

@@ -3,7 +3,7 @@
 open GameDef
 open Row
 open RowHistogram
-open RowX
+open SquareX
 open PersistentHashMap
 
 type Board = { Moves: PersistentHashMap<Point, Player>
@@ -17,17 +17,17 @@ let empty =  { Moves = PersistentHashMap.empty
                Candidates = Set.empty } 
 
 let getRow pos dir rows =
-    if PersistentHashMap.containsKey pos rows then RowX.get dir rows.[pos]
+    if PersistentHashMap.containsKey pos rows then SquareX.get dir rows.[pos]
     else None
 
 let setRow pos dir row rows =
     if PersistentHashMap.containsKey pos rows then
         let extRj = rows.[pos]
         let r = rows.Remove pos
-        let newRj = RowX.update dir (Some row) extRj
+        let newRj = SquareX.update dir (Some row) extRj
         r.Add (pos, newRj)
     else
-        rows.Add (pos, RowX.update dir (Some row) RowX.empty)
+        rows.Add (pos, SquareX.update dir (Some row) SquareX.empty)
 
 let getRowLength pos dir board =
     (getRow pos dir board.Rows |> Option.get).Length
@@ -37,8 +37,8 @@ let getRowRank pos dir board =
 
 let nullifyRow pos dir rows =
     let extRj = PersistentHashMap.find pos rows
-    let newRj = RowX.update dir None extRj
-    if RowX.isEmpty newRj then rows.Remove pos
+    let newRj = SquareX.update dir None extRj
+    if SquareX.isEmpty newRj then rows.Remove pos
     else (rows.Remove pos).Add (pos, newRj)
 
 let extend (r, c) player board =
