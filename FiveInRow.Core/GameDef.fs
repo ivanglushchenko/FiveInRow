@@ -98,3 +98,13 @@ let getLinearDictance (x1, y1) (x2, y2) =
     elif y1 = y2 then abs (x1 - x2) |> Some
     elif abs (x1 - x2) = abs (y1 - y2) then abs (x1 - x2) |> Some
     else None
+
+let getDelta = function 
+    | S -> 1, 0
+    | E -> 0 ,1
+    | SE -> 1, 1
+    | SW -> 1, -1
+
+let getInc dir =
+    let delta_r, delta_c = getDelta dir
+    fun (r, c) -> r + delta_r, c + delta_c

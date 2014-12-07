@@ -33,27 +33,6 @@
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Release\FiveInRow.Core.UI.XML</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Core">
-      <HintPath>$(MSBuildExtensionsPath32)\..\Reference Assemblies\Microsoft\FSharp\.NETPortable\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ObservableObject.fs" />
-    <Compile Include="GameSettings.fs" />
-    <Compile Include="CellView.fs" />
-    <Compile Include="BoardView.fs" />
-    <Compile Include="PositionView.fs" />
-    <Compile Include="EventProc.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FiveInRow.Core\FiveInRow.Core.fsproj">
-      <Name>FiveInRow.Core</Name>
-      <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
   </PropertyGroup>
@@ -70,6 +49,26 @@
     </Otherwise>
   </Choose>
   <Import Project="$(FSharpTargetsPath)" Condition="Exists('$(FSharpTargetsPath)')" />
+  <ItemGroup>
+    <Compile Include="ObservableObject.fs" />
+    <Compile Include="GameSettings.fs" />
+    <Compile Include="CellView.fs" />
+    <Compile Include="BoardView.fs" />
+    <Compile Include="PositionView.fs" />
+    <Compile Include="EventProc.fs" />
+    <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FSharp.Core">
+      <HintPath>$(MSBuildExtensionsPath32)\..\Reference Assemblies\Microsoft\FSharp\.NETPortable\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <ProjectReference Include="..\FiveInRow.Core\FiveInRow.Core.fsproj">
+      <Name>FiveInRow.Core</Name>
+      <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
