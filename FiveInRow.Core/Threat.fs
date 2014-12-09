@@ -209,3 +209,13 @@ let private matchThreatNew s =
     traverseTree s threatPatternTree [] [] [] |> Seq.toList
 
 let matchThreat = matchThreatNew
+
+let matchThreats player sequences =
+    let toThreatPatternSquare = function
+        | InBoardSquare (Occupied pl, p) when pl = player -> Rest, p
+        | InBoardSquare (Occupied _, p) -> Obstacle, p
+        | InBoardSquare (Empty, p) -> Available, p
+        | Border -> Obstacle, (-1, -1)
+    seq {
+        for s in sequences do
+            yield! s |> List.map toThreatPatternSquare |> matchThreat }

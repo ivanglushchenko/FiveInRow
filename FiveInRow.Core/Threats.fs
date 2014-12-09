@@ -7,13 +7,6 @@ open Threat
 open GameDef
 open Board
 
-let isInBounds (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardDimension
-
-let enumerateSequencesForPoint (r, c) =
-    let loop range1 = ()
-    
-    Seq.empty
-     
 let enumerateSequences board =
     let getInBoardSquare (r, c) =
         InBoardSquare (Board.get r c board, (r, c))

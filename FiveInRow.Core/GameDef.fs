@@ -108,3 +108,9 @@ let getDelta = function
 let getInc dir =
     let delta_r, delta_c = getDelta dir
     fun (r, c) -> r + delta_r, c + delta_c
+
+let getDec dir =
+    let delta_r, delta_c = getDelta dir
+    fun (r, c) -> r - delta_r, c - delta_c
+
+let isInBounds (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardDimension

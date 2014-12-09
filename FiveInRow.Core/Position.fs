@@ -5,6 +5,7 @@ open FiveInRow.Core
 open Row
 open RowHistogram
 open Threat
+open SquareX
 open PersistentHashMap
 open FSharpx.Collections
 
@@ -13,7 +14,7 @@ type ThreatX = SquareX.SquareX<Threat>
 type Position = 
     {
         Moves: PersistentHashMap<Point, Player>
-        Threats: PersistentHashMap<Point, ThreatX>        
+        Threats: PersistentHashMap<Point, ThreatX>
     }
 
 let empty = 
@@ -39,14 +40,6 @@ let setRow p dir row threats =
     else
         threats.Add (p, SquareX.update dir (Some row) SquareX.empty)
 
-let isInBounds (r, c) = r >= 0 && c >= 0 && r < boardDimension && c < boardDimension
-
-let step dir count point =
-    let inc_p = getInc dir
-    let rec loop p c =
-        if c = 0 then p else loop (inc_p p) (c - 1)
-    loop point count
-
 let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied position =
     let occupied = function | InBoardSquare (s, _) when isOccupied s -> 1 | _ -> 0
     let rec loop p s occupiedCount =
@@ -58,10 +51,21 @@ let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied
                     let removedItem, shortened = extended.Uncons
                     shortened, occupiedCount + occupied element - occupied removedItem
                 else extended, occupiedCount + occupied element
-            if Deque.length new_s = length && new_occupiedCount >= minOccupied then yield new_s |> Deque.toSeq
+            if Deque.length new_s = length && new_occupiedCount >= minOccupied then yield new_s |> Deque.toSeq |> Seq.toList
             if p <> toPoint then
                 yield! loop (nextPoint p) new_s new_occupiedCount }
     loop fromPoint Deque.empty 0
+
+let enumerateSequencesForPoint p dir position =
+    let rec step dp c p = if c = 0 || isInBounds p = false then p else step dp (c - 1) (dp p)
+    let extend dir p = step (getDec dir) boardDimension p, step (getInc dir) boardDimension p
+    seq {
+        let pmin, pmax = extend dir p
+        let smin, smax = extend S p
+        let semin, semax = extend SE p
+        let swmin, swmax = extend SW p
+        for l in 5..7 do
+            yield! enumerateSequencesConstrained pmin pmax (getInc dir) l 2 position }
 
 let enumerateSequences position =
     seq {
@@ -77,13 +81,31 @@ let enumerateSequences position =
                     yield! enumerateSequencesConstrained (t - 1, -1) (boardDimension, boardDimension - t) (getInc SE) l 2 position
                     yield! enumerateSequencesConstrained (t - 1, boardDimension) (boardDimension, t - 1) (getInc SW) l 2 position }
 
-let extend (r, c) player position =
-    if position.Moves.ContainsKey (r, c) then failwith "Cell is occupied already"
+let extend p player position =
+    if position.Moves.ContainsKey p then failwith "Cell is occupied already"
 
-    let newMoves = position.Moves.Add ((r, c), player)
+    let newMoves = position.Moves.Add (p, player)
     let newThreats = position.Threats
 
-    //let allSequences = enumerateSequencesForPoint (r, c)
+    let allSequences = 
+        seq {
+            yield S, enumerateSequencesForPoint p S position
+            yield E, enumerateSequencesForPoint p E position
+            yield SE, enumerateSequencesForPoint p SE position
+            yield SW, enumerateSequencesForPoint p SW position }
+    let updateThreats acc (dir, sequences) =
+        let threats :Threat list = matchThreats player sequences |> Seq.toList
+        let i =
+            match dir with
+            | S -> fst p
+            | E -> snd p
+            | SE -> snd p - fst p
+            | SW -> snd p + fst p
+        SquareX.update dir (Some threats) acc
+//    let pointTheats = if position.Threats.ContainsKey p then position.Threats.[p] else SquareX.empty
+//    let tt = allSequences |> Seq.fold updateThreats pointTheats
+    
+    //let allThreats = matchThreats player allSequences
 
     {
         Moves = newMoves
@@ -95,3 +117,8 @@ let replay moves position =
 
 let replayForPlayer moves player position =
     List.fold (fun acc p -> extend p player acc) position moves
+
+let identifyThreats player position =
+    position 
+        |> enumerateSequences 
+        |> matchThreats player

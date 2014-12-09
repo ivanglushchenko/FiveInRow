@@ -38,4 +38,4 @@ let get dir rx =
     | SW -> rx.SW
 
 type RowX = SquareX<Row>
-type ThreatX = SquareX<Threat>
+type ThreatX = SquareX<Threat list>
