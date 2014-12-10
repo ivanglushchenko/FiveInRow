@@ -197,7 +197,7 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
             match boards with 
             | hd :: _ -> 
                 let threats = Threats.identifyThreatsUnconstrained (next hd.LastPlayer) hd.Board |> Seq.toArray
-                let threatsTree = Threats.buildThreatsTree (next hd.LastPlayer) hd.Board 10
+                let threatsTree = Threats.buildThreatsTreeForBoard (next hd.LastPlayer) hd.Board 10
                 let threatsStrings = treeToStrings threatsTree 0 |> Seq.toArray
                 threatsStrings
             | _ -> [| |]

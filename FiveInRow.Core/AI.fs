@@ -250,7 +250,7 @@ let getHard p board =
     | None -> getBestMovesByScore scoreHard 0.5 p board
 
 let getImpossible p board =
-    let tree = buildThreatsTree p board 10
+    let tree = buildThreatsTreeForBoard p board 10
     match tree with
     | Some t -> 
         let nextMove = analyzeTree t

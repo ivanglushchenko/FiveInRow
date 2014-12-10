@@ -64,7 +64,7 @@ let identifyThreatsUnconstrained player board =
 
 let significantSquareDistance = 2
 
-let buildThreatsTree player board maxDepth =
+let buildThreatsTree extender threatGetter player board maxDepth =
     let isDependentOrClose parent child =
         match parent with
         | Some (_, data) ->
@@ -76,12 +76,12 @@ let buildThreatsTree player board maxDepth =
         | _ -> true
     let rec buildNextLevel board depth threat =
         let extend board threatData =
-            let folder acc el = Board.extend el (next player) acc
-            threatData.Cost |> List.fold folder (Board.extend threatData.Gain player board)
+            let folder acc el = extender el (next player) acc
+            threatData.Cost |> List.fold folder (extender threatData.Gain player board)
         if depth = maxDepth then None
         elif (match threat with | Some (kind, _) when isWinningThreat kind -> true | _ -> false) then None
         else
-            let threats = identifyThreatsUnconstrained player board |> Seq.toList
+            let threats = threatGetter player board |> Seq.toList
             let connectedThreats = 
                 threats
                 |> Seq.where (snd >> isDependentOrClose threat)
@@ -95,6 +95,10 @@ let buildThreatsTree player board maxDepth =
                 |> Seq.toList
                 |> Some
     buildNextLevel board 0 None
+
+let buildThreatsTreeForBoard = buildThreatsTree Board.extend identifyThreatsUnconstrained
+
+let buildThreatsTreeForPosition = buildThreatsTree Position.extend Position.getThreats
 
 let analyzeTree tree =
     let rec countMoves node =

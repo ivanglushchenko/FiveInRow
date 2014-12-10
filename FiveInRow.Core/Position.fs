@@ -9,12 +9,10 @@ open SquareX
 open PersistentHashMap
 open FSharpx.Collections
 
-type ThreatX = SquareX.SquareX<Threat>
-
 type Position = 
     {
         Moves: PersistentHashMap<Point, Player>
-        Threats: PersistentHashMap<Point, ThreatX>
+        Threats: PersistentHashMap<int, PersistentHashMap<Player, ThreatX>>
     }
 
 let empty = 
@@ -40,11 +38,12 @@ let setRow p dir row threats =
     else
         threats.Add (p, SquareX.update dir (Some row) SquareX.empty)
 
-let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied position =
+let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied moves =
     let occupied = function | InBoardSquare (s, _) when isOccupied s -> 1 | _ -> 0
+    let get p = if PersistentHashMap.containsKey p moves then Occupied moves.[p] else Empty
     let rec loop p s occupiedCount =
         seq {
-            let element = if isInBounds p then InBoardSquare (get p position, p) else Border
+            let element = if isInBounds p then InBoardSquare (get p, p) else Border
             let new_s, new_occupiedCount = 
                 let extended = Deque.conj element s 
                 if extended.Length > length then 
@@ -56,7 +55,7 @@ let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied
                 yield! loop (nextPoint p) new_s new_occupiedCount }
     loop fromPoint Deque.empty 0
 
-let enumerateSequencesForPoint p dir position =
+let enumerateSequencesForPoint p dir moves =
     let rec step dp c p = if c = 0 || isInBounds p = false then p else step dp (c - 1) (dp p)
     let extend dir p = step (getDec dir) boardDimension p, step (getInc dir) boardDimension p
     seq {
@@ -65,48 +64,55 @@ let enumerateSequencesForPoint p dir position =
         let semin, semax = extend SE p
         let swmin, swmax = extend SW p
         for l in 5..7 do
-            yield! enumerateSequencesConstrained pmin pmax (getInc dir) l 2 position }
+            yield! enumerateSequencesConstrained pmin pmax (getInc dir) l 2 moves }
 
 let enumerateSequences position =
     seq {
         for t in 0..boardDimension - 1 do
             for l in 5..7 do
-                yield! enumerateSequencesConstrained (t, -1) (t, boardDimension) (getInc E) l 2 position
-                yield! enumerateSequencesConstrained (-1, t) (boardDimension, t) (getInc S) l 2 position
+                yield! enumerateSequencesConstrained (t, -1) (t, boardDimension) (getInc E) l 2 position.Moves
+                yield! enumerateSequencesConstrained (-1, t) (boardDimension, t) (getInc S) l 2 position.Moves
         for t in 0..boardDimension - minPatternLength do
             for l in 5..7 do
-                yield! enumerateSequencesConstrained (-1, t - 1) (boardDimension - t, boardDimension) (getInc SE) l 2 position
-                yield! enumerateSequencesConstrained (-1, boardDimension - t) (boardDimension - t, -1) (getInc SW) l 2 position
+                yield! enumerateSequencesConstrained (-1, t - 1) (boardDimension - t, boardDimension) (getInc SE) l 2 position.Moves
+                yield! enumerateSequencesConstrained (-1, boardDimension - t) (boardDimension - t, -1) (getInc SW) l 2 position.Moves
                 if t <> 0 then
-                    yield! enumerateSequencesConstrained (t - 1, -1) (boardDimension, boardDimension - t) (getInc SE) l 2 position
-                    yield! enumerateSequencesConstrained (t - 1, boardDimension) (boardDimension, t - 1) (getInc SW) l 2 position }
+                    yield! enumerateSequencesConstrained (t - 1, -1) (boardDimension, boardDimension - t) (getInc SE) l 2 position.Moves
+                    yield! enumerateSequencesConstrained (t - 1, boardDimension) (boardDimension, t - 1) (getInc SW) l 2 position.Moves }
+
+let getThreatRowIndex dir p =
+    match dir with
+    | S -> snd p
+    | E -> fst p
+    | SE -> snd p - fst p
+    | SW -> snd p + fst p
 
 let extend p player position =
     if position.Moves.ContainsKey p then failwith "Cell is occupied already"
 
     let newMoves = position.Moves.Add (p, player)
-    let newThreats = position.Threats
 
     let allSequences = 
         seq {
-            yield S, enumerateSequencesForPoint p S position
-            yield E, enumerateSequencesForPoint p E position
-            yield SE, enumerateSequencesForPoint p SE position
-            yield SW, enumerateSequencesForPoint p SW position }
-    let updateThreats acc (dir, sequences) =
-        let threats :Threat list = matchThreats player sequences |> Seq.toList
-        let i =
-            match dir with
-            | S -> fst p
-            | E -> snd p
-            | SE -> snd p - fst p
-            | SW -> snd p + fst p
-        SquareX.update dir (Some threats) acc
-//    let pointTheats = if position.Threats.ContainsKey p then position.Threats.[p] else SquareX.empty
-//    let tt = allSequences |> Seq.fold updateThreats pointTheats
-    
-    //let allThreats = matchThreats player allSequences
+            yield S, enumerateSequencesForPoint p S newMoves
+            yield E, enumerateSequencesForPoint p E newMoves
+            yield SE, enumerateSequencesForPoint p SE newMoves
+            yield SW, enumerateSequencesForPoint p SW newMoves }
 
+    let updateThreatsForPlayer player threats =
+        let updateThreats acc (dir, sequences) =
+            let i = getThreatRowIndex dir p
+            let threats = matchThreats player sequences |> Seq.toList
+            let playerThreats = if PersistentHashMap.containsKey i acc then acc.[i] else PersistentHashMap.empty
+            let pointThreats = if PersistentHashMap.containsKey player playerThreats then playerThreats.[player] else SquareX.empty
+            let newPointThreats = SquareX.update dir (Some threats) pointThreats
+            let upsert k v map =
+                if PersistentHashMap.containsKey k map = false then PersistentHashMap.add k v map
+                else map.Remove k |> PersistentHashMap.add k v
+            let newPlayerThreats = upsert player newPointThreats playerThreats 
+            upsert i newPlayerThreats acc
+        allSequences |> Seq.fold updateThreats threats
+    let newThreats = position.Threats |> updateThreatsForPlayer Player1 |> updateThreatsForPlayer Player2
     {
         Moves = newMoves
         Threats = newThreats
@@ -122,3 +128,15 @@ let identifyThreats player position =
     position 
         |> enumerateSequences 
         |> matchThreats player
+
+let getThreats player position =
+    let extractThreats tx =
+        if PersistentHashMap.containsKey player tx then
+            seq {
+                yield tx.[player].S
+                yield tx.[player].E
+                yield tx.[player].SE
+                yield tx.[player].SW }
+            |> Seq.choose (fun t -> t)
+        else Seq.empty
+    position.Threats |> PersistentHashMap.toSeq |> Seq.collect (snd >> extractThreats) |> Seq.collect (fun t -> t)
