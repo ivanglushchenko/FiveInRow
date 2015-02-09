@@ -263,4 +263,4 @@ let get = function
     | Easy -> getEasy
     | Medium -> getMedium
     | Hard -> getHard
-    | Impossible -> getImpossible
+    | Impossible -> getMedium

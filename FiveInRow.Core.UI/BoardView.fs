@@ -8,19 +8,22 @@ open FiveInRow.Core.AI
 open FiveInRow.Core.Threats
 
 type BoardInfo = { Board: Board.Board
+                   Position: Position.Position
                    AI: AI
                    LastMove: Point option
                    LastPlayer: Player
                    Winner: Player option }
 
-type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.Board -> AI) =
+type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> AI) =
     inherit ObservableObject()
 
+    let (startingBoard, startingPosition, startingPlayer) = startingConf
     let mutable opponent: OpponentType = startingOpponentType
-    let mutable boards = [ { Board = fst startingConfiguration
-                             AI = ai (snd startingConfiguration) (fst startingConfiguration)
+    let mutable boards = [ { Board = startingBoard
+                             Position = startingPosition
+                             AI = ai startingPlayer startingBoard
                              LastMove = None
-                             LastPlayer = (snd >> next) startingConfiguration
+                             LastPlayer = next startingPlayer
                              Winner = None } ]
     let mutable isRunning = false
     let mutable showFitness = true
@@ -47,8 +50,11 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
 
     let showPredictions() =
         if showFitness then
-            for ((i, j), fitness) in boards.Head.AI.PossibleMoves do
-                cells.[i].[j].Fitness <- fitness
+            match Threats.analyzeThreatSpace boards.Head.LastPlayer 10 boards.Head.Position with
+            | Some (i, j) -> cells.[i].[j].Fitness <- 3.3
+            | None ->
+                for ((i, j), fitness) in boards.Head.AI.PossibleMoves do
+                    cells.[i].[j].Fitness <- fitness
 
     let undo() =
         boards <- boards.Tail
@@ -62,8 +68,9 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
     static member CreateFrom (settings: GameSettings, moves) =
         boardDimension <- settings.BoardSize
         
-        let finalBoard = Board.replay moves
-        let view = BoardView(finalBoard, settings.Opponent, AI.get settings.Difficulty)
+        let (board, player) = Board.replay moves
+        let (position, _) = Position.replay moves Position.empty
+        let view = BoardView((board, position, player), settings.Opponent, AI.get settings.Difficulty)
         view.Opponent <- settings.Opponent
         view.Start()
         view
@@ -92,7 +99,12 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
 
             let board = Board.extend (i, j) thisTurn boards.Head.Board
             let ai = ai (next thisTurn) board
-            boards <- { Board = board; AI = ai; LastMove = Some (i, j); LastPlayer = thisTurn; Winner = if x.IsCompleted then x.Winner else Board.getWinner board } :: boards
+            boards <- { Board = board
+                        Position = Position.extend (i, j) thisTurn boards.Head.Position
+                        AI = ai
+                        LastMove = Some (i, j)
+                        LastPlayer = thisTurn
+                        Winner = if x.IsCompleted then x.Winner else Board.getWinner board } :: boards
 
             if x.IsCompleted = false then
                 showPredictions()
@@ -182,22 +194,23 @@ type BoardView(startingConfiguration, startingOpponentType, ai: Player -> Board.
 
     member x.Threats
         with get() =
-            let threatToString (kind, data) =
-                sprintf "%O - %O" kind data
-            let rec treeToStrings tree indent =
-                seq {
-                    match tree with
-                    | Some nodes ->
-                        let prefix = System.String(' ', indent * 4)
-                        for node in nodes do
-                            yield prefix + (threatToString node.Threat)
-                            yield! treeToStrings node.Dependencies (indent + 1)
-                    | None -> () }
-         
-            match boards with 
-            | hd :: _ -> 
-                let threats = Threats.identifyThreatsUnconstrained (next hd.LastPlayer) hd.Board |> Seq.toArray
-                let threatsTree = Threats.buildThreatsTreeForBoard (next hd.LastPlayer) hd.Board 10
-                let threatsStrings = treeToStrings threatsTree 0 |> Seq.toArray
-                threatsStrings
-            | _ -> [| |]
+            [| |]
+//            let threatToString (kind, data) =
+//                sprintf "%O - %O" kind data
+//            let rec treeToStrings tree indent =
+//                seq {
+//                    match tree with
+//                    | Some nodes ->
+//                        let prefix = System.String(' ', indent * 4)
+//                        for node in nodes do
+//                            yield prefix + (threatToString node.Threat)
+//                            yield! treeToStrings node.Dependencies (indent + 1)
+//                    | None -> () }
+//         
+//            match boards with 
+//            | hd :: _ -> 
+//                let threats = Threats.identifyThreatsUnconstrained (next hd.LastPlayer) hd.Board |> Seq.toArray
+//                let threatsTree = Threats.buildThreatsTreeForBoard (next hd.LastPlayer) hd.Board 10
+//                let threatsStrings = treeToStrings threatsTree 0 |> Seq.toArray
+//                threatsStrings
+//            | _ -> [| |]

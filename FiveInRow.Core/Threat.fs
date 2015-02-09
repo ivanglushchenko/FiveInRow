@@ -163,7 +163,9 @@ let threatPatternTree =
         |> List.map (fun (k, v) -> k, Option.get v)
     build (threatPatterns @ reversedPatterns)
 
-let isWinningThreat = function | Five | StraightFour -> true | _ -> false
+let isWinningThreatKind = function | Five | StraightFour -> true | _ -> false
+
+let isWinningThreat = function | Some (kind, _) when isWinningThreatKind kind -> true | _ -> false
 
 let private matchThreatOld s =
     let matchThreatPattern sequence (kind, pattern) =

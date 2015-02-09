@@ -26,7 +26,6 @@ let enumerateSequences board =
                         if breakIfOffboard = false then
                             yield! getNext (inc_p p) (l + 1) (Border :: acc) true (numOfActiveSquares + incActiveCount) }
         getNext p 0 [] false 0
-
     seq {
         for r in -1..boardDimension - 1 do
             for c in -1..boardDimension - 1 do
@@ -62,32 +61,33 @@ let identifyThreatsUnconstrained player board =
         |> Seq.where (hasEnoughOccupiedCells 2) 
         |> identifyThreats player
 
-let significantSquareDistance = 2
+let significantSquareDistance = 3
+
+let isThreatDependentOrClose parent child =
+    match parent with
+    | Some (_, data) ->
+        if child.Rest |> List.exists (fun p -> p = data.Gain) then true
+        else
+            match getLinearDictance child.Gain data.Gain with
+            | Some d -> d < significantSquareDistance
+            | _ -> false
+    | _ -> true
 
 let buildThreatsTree extender threatGetter player board maxDepth =
-    let isDependentOrClose parent child =
-        match parent with
-        | Some (_, data) ->
-            if child.Rest |> List.exists (fun p -> p = data.Gain) then true
-            else
-                match getLinearDictance child.Gain data.Gain with
-                | Some d -> d < significantSquareDistance
-                | _ -> false
-        | _ -> true
     let rec buildNextLevel board depth threat =
         let extend board threatData =
             let folder acc el = extender el (next player) acc
             threatData.Cost |> List.fold folder (extender threatData.Gain player board)
         if depth = maxDepth then None
-        elif (match threat with | Some (kind, _) when isWinningThreat kind -> true | _ -> false) then None
+        elif isWinningThreat threat then None
         else
             let threats = threatGetter player board |> Seq.toList
             let connectedThreats = 
                 threats
-                |> Seq.where (snd >> isDependentOrClose threat)
+                |> Seq.where (snd >> isThreatDependentOrClose threat)
                 |> Seq.toList
             threats
-                |> Seq.where (snd >> isDependentOrClose threat)
+                |> Seq.where (snd >> isThreatDependentOrClose threat)
                 |> Seq.map (
                     fun t ->
                         { Threat = t; 
@@ -98,7 +98,7 @@ let buildThreatsTree extender threatGetter player board maxDepth =
 
 let buildThreatsTreeForBoard = buildThreatsTree Board.extend identifyThreatsUnconstrained
 
-let buildThreatsTreeForPosition = buildThreatsTree Position.extend Position.getThreats
+let buildThreatsTreeForPosition player board maxDepth = buildThreatsTree (Position.extendConstrained (Some player)) Position.getThreats player board maxDepth
 
 let analyzeTree tree =
     let rec countMoves node =
@@ -121,3 +121,21 @@ let analyzeTree tree =
     match goodNodes with
     | (node, _) :: _ -> let (_, data) = node.Threat in Some data.Gain
     | _ -> None
+
+let analyzeThreatSpace player maxDepth position =
+    let extend = Position.extendConstrained (Some player)
+    let getThreats = Position.getThreats player
+    let extend board threatData =
+        let folder acc el = extend el (next player) acc
+        threatData.Cost |> List.fold folder (extend threatData.Gain player board)
+    let rec analyzeNextLevel position depth threat =
+        if depth = maxDepth then None
+        elif isWinningThreat threat then Some (threat |> Option.get |> snd).Gain
+        else
+            getThreats position 
+                |> Seq.where (snd >> isThreatDependentOrClose threat)
+                |> Seq.tryPick (fun t -> 
+                    match analyzeNextLevel (extend position (snd t)) (depth + 1) (Some t) with
+                    | Some _ -> Some (snd t).Gain
+                    | _ -> None)
+    analyzeNextLevel position 0 None

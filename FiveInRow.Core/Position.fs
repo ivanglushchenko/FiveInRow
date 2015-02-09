@@ -87,7 +87,7 @@ let getThreatRowIndex dir p =
     | SE -> snd p - fst p
     | SW -> snd p + fst p
 
-let extend p player position =
+let extendConstrained threatOwner p player position =
     if position.Moves.ContainsKey p then failwith "Cell is occupied already"
 
     let newMoves = position.Moves.Add (p, player)
@@ -112,11 +112,16 @@ let extend p player position =
             let newPlayerThreats = upsert player newPointThreats playerThreats 
             upsert i newPlayerThreats acc
         allSequences |> Seq.fold updateThreats threats
-    let newThreats = position.Threats |> updateThreatsForPlayer Player1 |> updateThreatsForPlayer Player2
+    let newThreats = 
+        match threatOwner with
+        | Some p -> position.Threats |> updateThreatsForPlayer p
+        | _ -> position.Threats |> updateThreatsForPlayer Player1 |> updateThreatsForPlayer Player2
     {
         Moves = newMoves
         Threats = newThreats
     }
+
+let extend = extendConstrained None
 
 let replay moves position =
     List.fold (fun (acc, player) p -> extend p player acc, next player) (position, Player1) moves
