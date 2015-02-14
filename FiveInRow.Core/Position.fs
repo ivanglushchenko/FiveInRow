@@ -135,13 +135,9 @@ let identifyThreats player position =
         |> matchThreats player
 
 let getThreats player position =
-    let extractThreats tx =
-        if PersistentHashMap.containsKey player tx then
-            seq {
-                yield tx.[player].S
-                yield tx.[player].E
-                yield tx.[player].SE
-                yield tx.[player].SW }
-            |> Seq.choose (fun t -> t)
-        else Seq.empty
-    position.Threats |> PersistentHashMap.toSeq |> Seq.collect (snd >> extractThreats) |> Seq.collect (fun t -> t)
+    let extractThreats tx = 
+        if PersistentHashMap.containsKey player tx then SquareX.toSeq tx.[player] |> Seq.choose id else Seq.empty
+    position.Threats |> Seq.collect (snd >> extractThreats) |> Seq.collect id
+
+let findThreat player kind position =
+    getThreats player position |> Seq.tryPick (fun (k, v) -> if k = kind then Some v else None)

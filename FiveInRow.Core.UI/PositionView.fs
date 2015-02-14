@@ -19,7 +19,7 @@ type PositionView(boardView: BoardView) =
                 cells.[i - 1].[j - 1].Fitness <- 0.0
                 cells.[i - 1].[j - 1].IsLast <- false
 
-    static member Create(boardView) =
+    static member Create(boardView, moves) =
         let pv = PositionView(boardView)
         //boardView.
         pv

@@ -68,7 +68,7 @@ let isThreatDependentOrClose parent child =
     | Some (_, data) ->
         if child.Rest |> List.exists (fun p -> p = data.Gain) then true
         else
-            match getLinearDictance child.Gain data.Gain with
+            match getLinearDistance child.Gain data.Gain with
             | Some d -> d < significantSquareDistance
             | _ -> false
     | _ -> true
@@ -121,21 +121,3 @@ let analyzeTree tree =
     match goodNodes with
     | (node, _) :: _ -> let (_, data) = node.Threat in Some data.Gain
     | _ -> None
-
-let analyzeThreatSpace player maxDepth position =
-    let extend = Position.extendConstrained (Some player)
-    let getThreats = Position.getThreats player
-    let extend board threatData =
-        let folder acc el = extend el (next player) acc
-        threatData.Cost |> List.fold folder (extend threatData.Gain player board)
-    let rec analyzeNextLevel position depth threat =
-        if depth = maxDepth then None
-        elif isWinningThreat threat then Some (threat |> Option.get |> snd).Gain
-        else
-            getThreats position 
-                |> Seq.where (snd >> isThreatDependentOrClose threat)
-                |> Seq.tryPick (fun t -> 
-                    match analyzeNextLevel (extend position (snd t)) (depth + 1) (Some t) with
-                    | Some _ -> Some (snd t).Gain
-                    | _ -> None)
-    analyzeNextLevel position 0 None

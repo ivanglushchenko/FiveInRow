@@ -68,6 +68,9 @@
       <Project>{76dd930f-adaa-4c84-8e45-30e401fa8530}</Project>
       <Private>True</Private>
     </ProjectReference>
+    <Reference Include="FSharpx.Collections">
+      <HintPath>..\packages\FSharpx.Collections.1.9.4\lib\portable-net4+sl4+wp71+win8\FSharpx.Collections.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

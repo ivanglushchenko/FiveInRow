@@ -9,6 +9,7 @@ open Microsoft.FSharp.Quotations.Patterns
 
 open FiveInRow.Core
 open FiveInRow.Core.GameDef
+open FiveInRow.Core.Threat
 open FiveInRow.Core.UI
 
 //open FiveInRow.Foundation
@@ -35,18 +36,24 @@ type MainWindowViewModel() =
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(9, 9); (8, 8); (8, 9); (10, 9); (7, 8); (6, 7); (9, 8); (7, 10); (10, 7); (11, 6); (11, 8); (9, 7); (9, 10); (10, 6); (7, 9); (8, 7); (10, 8); (8, 10); (7, 7); (9, 6); (8, 6); (11, 5); (12, 4); (12, 6); (13, 6); (11, 4); (11, 3); (10, 5); (12, 3);])// (13, 4); (5, 9); (6, 9); (6, 8); (4, 10); ])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Hard, Human), [(9, 9); (8, 8); (8, 9); (10, 9); (7, 8); (6, 7); (9, 8); (7, 10); (10, 7); (11, 6); (11, 8); (9, 7); (9, 10); (10, 6); (7, 9); (8, 7); (10, 8); (8, 10); (7, 7); (9, 6); (8, 6); (11, 5); (12, 4); (12, 6); (13, 6); (11, 4); (11, 3); (10, 5); (12, 3); (9, 4); (8, 3); (9, 5); (9, 3)])
     //let boardView = BoardView.CreateFrom(GameSettings(19, Impossible, Human), [ (0, 0); (13, 0); (0, 1); (9, 17); (0, 2); (13, 6); (1, 5); (9, 4); (2, 6); (2, 8); (5, 8); (5, 9); (6, 8); (14, 14);])
-    let boardView = BoardView.CreateFrom(GameSettings(19, Impossible, Human), [ (6, 5); (6, 4); (6, 6); (7, 4); (6, 7); (8, 4); (7, 6); (9, 4); (10, 4); (10, 3); (10, 5); (11, 5); (10, 6); (9, 6); (9, 5); (9, 8); (8, 5); (7, 5); (8, 6); (8, 8); (8, 7); (7, 7); ])
-    //let boardView = BoardView.CreateFrom(GameSettings(19, Impossible, Human), [ ])
-    let position = PositionView.Create(boardView)
+    //let moves = [ (6, 5); (6, 4); (6, 6); (7, 4); (6, 7); (8, 4); (7, 6); (9, 4); (10, 4); (10, 3); (10, 5); (11, 5); (10, 6); (9, 6); (9, 5); (9, 8); (8, 5); (7, 5); (8, 6); (8, 8); (8, 7); (7, 7); ]
+    let moves = [ (6, 5); (6, 4); (6, 6); (7, 4); (6, 7); (8, 4); (7, 6); (9, 4); (10, 4); (10, 3); (10, 5); (11, 5); (10, 6); (9, 6); (9, 5); (9, 8); (8, 5); (7, 5); (8, 6); (8, 8); (8, 7); (7, 7); (5, 4); (4, 3); ] 
+    let boardView = BoardView.CreateFrom(GameSettings(19, Impossible, Human), moves)
+
+    let mutable visibleGain: Point list = []
+    let mutable visibleCost: Point list = []
+    let mutable visibleRest: Point list = []
+
+    let setVisibleThreat (_, data) =
+        visibleGain <- [ data.Gain ]
+        visibleCost <- data.Cost
+        visibleRest <- data.Rest
 
     member x.Board with get() = boardView
 
-    member x.Position with get() = position
-
     member x.Set index = 
         if boardView.IsCompleted = false then
-            if boardView.Set index then
-                position.Set index
+            boardView.Set index |> ignore
 
     member x.Offset
         with get() = offset
@@ -86,7 +93,6 @@ type MainWindowViewModel() =
 
     member x.Start() = 
         boardView.Start()
-        position.Start()
 
     member x.MakeMove() = boardView.MakeMove()
 
@@ -96,7 +102,34 @@ type MainWindowViewModel() =
         //boardView.FastForward 100
         //let boardView = BoardView.CreateFrom(GameSettings(19, Impossible, Human), [ (0, 0); (13, 0); (0, 1); (9, 17); (0, 2); (13, 6); (1, 5); (9, 4); (2, 6); (2, 8); (5, 8); (5, 9); (6, 8); (14, 14);])
         let boardView = BoardView.CreateFrom(GameSettings(19, Impossible, Human), [ (6, 5); (6, 4); (6, 6); (7, 4); (6, 7); (8, 4); (7, 6); (9, 4); (10, 4); (10, 3); (10, 5); (11, 5); (10, 6); (9, 6); (9, 5); (9, 8); (8, 5); (7, 5); (8, 6); (8, 8); (8, 7); (7, 7); ])
-        boardView.Threats |> ignore
+        boardView.ThreatsForPlayer1 |> ignore
         sw.Stop()
         System.Diagnostics.Debug.WriteLine(sw.Elapsed.ToString())
         
+    member x.VisibleGain with get() = visibleGain
+
+    member x.VisibleCost with get() = visibleCost
+
+    member x.VisibleRest with get() = visibleRest
+
+    member x.SelectedThreatForPlayer1
+        with set(v: Threat option) =
+            match v with
+            | Some t ->
+                setVisibleThreat t
+                x.OnPropertyChanged(<@ x.VisibleGain @>)
+                x.OnPropertyChanged(<@ x.VisibleCost @>)
+                x.OnPropertyChanged(<@ x.VisibleRest @>)
+            | _ ->
+                ()
+
+    member x.SelectedThreatForPlayer2
+        with set(v: Threat option) =
+            match v with
+            | Some t ->
+                setVisibleThreat t
+                x.OnPropertyChanged(<@ x.VisibleGain @>)
+                x.OnPropertyChanged(<@ x.VisibleCost @>)
+                x.OnPropertyChanged(<@ x.VisibleRest @>)
+            | _ ->
+                ()

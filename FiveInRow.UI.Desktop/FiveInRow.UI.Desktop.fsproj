@@ -63,6 +63,7 @@
     <Compile Include="RowColorConverter.fs" />
     <Compile Include="CellValueToStrConverter.fs" />
     <Compile Include="FitnessVisibilityConverter.fs" />
+    <Compile Include="ThreatOptionConverter.fs" />
     <Compile Include="PlayerToStrConverter.fs" />
     <Resource Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

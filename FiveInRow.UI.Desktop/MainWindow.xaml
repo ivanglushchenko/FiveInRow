@@ -14,6 +14,7 @@
         <local:FitnessVisibilityConverter x:Key="FitnessVisibilityConverter" />
         <local:PlayerToStrConverter x:Key="PlayerToStrConverter" />
         <local:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <local:ThreatOptionConverter x:Key="ThreatOptionConverter" />
      </Window.Resources>
 
     <TabControl SelectedIndex="0">
@@ -157,13 +158,13 @@
                                 <TextBox IsReadOnly="True" Text="{Binding Board.Moves, Mode=OneWay}" AcceptsReturn="True" Height="200" TextWrapping="Wrap" />
                             </StackPanel>
 
-                            <StackPanel Margin="10,20,0,0">
+                            <!--<StackPanel Margin="10,20,0,0">
                                 <TextBlock Text="Threats"/>
                                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Height="300">
                                     <ItemsControl ItemsSource="{Binding Board.Threats, Mode=OneWay}">
                                     </ItemsControl>
                                 </ScrollViewer>
-                            </StackPanel>
+                            </StackPanel>-->
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
@@ -179,7 +180,7 @@
                     <ColumnDefinition Width="350" />
                 </Grid.ColumnDefinitions>
 
-                <ItemsControl ItemsSource="{Binding Position.Cells}" Tag="{Binding Position}">
+                <ItemsControl ItemsSource="{Binding Board.Cells}" Tag="{Binding Board}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <local:BoardPanel />
@@ -231,6 +232,105 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
+                <ListBox ItemsSource="{Binding VisibleGain}" IsHitTestVisible="False" Background="Transparent"> 
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Canvas.Top">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" ConverterParameter="!" Mode="OneWay">
+                                        <Binding Path="Item1" />
+                                        <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Canvas.Left">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" ConverterParameter="!" Mode="OneWay">
+                                        <Binding Path="Item2" />
+                                        <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="42" Height="43" BorderBrush="Green" BorderThickness="3" Margin="-4,-2,0,0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+
+                <ListBox ItemsSource="{Binding VisibleCost}" IsHitTestVisible="False" Background="Transparent">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Canvas.Top">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" ConverterParameter="!" Mode="OneWay">
+                                        <Binding Path="Item1" />
+                                        <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Canvas.Left">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" ConverterParameter="!" Mode="OneWay">
+                                        <Binding Path="Item2" />
+                                        <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                 </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="42" Height="43" BorderBrush="OrangeRed" BorderThickness="3" Margin="-4,-2,0,0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+
+                <ListBox ItemsSource="{Binding VisibleRest}" IsHitTestVisible="False" Background="Transparent">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Canvas.Top">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" ConverterParameter="!" Mode="OneWay">
+                                        <Binding Path="Item1" />
+                                        <Binding Path="DataContext.Offset.Y" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Canvas.Left">
+                                <Setter.Value>
+                                    <MultiBinding Converter="{StaticResource RowLocationConverter}" ConverterParameter="!" Mode="OneWay">
+                                        <Binding Path="Item2" />
+                                        <Binding Path="DataContext.Offset.X" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=Window}" />
+                                    </MultiBinding>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="43" Height="45" BorderBrush="Black" BorderThickness="3" Margin="-4,-2,0,0"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+
                 <Border Grid.Column="1" Background="#afd0d0d0" VerticalAlignment="Stretch">
                     <ScrollViewer>
                         <StackPanel>
@@ -242,9 +342,6 @@
 
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10" DockPanel.Dock="Top">
                                 <Button Content="Restart" Margin="10,0,0,0" x:Name="btnPositionRestart" />
-                                <!--<Button Content="Make move" Margin="10,0,0,0" x:Name="btnMakeMove" />
-                                <Button Content="Simulate" Margin="10,0,0,0" x:Name="btnSimulate" />
-                                <Button Content="Undo" Margin="10,0,0,0" x:Name="btnUndo" />-->
                             </StackPanel>
 
                             <StackPanel Margin="10,20,0,0" Orientation="Horizontal">
@@ -270,9 +367,13 @@
                             </Grid>
 
                             <StackPanel Margin="10,20,0,0">
-                                <TextBlock Text="Moves"/>
-                                <TextBox IsReadOnly="True" Text="{Binding Board.Moves, Mode=OneWay}" AcceptsReturn="True" Height="300" TextWrapping="Wrap" />
-                                <!--<ItemsControl ItemsSource="{Binding Board.Moves}" />-->
+                                <TextBlock Text="Threats for P1"/>
+                                <ListBox ItemsSource="{Binding Board.ThreatsForPlayer1}" SelectedItem="{Binding SelectedThreatForPlayer1, Mode=OneWayToSource, Converter={StaticResource ThreatOptionConverter}}" MaxHeight="150" />
+                            </StackPanel>
+
+                            <StackPanel Margin="10,20,0,0">
+                                <TextBlock Text="Threats for P2"/>
+                                <ListBox ItemsSource="{Binding Board.ThreatsForPlayer2}" SelectedItem="{Binding SelectedThreatForPlayer2, Mode=OneWayToSource, Converter={StaticResource ThreatOptionConverter}}" MaxHeight="150" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

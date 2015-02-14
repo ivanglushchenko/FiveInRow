@@ -80,7 +80,7 @@ let threatPatterns =
         Three, [ Cost; Gain; Rest; Rest; Cost; Available ]
         // ..x.x.
         // .oxxxo
-        Three, [ Available; Cost; Rest; Gain; Rest; Cost ]
+        Three, [ Available; Cost; Rest; Gain; Rest; Cost; Available; ]
         // ..x.x.
         // oxxoxo
         BrokenThree, [ Cost; Gain; Rest; Cost; Rest; Cost ]
@@ -116,10 +116,14 @@ let threatPatterns =
         Four, [Obstacle; Rest; Cost; Gain; Rest; Rest ]
         // b: ox.xx.
         // a: oxoxxx
-        Four, [Obstacle; Rest; Cost; Rest; Rest; Gain]
+        Four, [Obstacle; Rest; Cost; Rest; Rest; Gain ]
         // b: ox.xx.
         // a: oxxxxo
-        Four, [Obstacle; Rest; Gain; Rest; Rest; Cost]
+        Four, [Obstacle; Rest; Gain; Rest; Rest; Cost ]
+
+        // b: x.x.x
+        // a: xoxxx
+        Four, [Rest; Cost; Rest; Gain; Rest ]
 
         // no cost squares because this is supposed to be the last move 
         StraightFour, [ Available; Gain; Rest; Rest; Rest; Available ]
@@ -162,6 +166,10 @@ let threatPatternTree =
         |> List.filter (snd >> Option.isSome)
         |> List.map (fun (k, v) -> k, Option.get v)
     build (threatPatterns @ reversedPatterns)
+
+let isFive = function | (Five, _) -> true | _ -> false
+
+let isFour = function | (Four, _) -> true | _ -> false
 
 let isWinningThreatKind = function | Five | StraightFour -> true | _ -> false
 

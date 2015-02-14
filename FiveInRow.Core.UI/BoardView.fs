@@ -14,14 +14,14 @@ type BoardInfo = { Board: Board.Board
                    LastPlayer: Player
                    Winner: Player option }
 
-type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> AI) =
+type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> Position.Position -> AI) =
     inherit ObservableObject()
 
     let (startingBoard, startingPosition, startingPlayer) = startingConf
     let mutable opponent: OpponentType = startingOpponentType
     let mutable boards = [ { Board = startingBoard
                              Position = startingPosition
-                             AI = ai startingPlayer startingBoard
+                             AI = ai startingPlayer startingBoard startingPosition
                              LastMove = None
                              LastPlayer = next startingPlayer
                              Winner = None } ]
@@ -41,8 +41,9 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
         match boards.Head.LastMove with
         | Some (r, c) -> cells.[r].[c].IsLast <- false
         | None -> ()
-        for (r, c), _ in boards.Head.AI.PossibleMoves do
-            cells.[r].[c].Fitness <- 0.0
+        match boards.Head.AI.NextMove with
+        | Some (r, c) -> cells.[r].[c].Fitness <- 0.0
+        | None -> ()
 
     let showMoves() =
         for (pos, p) in boards.Head.Board.Moves do
@@ -50,11 +51,9 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
 
     let showPredictions() =
         if showFitness then
-            match Threats.analyzeThreatSpace boards.Head.LastPlayer 10 boards.Head.Position with
+            match boards.Head.AI.NextMove with
             | Some (i, j) -> cells.[i].[j].Fitness <- 3.3
-            | None ->
-                for ((i, j), fitness) in boards.Head.AI.PossibleMoves do
-                    cells.[i].[j].Fitness <- fitness
+            | None -> ()
 
     let undo() =
         boards <- boards.Tail
@@ -63,6 +62,14 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
             cells.[fst pos].[snd pos].Value <- Occupied p
         showPredictions()
 
+    let collectThreats player threats =
+        let isPlayer (p, _) = p = player
+        threats 
+            |> Seq.collect (snd >> Seq.filter isPlayer >> Seq.collect (snd >> SquareX.toSeq)) 
+            |> Seq.choose id
+            |> Seq.collect id
+            |> Seq.sortBy (fun (_, t) -> t.Gain)
+
     static member Create (settings: GameSettings) = BoardView.CreateFrom (settings, [])
 
     static member CreateFrom (settings: GameSettings, moves) =
@@ -70,7 +77,7 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
         
         let (board, player) = Board.replay moves
         let (position, _) = Position.replay moves Position.empty
-        let view = BoardView((board, position, player), settings.Opponent, AI.get settings.Difficulty)
+        let view = BoardView((board, position, player), settings.Opponent, AI.get2 settings.Difficulty)
         view.Opponent <- settings.Opponent
         view.Start()
         view
@@ -98,9 +105,10 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
             cells.[i].[j].IsLast <- true
 
             let board = Board.extend (i, j) thisTurn boards.Head.Board
-            let ai = ai (next thisTurn) board
+            let position = Position.extend (i, j) thisTurn boards.Head.Position
+            let ai = ai (next thisTurn) board position
             boards <- { Board = board
-                        Position = Position.extend (i, j) thisTurn boards.Head.Position
+                        Position = position
                         AI = ai
                         LastMove = Some (i, j)
                         LastPlayer = thisTurn
@@ -120,13 +128,15 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
         if x.IsCompleted = false then
             match opponent with
                 | AI(p) when p <> boards.Head.LastPlayer ->
-                    if boards.Head.AI.PossibleMoves.IsEmpty = false then x.Set (fst boards.Head.AI.PossibleMoves.Head) |> ignore
+                    match boards.Head.AI.NextMove with
+                    | Some p -> x.Set p |> ignore
+                    | None -> ()
                 | _ -> ()
         
     member x.FastForward turns =
         for _ in 0..turns do
-            if x.IsCompleted = false && boards.Head.AI.PossibleMoves.IsEmpty = false then
-                x.Set (fst boards.Head.AI.PossibleMoves.Head) |> ignore
+            if x.IsCompleted = false && boards.Head.AI.NextMove.IsSome then
+                x.Set (boards.Head.AI.NextMove.Value) |> ignore
 
     member x.Clear() =
         boards <- [ boards |> List.rev |> List.head ]
@@ -162,14 +172,15 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
 
     member x.NextTurn with get() = next boards.Head.LastPlayer
 
-    member x.BestMove with get() = fst boards.Head.AI.PossibleMoves.Head
+    member x.BestMove with get() = boards.Head.AI.NextMove
 
     member x.RaisePropertiesChanged() =
         x.OnPropertyChanged(<@ x.Moves @>)
         x.OnPropertyChanged(<@ x.Rows @>)
         x.OnPropertyChanged(<@ x.NextTurn @>)
         x.OnPropertyChanged(<@ x.Histograms @>)
-        x.OnPropertyChanged(<@ x.Threats @>)
+        x.OnPropertyChanged(<@ x.ThreatsForPlayer1 @>)
+        x.OnPropertyChanged(<@ x.ThreatsForPlayer2 @>)
 
     member x.Opponent
         with get() = opponent
@@ -192,25 +203,8 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
     [<CLIEvent>]
     member x.WinnerChanged = winnerChanged.Publish
 
-    member x.Threats
-        with get() =
-            [| |]
-//            let threatToString (kind, data) =
-//                sprintf "%O - %O" kind data
-//            let rec treeToStrings tree indent =
-//                seq {
-//                    match tree with
-//                    | Some nodes ->
-//                        let prefix = System.String(' ', indent * 4)
-//                        for node in nodes do
-//                            yield prefix + (threatToString node.Threat)
-//                            yield! treeToStrings node.Dependencies (indent + 1)
-//                    | None -> () }
-//         
-//            match boards with 
-//            | hd :: _ -> 
-//                let threats = Threats.identifyThreatsUnconstrained (next hd.LastPlayer) hd.Board |> Seq.toArray
-//                let threatsTree = Threats.buildThreatsTreeForBoard (next hd.LastPlayer) hd.Board 10
-//                let threatsStrings = treeToStrings threatsTree 0 |> Seq.toArray
-//                threatsStrings
-//            | _ -> [| |]
+    member x.ThreatsForPlayer1
+        with get() = collectThreats Player1 boards.Head.Position.Threats
+
+    member x.ThreatsForPlayer2
+        with get() = collectThreats Player2 boards.Head.Position.Threats

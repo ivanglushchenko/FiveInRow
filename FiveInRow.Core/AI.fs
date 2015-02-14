@@ -4,11 +4,12 @@ open PersistentHashMap
 open GameDef
 open Board
 open RowHistogram
+open Threat
 open Threats
 
-type AI = { PossibleMoves: (Point * float) list }
+type AI = { NextMove: Point option }
 
-let empty = { PossibleMoves = [] }
+let empty = { NextMove = None }
 
 [<CustomEquality; CustomComparison>]
 type Forecast =
@@ -142,7 +143,7 @@ let getBestMovesByScore scorer discountRate p board =
         possibleOutcomes 
         |> Seq.map (fun (pos, f1, f2) -> pos, f1 + f2 * discountRate)
         |> getTopChoices (fun (p, f) -> -f)
-    { empty with PossibleMoves = forecasts |> Seq.map (fun (pos, f) -> pos, f) |> Seq.toList }
+    { empty with NextMove = forecasts |> Seq.head |> fst |> Some }
 
 type StrategyNode =
     | Outcome of Point * Forecast
@@ -246,21 +247,61 @@ let getHard p board =
         | _, Some (p2, _) -> Some p2
         | _ -> None
     match bestMove with
-    | Some p -> { PossibleMoves = [ p, 1.0 ] }
+    | Some p -> { NextMove = Some(p) }
     | None -> getBestMovesByScore scoreHard 0.5 p board
 
-let getImpossible p board =
-    let tree = buildThreatsTreeForBoard p board 10
-    match tree with
-    | Some t -> 
-        let nextMove = analyzeTree t
-        match nextMove with
-        | Some m -> { empty with PossibleMoves = [ m, 1.0 ] }
-        | None   -> getMedium p board
-    | None -> getMedium p board
+let analyzeThreatSpace player maxDepth position =
+    let getThreats = Position.getThreats player
+    let extend position threatData =
+        let folder acc el = Position.extend el (next player) acc
+        threatData.Cost |> List.fold folder (Position.extend threatData.Gain player position)
+    let rec analyzeNextLevel position depth threat =
+        let findMyThreat kind = Position.findThreat player kind position
+        let findOpThreat kind = Position.findThreat (next player) kind position
+        let pretty s = diag (sprintf "%s%O" (new System.String(' ', (if depth = 0 then 0 else depth - 1) * 2)) s)
+        match threat with | Some v -> pretty v | _ -> ()
+        match findMyThreat Five with
+        | Some d -> 
+            pretty (sprintf "* Five - %O" d)
+            Some d.Gain
+        | None   ->
+            match findOpThreat Five with
+            | Some d -> None
+            | None   ->
+                match findMyThreat StraightFour with
+                | Some d ->
+                    pretty (sprintf "* StraightFour - %O" d)
+                    Some d.Gain
+                | None   ->
+                    if depth = maxDepth then None
+                    else
+                        let opHasStraightFours = findOpThreat StraightFour |> Option.isSome
+                        let isThreatConnected child = 
+                            (opHasStraightFours = false || isFive child || isFour child) && isThreatDependentOrClose threat (snd child)
+                        let allThreats = getThreats position |> Seq.toList
+                        let allOpThreats = Position.getThreats (next player) position |> Seq.toList
+
+                        let connectedThreats = allThreats |> Seq.where isThreatConnected |> Seq.toList
+                        connectedThreats
+                            |> Seq.tryPick (fun t -> 
+                                match analyzeNextLevel (extend position (snd t)) (depth + 1) (Some t) with
+                                | Some _ -> Some (snd t).Gain
+                                | _ -> None)
+    analyzeNextLevel position 0 None
+
+let getImpossible player board position =
+    match analyzeThreatSpace player 10 position with
+    | Some s -> { empty with NextMove = Some s }
+    | None   -> getMedium player board
     
 let get = function
     | Easy -> getEasy
     | Medium -> getMedium
     | Hard -> getHard
-    | Impossible -> getMedium
+    | Impossible -> failwith "Use get2"
+
+let get2 = function
+    | Easy -> fun player board position -> getEasy player board
+    | Medium -> fun player board position -> getMedium player board
+    | Hard -> fun player board position -> getHard player board
+    | Impossible -> getImpossible
