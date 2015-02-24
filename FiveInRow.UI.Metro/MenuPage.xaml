@@ -116,19 +116,19 @@
                     <RadioButton.RenderTransform>
                         <RotateTransform Angle="1" />
                     </RadioButton.RenderTransform>
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="19 x 19" Margin="10,-11,0,0"/>
+                    <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="9 x 9" Margin="10,-11,0,0"/>
                 </RadioButton>
                 <RadioButton IsChecked="{Binding BoardSize35, Mode=TwoWay}" GroupName="B" Margin="0,10,0,0">
                     <RadioButton.RenderTransform>
                         <RotateTransform Angle="-1" />
                     </RadioButton.RenderTransform>
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="35 x 35" Margin="10,-11,0,0" />
+                    <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="13 x 13" Margin="10,-11,0,0" />
                 </RadioButton>
                 <RadioButton IsChecked="{Binding BoardSize51, Mode=TwoWay}" GroupName="B" Margin="0,10,0,0">
                     <RadioButton.RenderTransform>
                         <RotateTransform Angle="1" />
                     </RadioButton.RenderTransform>
-                    <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="51 x 51" Margin="10,-11,0,0" />
+                    <TextBlock Style="{StaticResource SubheaderTextStyle}" Text="19 x 19" Margin="10,-11,0,0" />
                 </RadioButton>
             </StackPanel>
 

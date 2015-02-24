@@ -4,6 +4,7 @@ open GameDef
 open Row
 open Threat
 
+// One cell could be part of as many as 4 different rows or threats that go in different directions
 type SquareX<'a> =
     {
         S: 'a option

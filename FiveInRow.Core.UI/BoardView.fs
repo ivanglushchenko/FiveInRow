@@ -25,7 +25,6 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
                              LastMove = None
                              LastPlayer = next startingPlayer
                              Winner = None } ]
-    let mutable isRunning = false
     let mutable showFitness = true
     let winnerChanged = new Event<Player option>()
     let cells = [| for r in 1..boardDimension -> [| for c in 1..boardDimension -> CellView(r, c) |] |]
@@ -189,13 +188,6 @@ type BoardView(startingConf, startingOpponentType, ai: Player -> Board.Board -> 
                 opponent <- v
                 x.OnPropertyChanged(<@ x.Opponent @>)
                 x.MakeMove()
-
-    member x.IsRunning
-        with get() = isRunning
-        and set(v) =
-            if v <> isRunning then
-                isRunning <- v
-                x.OnPropertyChanged(<@ x.IsRunning @>)
 
     member x.Histograms
         with get() = [| RowHistogram.print Player1 boards.Head.Board.Histogram; RowHistogram.print Player2 boards.Head.Board.Histogram |]

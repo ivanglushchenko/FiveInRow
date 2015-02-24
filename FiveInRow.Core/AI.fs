@@ -278,11 +278,8 @@ let analyzeThreatSpace player maxDepth position =
                         let opHasStraightFours = findOpThreat StraightFour |> Option.isSome
                         let isThreatConnected child = 
                             (opHasStraightFours = false || isFive child || isFour child) && isThreatDependentOrClose threat (snd child)
-                        let allThreats = getThreats position |> Seq.toList
-                        let allOpThreats = Position.getThreats (next player) position |> Seq.toList
-
-                        let connectedThreats = allThreats |> Seq.where isThreatConnected |> Seq.toList
-                        connectedThreats
+                        getThreats position 
+                            |> Seq.where isThreatConnected
                             |> Seq.tryPick (fun t -> 
                                 match analyzeNextLevel (extend position (snd t)) (depth + 1) (Some t) with
                                 | Some _ -> Some (snd t).Gain

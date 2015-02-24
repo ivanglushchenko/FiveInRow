@@ -30,7 +30,7 @@ let rec treeToStrings tree indent =
 [<EntryPoint>]
 let main argv =
     boardDimension <- 19
-    let moves = [ (6, 5); (6, 4); (6, 6); (7, 4); (6, 7); (8, 4); (7, 6); (9, 4); (10, 4); (10, 3); (10, 5); (11, 5); (10, 6); (9, 6); (9, 5); (9, 8); (8, 5); (7, 5); (8, 6); (8, 8); (8, 7); (7, 7); ]
+    let moves = [ (6, 5); (6, 4); (6, 6); (7, 4); (6, 7); (8, 4); (7, 6); (9, 4); (10, 4); (10, 3); (10, 5); (11, 5); (10, 6); (9, 6); (9, 5); (9, 8); (8, 5); (7, 5); (8, 6); (8, 8); (8, 7); (7, 7); (5, 4); (4, 3); ]
 
     let analyzeTree list = 
         match list with
@@ -42,8 +42,8 @@ let main argv =
 //        Threats.buildThreatsTreeForBoard Player1 board 10 ) |> analyzeTree
 
     let res2 = run "position" (fun () ->
-        let (board, player) = Position.replay moves Position.empty
-        Threats.analyzeThreatSpace Player1 10 board )
+        let (position, player) = Position.replay moves Position.empty
+        AI.analyzeThreatSpace Player1 10 position )
         //Threats.buildThreatsTreeForPosition Player1 board 10 )
              
 

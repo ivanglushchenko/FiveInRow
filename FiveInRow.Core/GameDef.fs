@@ -50,7 +50,7 @@ type Difficulty =
 
 type OpponentType = Human | AI of Player
 
-let mutable boardDimension = 51
+let mutable boardDimension = 19
 
 let isTracingEnabled = false
 

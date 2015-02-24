@@ -38,6 +38,7 @@ let setRow p dir row threats =
     else
         threats.Add (p, SquareX.update dir (Some row) SquareX.empty)
 
+// Enumerates sequences of a given length that span [fromPoint, toPoint] interval
 let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied moves =
     let occupied = function | InBoardSquare (s, _) when isOccupied s -> 1 | _ -> 0
     let get p = if PersistentHashMap.containsKey p moves then Occupied moves.[p] else Empty
@@ -55,6 +56,7 @@ let enumerateSequencesConstrained fromPoint toPoint nextPoint length minOccupied
                 yield! loop (nextPoint p) new_s new_occupiedCount }
     loop fromPoint Deque.empty 0
 
+// Enumerates sequences for a point 
 let enumerateSequencesForPoint p dir moves =
     let rec step dp c p = if c = 0 || isInBounds p = false then p else step dp (c - 1) (dp p)
     let extend dir p = step (getDec dir) boardDimension p, step (getInc dir) boardDimension p

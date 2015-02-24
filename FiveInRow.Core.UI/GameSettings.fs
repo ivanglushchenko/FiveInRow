@@ -123,11 +123,11 @@ type GameSettingsVM() =
             else if x.OpponentAIPlayer2 then AI(Player2)
             else Human
         let boardSize =
-            if x.BoardSize19 then 19
-            else if x.BoardSize35 then 35
-            else 51
+            if x.BoardSize19 then 9
+            else if x.BoardSize35 then 13
+            else 19
         let diff =
             if x.DiffEasy then Easy
             else if x.DiffMedium then Medium
-            else Hard
+            else Impossible
         GameSettings(boardSize, diff, opponent)

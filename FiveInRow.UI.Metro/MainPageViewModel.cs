@@ -28,6 +28,7 @@ namespace FiveInRow.UI.Metro
 
         #region Fields
 
+        private readonly object _syncObject = new object();
         private GameSettings _params;
         private Point _offset;
         private BoardPanel _panel;
@@ -78,6 +79,27 @@ namespace FiveInRow.UI.Metro
         private object p_WinningRow;
         partial void OnWinningRowChanged();
 
+        /// <summary>
+        /// Gets/sets IsAIInProgress.
+        /// </summary>
+        public bool IsAIInProgress
+        {
+            [System.Diagnostics.DebuggerStepThrough]
+            get { return _IsAIInProgress; }
+            [System.Diagnostics.DebuggerStepThrough]
+            set
+            {
+                if (_IsAIInProgress != value)
+                {
+                    _IsAIInProgress = value;
+                    OnPropertyChanged("IsAIInProgress");
+                    OnIsAIInProgressChanged();
+                }
+            }
+        }
+        bool _IsAIInProgress;
+        partial void OnIsAIInProgressChanged();
+
         #endregion Properties
 
         #region Methods
@@ -90,8 +112,23 @@ namespace FiveInRow.UI.Metro
         public void Set(int row, int col)
         {
             if (Board.Winner != null) return;
-            Board.Set(row, col);
-            PersistMoves();
+
+            if (IsAIInProgress)
+                return;
+            lock (_syncObject)
+            {
+                if (!IsAIInProgress)
+                {
+                    IsAIInProgress = true;
+                    Task.Run(() =>
+                    {
+                        Board.Set(row, col);
+
+                        lock (_syncObject)
+                            IsAIInProgress = false;
+                    });
+                }
+            }
         }
 
         public void Restart()
